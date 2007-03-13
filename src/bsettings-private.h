@@ -7,6 +7,6 @@
 	a * b = malloc(sizeof(a)); memset((b),0,sizeof(a))
 
 void bsLoadPlugin(BSContext * context, char * filename);
-
+void collateGroups(BSPlugin * plugin);
 
 #endif

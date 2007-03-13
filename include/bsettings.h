@@ -120,14 +120,12 @@ typedef enum _BSSettingType
 struct _BSSubGroup
 {
 	char *				name;		//in current locale
-	char *				desc;		//in current locale
 	BSSettingList *		settings;	//list of BerylSetting
 };
 
 struct _BSGroup
 {
 	char *				name;		//in current locale
-	char *				desc;		//in current locale
 	BSSubGroupList *	subGroups;	//list of BerylSettingsSubGroup
 };
 
