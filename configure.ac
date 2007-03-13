@@ -84,6 +84,7 @@ bsettings.pc
 Makefile
 src/Makefile
 include/Makefile
+po/Makefile.in
 ])
 
 AC_OUTPUT
