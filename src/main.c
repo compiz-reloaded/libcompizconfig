@@ -4,3 +4,6 @@
 #include <malloc.h>
 #include <libintl.h>
 #include <dlfcn.h>
+
+#include <bsettings.h>
+
