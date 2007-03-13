@@ -63,6 +63,29 @@ struct _BSBackend
 	BSBackendVTable *	vtable;
 };
 
+typedef BSBackendVTable *(*BackendGetInfoProc) (void);
+
+typedef void (*BSExecuteEventsFunc) (void);
+
+typedef Bool (*BSInitBackendFunc) (BSContext * context);
+typedef Bool (*BSFiniBackendFunc) (BSContext * context);
+
+typedef Bool (*BSContextReadInitFunc) (BSContext * context);
+typedef void (*BSContextReadSettingFunc)
+					(BSContext * context, BSSetting * setting);
+typedef void (*BSContextReadDoneFunc) (BSContext * context);
+
+typedef Bool (*BSContextWriteInitFunc) (BSContext * context);
+typedef void (*BSContextWriteSettingFunc)
+					(BSContext * context, BSSetting * setting);
+typedef void (*BSContextWriteDoneFunc) (BSContext * context);
+
+typedef Bool (*BSGetIsIntegratedFunc) (BSSetting * setting);
+typedef Bool (*BSGetIsReadOnlyFunc) (BSSetting * setting);
+
+typedef BSStringList * (*BSGetExistingProfilesFunc) (void);
+typedef Bool (*BSDeleteProfileFunc) (char * name);
+
 struct _BSBackendVTable
 {
 	char *				name;
@@ -70,28 +93,28 @@ struct _BSBackendVTable
 	char *				longDesc;
 	Bool				integrationSupport;
 	Bool				profileSupport;
-/*
-	BSExecuteEventsFunc		executeEvents; // something like a event loop call for the backend
+
+	BSExecuteEventsFunc			executeEvents; // something like a event loop call for the backend
 	// so it can check for file changes (gconf changes in the gconf backend)
 	// no need for reload settings signals anymore
 
-	BSInitBackendFunc	        backendInit;
-	BSFiniBackendFunc		backendFini;
+	BSInitBackendFunc			backendInit;
+	BSFiniBackendFunc			backendFini;
 
-    	BSContextReadInitFunc		readInit;
-    	BSContextReadSettingFunc	readSetting;
-    	BSContextReadDoneFunc		readDone;
+   	BSContextReadInitFunc		readInit;
+   	BSContextReadSettingFunc	readSetting;
+   	BSContextReadDoneFunc		readDone;
 
-    	BSContextWriteInitFunc		writeInit;
-    	BSContextWriteSettingFunc	writeSetting;
-    	BSContextWriteDoneFunc		writeDone;
+   	BSContextWriteInitFunc		writeInit;
+   	BSContextWriteSettingFunc	writeSetting;
+   	BSContextWriteDoneFunc		writeDone;
 
 
 	BSGetIsIntegratedFunc 		getSettingIsIntegrated;
 	BSGetIsReadOnlyFunc 		getSettingIsReadOnly;
 
 	BSGetExistingProfilesFunc	getExistingProfiles;
-	BSDeleteProfileFunc		deleteProfile;*/
+	BSDeleteProfileFunc			deleteProfile;
 };
 
 struct _BSPlugin
