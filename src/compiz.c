@@ -300,7 +300,7 @@ void bsLoadPlugin(BSContext * context, char * filename)
 	}
 	
 	dlclose(dlhand);
-	//collate_groups(plugin);
+	collateGroups(plugin);
 	context->plugins = bsPluginListAppend(context->plugins, plugin);
 }
 

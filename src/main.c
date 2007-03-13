@@ -96,3 +96,53 @@ BSSetting * bsFindSetting(BSPlugin *plugin, char * name,
 	}
 	return NULL;
 }
+
+static void subGroupAdd(BSSetting * setting, BSGroup * group)
+{
+	BSSubGroupList *l = group->subGroups;
+	while (l)
+	{
+		if (!strcmp(l->data->name, setting->subGroup))
+		{
+			l->data->settings = bsSettingListAppend(l->data->settings,
+													 setting);
+			return;
+		}
+		l = l->next;
+	}
+	
+	NEW(BSSubGroup, subGroup);
+	group->subGroups = bsSubGroupListAppend(group->subGroups, subGroup);
+	subGroup->name = strdup(setting->subGroup);
+	subGroup->settings = bsSettingListAppend(subGroup->settings, setting);
+}
+
+static void groupAdd(BSSetting * setting, BSPlugin * plugin)
+{
+	BSGroupList *l = plugin->groups;
+	while (l)
+	{
+		if (!strcmp(l->data->name, setting->group))
+		{
+			subGroupAdd(setting, l->data);
+			return;
+		}
+		l = l->next;
+	}
+	
+	NEW(BSGroup, group);
+	plugin->groups = bsGroupListAppend(plugin->groups, group);
+	group->name = strdup(setting->group);
+	subGroupAdd(setting, group);
+}
+
+void collateGroups(BSPlugin * plugin)
+{
+	BSSettingList *l = plugin->settings;
+	while (l)
+	{
+		groupAdd(l->data, plugin);
+		l = l->next;
+	}
+	
+}
