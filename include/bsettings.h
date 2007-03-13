@@ -33,23 +33,23 @@ BSLIST(SettingValue,BSSettingValue)
 
 struct _BSContext
 {
-	BSPluginList *			plugins;
+	BSPluginList *		plugins;
 	BSPluginCategory *	categories;
-	void *    			privatePtr;
+	void *				privatePtr;
 
 	BSBackend *			backend;
 
-	char *				profile; 			// settings profile name
-	Bool				deIntegration; 	// integrate settings into the desktop environment
-									// settings system
-	BSSettingList * 		changedSettings;
+	char *				profile;
+	Bool				deIntegration;
+
+	BSSettingList * 	changedSettings;
 	Bool 				pluginsChanged;
 };
 
 struct _BSBackend
 {
 	void *				dlHand;
-	BSBackendVTable *		vtable;
+	BSBackendVTable *	vtable;
 };
 
 struct _BSBackendVTable
@@ -85,47 +85,47 @@ struct _BSBackendVTable
 
 struct _BSPlugin
 {
-	char *		gettextDomain;     // gettext domain for the plugin
-	char * 		name;
-	char *		hints;
-	char * 		shortDesc;         	// in current locale
-	char *		longDesc;          	// in current locale
-	char *		category;				// simple name
-	char *		filename;				// filename of the so
-    	BSStringList *	loadAfter;         	// list_of(gchar *)
-	BSStringList *	loadBefore;        	// list_of(gchar *)
-	BSStringList *	provides;           	// list_of(gchar *)
-	BSStringList *	requires;           	// list_of(gchar *)
-	BSSettingList *	settings;           	// list_of(BerylSetting)
-	BSGroupList   *	groups;		    		// list_of(BerylSettingsGroup)
-   	void *		privatePtr;
-	BSContext *	context;
+	char *				name;
+	char *				shortDesc;		// in current locale
+	char *				longDesc;		// in current locale
+	char *				hints;
+	char *				category;		// simple name
+	char *				filename;		// filename of the so
+	char *				gettextDomain;	// gettext domain for the plugin
+	BSStringList *		loadAfter;
+	BSStringList *		loadBefore;
+	BSStringList *		provides;
+	BSStringList *		requires;
+	BSSettingList *		settings;
+	BSGroupList   *		groups;
+	void *				privatePtr;
+	BSContext *			context;
 };
 
 typedef enum _BSSettingType
 {
-    TypeBool,
-    TypeInt,
-    TypeFloat,
-    TypeString,
-    TypeAction,
-    TypeColor,
-    TypeMatch,
-    TypeList,
-    TypeNum
+ 	TypeBool,
+	TypeInt,
+	TypeFloat,
+	TypeString,
+	TypeAction,
+	TypeColor,
+	TypeMatch,
+	TypeList,
+	TypeNum
 } BSSettingType;
 
 struct _BSSubGroup
 {
-	char *		name;		//in current locale
-	char *		desc;		//in current locale
-	BSSettingList * settings;	//list of BerylSetting
+	char *				name;		//in current locale
+	char *				desc;		//in current locale
+	BSSettingList *		settings;	//list of BerylSetting
 };
 
 struct _BSGroup
 {
-	char *			name;		//in current locale
-	char *			desc;		//in current locale
+	char *				name;		//in current locale
+	char *				desc;		//in current locale
 	BSSubGroupList *	subGroups;	//list of BerylSettingsSubGroup
 };
 
@@ -139,141 +139,139 @@ typedef enum _BSConflictType
 
 typedef struct _BSSettingConflict
 {
-	BSSettingList * settings; // settings that conflict over the binding
-	BSConflictType type; // type of the conflict, note that a setting may show up again in another
-								   // list for a different type
+	BSSettingList *		settings;	// settings that conflict over the binding
+	BSConflictType		type;		// type of the conflict, note that a setting may show up again in another
+									// list for a different type
 } BSConflict;
-
-
 
 union _BSSettingInfo;
 
 typedef struct _BSSettingIntInfo
 {
-    int min;
-    int max;
+	int		min;
+	int		max;
 } BSSettingIntInfo;
 
 typedef struct _BSSettingFloatInfo
 {
-    float min;
-    float max;
-    float precision;
+	float	min;
+	float	max;
+	float	precision;
 } BSSettingFloatInfo;
 
 typedef struct _BSSettingStringInfo
 {
-    BSStringList * allowed_values; //list_of(char *) in current locale
-    BSStringList * raw_values;     //list_of(char *) in C locale
+	BSStringList *	allowed_values; //list_of(char *) in current locale
+	BSStringList *	raw_values;     //list_of(char *) in C locale
 } BSSettingStringInfo;
 
 typedef struct _BSSettingActionInfo
 {
-    Bool key;
-    Bool button;
-    Bool bell;
-    Bool edge;
+	Bool	key;
+	Bool	button;
+	Bool	bell;
+	Bool	edge;
 } BSSettingActionInfo;
 
 typedef struct _BSSettingActionArrayInfo
 {
-    Bool array[4];
+	Bool	array[4];
 } BSSettingActionArrayInfo;
 
 typedef struct _BSSettingListInfo
 {
-    BSSettingType    listType;
-    union _BSSettingInfo    * listInfo;
+	BSSettingType			listType;
+	union _BSSettingInfo *	listInfo;
 } BSSettingListInfo;
 
 typedef union _BSSettingInfo
 {
-    BSSettingIntInfo             forInt;
-    BSSettingFloatInfo           forFloat;
-    BSSettingStringInfo          forString;
-    BSSettingActionInfo         forAction;
-    BSSettingActionArrayInfo    forActionAsArray;
-    BSSettingListInfo            forList;
+	BSSettingIntInfo			forInt;
+	BSSettingFloatInfo			forFloat;
+	BSSettingStringInfo			forString;
+	BSSettingActionInfo			forAction;
+	BSSettingActionArrayInfo	forActionAsArray;
+	BSSettingListInfo			forList;
 } BSSettingInfo;
 
 typedef struct _BSSettingColorValueColor
 {
-    unsigned short red;
-    unsigned short green;
-    unsigned short blue;
-    unsigned short alpha;
+	unsigned short	red;
+	unsigned short	green;
+	unsigned short	blue;
+	unsigned short	alpha;
 } BSSettingColorValueColor;
 
 typedef struct _BSSettingColorValueArray
 {
-    unsigned short array[4];
+	unsigned short	array[4];
 } BSSettingColorValueArray;
 
 typedef union _BSSettingColorValue
 {
-    BSSettingColorValueColor color;
-    BSSettingColorValueArray array;
+	BSSettingColorValueColor	color;
+	BSSettingColorValueArray	array;
 } BSSettingColorValue;
 
 
 typedef struct _BSSettingActionValue
 {
-    int                            button;
-    int                            buttonModMask;
-    int                            keysym;
-    int                            keyModMask;
-    Bool                        	onBell;
-    int                            edgeMask;
+	int				button;
+	unsigned int	buttonModMask;
+	int				keysym;
+	unsigned int	keyModMask;
+	Bool			onBell;
+	int				edgeMask;
 } BSSettingActionValue;
 
 typedef union _BSSettingValueUnion
 {
-    Bool                    asBool;
-    int                        asInt;
-    float                     asFloat;
-    char                     * asString;
-    char *			asMatch;
-    BSSettingActionValue    asAction;
-    BSSettingColorValue      asColor;
-    BSSettingValueList * asList;        // list_of(BerylSettingValue *)
+	Bool					asBool;
+	int						asInt;
+	float					asFloat;
+	char *					asString;
+	char *					asMatch;
+	BSSettingActionValue	asAction;
+	BSSettingColorValue		asColor;
+	BSSettingValueList *	asList;        // list_of(BerylSettingValue *)
 } BSSettingValueUnion;
 
 struct _BSSettingValue
 {
-    BSSettingValueUnion      value;
-    BSSetting              * parent;
-    Bool                    isListChild;
+	BSSettingValueUnion		value;
+	BSSetting *				parent;
+	Bool					isListChild;
 };
 
 struct _BSSetting
 {
-	char * 			name;
-	char *			shortDesc;        // in current locale
-	char *			longDesc;        // in current locale
+	char * 				name;
+	char *				shortDesc;        // in current locale
+	char *				longDesc;        // in current locale
 
 	BSSettingType		type;
-	Bool			isScreen;        // support the 'screen/display' thing
+	Bool				isScreen;        // support the 'screen/display' thing
 	unsigned int		screenNum;
 
 	BSSettingInfo		info;
-	char *			group;		// in current locale
-	char *			subGroup;		// in current locale
-	char * 			displayHints;	// in current locale
+	char *				group;		// in current locale
+	char *				subGroup;		// in current locale
+	char * 				displayHints;	// in current locale
 
-	BSSettingValue	default_value;
+	BSSettingValue		default_value;
 	BSSettingValue *	value; // = &default_value if isDefault == TRUE
-	Bool			isDefault;
+	Bool				isDefault;
 
-	BSPlugin *		parent;
-	void * 			privatePtr;
+	BSPlugin *			parent;
+	void * 				privatePtr;
 };
 
 struct _BSPluginCategory
 {
-	const char * name;
-	const char * shortDesc;
-	const char * longDesc;
-	BSStringList * plugins;
+	const char *		name;
+	const char *		shortDesc;
+	const char *		longDesc;
+	BSStringList *		plugins;
 };
 
 #endif
