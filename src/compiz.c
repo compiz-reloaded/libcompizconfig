@@ -123,7 +123,6 @@ static BSSettingType translateType(CompOptionType type)
 
 static void initOption(BSPlugin * plugin, CompOption * o, Bool isScreen)
 {
-	printf("Reading Option %s\n", o->name);
 	NEW(BSSetting, setting);
 	
 	setting->parent     = plugin;
@@ -167,6 +166,7 @@ static void initOption(BSPlugin * plugin, CompOption * o, Bool isScreen)
 	}
 
 	setting->value = &setting->defaultValue;
+	setting->defaultValue.parent = setting;
 	
 	plugin->settings = bsSettingListAppend(plugin->settings, setting);
 	
@@ -223,8 +223,7 @@ void bsLoadPlugin(BSContext * context, char * filename)
 	plugin->longDesc  = strdup(vt->longDesc);
 	plugin->filename  = strdup(filename);
 
-	plugin->category  = NULL;
-	
+	plugin->category  = strdup("");
 	
 	for (n = 0; n < vt->nDeps; n++)
 	{
@@ -262,6 +261,7 @@ void bsLoadPlugin(BSContext * context, char * filename)
 			initOption(plugin, o++, FALSE);
 		}
 	}
+
 	if (vt->getScreenOptions)
 	{
 		CompOption * o;

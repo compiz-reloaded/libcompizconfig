@@ -5,6 +5,14 @@
 #define Bool unsigned int
 #endif
 
+#ifndef TRUE
+#define TRUE ~0
+#endif
+
+#ifndef FALSE
+#define FALSE 0
+#endif
+
 #define BSLIST_HDR(type,dtype)		\
 typedef struct _BS##type##List	BS##type##List;\
 struct _BS##type##List	\
@@ -13,7 +21,8 @@ struct _BS##type##List	\
 	BS##type##List * next;		\
 }; \
 BS##type##List * bs##type##ListAppend (BS##type##List * list, dtype *data); \
-BS##type##List * bs##type##ListPrepend (BS##type##List * list, dtype *data);
+BS##type##List * bs##type##ListPrepend (BS##type##List * list, dtype *data); \
+BS##type##List * bs##type##ListFree (BS##type##List * list, Bool freeObj);
 
 typedef struct _BSContext			BSContext;
 typedef struct _BSPlugin			BSPlugin;
@@ -281,5 +290,12 @@ BSPlugin * bsFindPlugin(BSContext *context, char * name);
 BSSetting * bsFindSetting(BSPlugin *plugin, char * name,
 						  Bool isScreen, unsigned int screenNum);
 
+void bsFreeContext(BSContext *context);
+void bsFreePlugin(BSPlugin *plugin);
+void bsFreeSetting(BSSetting *setting);
+void bsFreeGroup(BSGroup *group);
+void bsFreeSubGroup(BSSubGroup *subGroup);
+void bsFreeSettingValue(BSSettingValue *value);
+#define bsFreeString(val) free(val)
 
 #endif

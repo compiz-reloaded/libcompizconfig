@@ -143,6 +143,114 @@ void collateGroups(BSPlugin * plugin)
 	{
 		groupAdd(l->data, plugin);
 		l = l->next;
+	}	
+}
+
+void bsFreeContext(BSContext *c)
+{
+	if (!c)
+		return;
+	bsPluginListFree(c->plugins, TRUE);
+	free(c);
+}
+
+void bsFreePlugin(BSPlugin *p)
+{
+	if (!p)
+		return;
+	free(p->name);
+	free(p->shortDesc);
+	free(p->longDesc);
+	free(p->hints);
+	free(p->category);
+	free(p->filename);
+	bsStringListFree(p->loadAfter, TRUE);
+	bsStringListFree(p->loadBefore, TRUE);
+	bsStringListFree(p->provides, TRUE);
+	bsStringListFree(p->requires, TRUE);
+	bsSettingListFree(p->settings, TRUE);
+	bsGroupListFree(p->groups, TRUE);
+	free(p);
+}
+
+void bsFreeSetting(BSSetting *s)
+{
+	if (!s)
+		return;
+	free(s->name);
+	free(s->shortDesc);
+	free(s->longDesc);
+	free(s->group);
+	free(s->subGroup);
+	free(s->hints);
+
+	switch (s->type)
+	{
+		case TypeString:
+			bsStringListFree(s->info.forString.allowedValues, TRUE);
+			break;
+		case TypeList:
+			if (s->info.forList.listType == TypeString)
+				bsStringListFree(s->info.forList.listInfo->
+								 forString.allowedValues, TRUE);
+			free(s->info.forList.listInfo);
+			break;
+		default:
+			break;
 	}
 	
+	if (&s->defaultValue != s->value)
+		bsFreeSettingValue(s->value);
+	bsFreeSettingValue(&s->defaultValue);
+	free (s);
+}
+
+void bsFreeGroup(BSGroup *g)
+{
+	if (!g)
+		return;
+	free(g->name);
+	bsSubGroupListFree(g->subGroups, TRUE);
+	free(g);
+}
+void bsFreeSubGroup(BSSubGroup *s)
+{
+	if (!s)
+		return;
+	free(s->name);
+	bsSettingListFree(s->settings, FALSE);
+	free(s);
+}
+
+void bsFreeSettingValue(BSSettingValue *v)
+{
+	if (!v)
+		return;
+	if (!v->parent)
+		return;
+
+	BSSettingType type = v->parent->type;
+
+	if (v->isListChild)
+		type = v->parent->info.forList.listType;
+	
+	switch (type)
+	{
+		case TypeString:
+			free(v->value.asString);
+			break;
+		case TypeMatch:
+			free(v->value.asMatch);
+			break;
+		case TypeList:
+			if (!v->isListChild)
+				bsSettingValueListFree(v->value.asList, TRUE);
+			break;
+		default:
+			break;
+	}
+	
+	
+	if (v != &v->parent->defaultValue)
+		free(v);
 }
