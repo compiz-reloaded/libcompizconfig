@@ -79,6 +79,14 @@ PKG_CHECK_MODULES(COMPIZ, "compiz")
 PKG_CHECK_MODULES(GLIB, "glib-2.0")
 PKG_CHECK_MODULES(GCONF, "gconf-2.0")
 
+if test -z "$PKG_CONFIG"; then
+    AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
+fi
+if test "$PKG_CONFIG" != "no" ; then
+	PLUGINDIR=`$PKG_CONFIG --variable=libdir compiz`/compiz
+	AC_SUBST(PLUGINDIR)
+fi
+
 AC_CONFIG_FILES([
 bsettings.pc
 Makefile

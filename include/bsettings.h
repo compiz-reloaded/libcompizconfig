@@ -5,13 +5,15 @@
 #define Bool unsigned int
 #endif
 
-#define BSLIST(type,dtype)		\
+#define BSLIST_HDR(type,dtype)		\
 typedef struct _BS##type##List	BS##type##List;\
 struct _BS##type##List	\
 {								\
 	dtype   * data;			\
 	BS##type##List * next;		\
-};
+}; \
+BS##type##List * bs##type##ListAppend (BS##type##List * list, dtype *data); \
+BS##type##List * bs##type##ListPrepend (BS##type##List * list, dtype *data);
 
 typedef struct _BSContext			BSContext;
 typedef struct _BSPlugin			BSPlugin;
@@ -23,12 +25,12 @@ typedef struct _BSBackendVTable 	BSBackendVTable;
 typedef struct _BSPluginCategory	BSPluginCategory;
 typedef struct _BSSettingValue		BSSettingValue;
 
-BSLIST(Plugin,BSPlugin)
-BSLIST(Setting,BSSetting)
-BSLIST(String,char)
-BSLIST(Group,BSGroup)
-BSLIST(SubGroup,BSSubGroup)
-BSLIST(SettingValue,BSSettingValue)
+BSLIST_HDR(Plugin,BSPlugin)
+BSLIST_HDR(Setting,BSSetting)
+BSLIST_HDR(String,char)
+BSLIST_HDR(Group,BSGroup)
+BSLIST_HDR(SubGroup,BSSubGroup)
+BSLIST_HDR(SettingValue,BSSettingValue)
 
 
 struct _BSContext
@@ -91,7 +93,7 @@ struct _BSPlugin
 	char *				hints;
 	char *				category;		// simple name
 	char *				filename;		// filename of the so
-	char *				gettextDomain;	// gettext domain for the plugin
+	
 	BSStringList *		loadAfter;
 	BSStringList *		loadBefore;
 	BSStringList *		provides;
@@ -162,7 +164,6 @@ typedef struct _BSSettingFloatInfo
 typedef struct _BSSettingStringInfo
 {
 	BSStringList *	allowed_values; //list_of(char *) in current locale
-	BSStringList *	raw_values;     //list_of(char *) in C locale
 } BSSettingStringInfo;
 
 typedef struct _BSSettingActionInfo
@@ -273,5 +274,9 @@ struct _BSPluginCategory
 	const char *		longDesc;
 	BSStringList *		plugins;
 };
+
+
+BSContext * bsContextNew(void);
+
 
 #endif
