@@ -163,7 +163,7 @@ typedef struct _BSSettingFloatInfo
 
 typedef struct _BSSettingStringInfo
 {
-	BSStringList *	allowed_values; //list_of(char *) in current locale
+	BSStringList *	allowedValues; //list_of(char *) in current locale
 } BSSettingStringInfo;
 
 typedef struct _BSSettingActionInfo
@@ -257,9 +257,9 @@ struct _BSSetting
 	BSSettingInfo		info;
 	char *				group;		// in current locale
 	char *				subGroup;		// in current locale
-	char * 				displayHints;	// in current locale
+	char * 				hints;	// in current locale
 
-	BSSettingValue		default_value;
+	BSSettingValue		defaultValue;
 	BSSettingValue *	value; // = &default_value if isDefault == TRUE
 	Bool				isDefault;
 
@@ -277,6 +277,11 @@ struct _BSPluginCategory
 
 
 BSContext * bsContextNew(void);
+
+BSPlugin * bsFindPlugin(BSContext *context, char * name);
+
+BSSetting * bsFindSetting(BSPlugin *plugin, char * name,
+						  Bool isScreen, unsigned int screenNum);
 
 
 #endif

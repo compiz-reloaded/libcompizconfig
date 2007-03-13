@@ -70,3 +70,29 @@ BSContext * bsContextNew(void)
 	
 	return context;
 }
+
+BSPlugin * bsFindPlugin(BSContext *context, char * name)
+{
+	BSPluginList *l = context->plugins;
+	while (l)
+	{
+		if (!strcmp(l->data->name, name))
+			return l->data;
+		l = l->next;
+	}
+	return NULL;
+}
+
+BSSetting * bsFindSetting(BSPlugin *plugin, char * name,
+						  Bool isScreen, unsigned int screenNum)
+{
+	BSSettingList *l = plugin->settings;
+	while (l)
+	{
+		if (!strcmp(l->data->name, name) && l->data->isScreen == isScreen &&
+		    l->data->screenNum == screenNum)
+			return l->data;
+		l = l->next;
+	}
+	return NULL;
+}
