@@ -348,4 +348,10 @@ Bool bsGetMatch(BSSetting * setting, char ** data);
 Bool bsGetAction(BSSetting * setting, BSSettingActionValue * data);
 Bool bsGetList(BSSetting * setting, BSSettingValueList **data);
 
+BSSettingValueList * bsGetValueListFromStringList(BSStringList *list);
+BSStringList * bsGetStringListFromValueList(BSSettingValueList *list);
+
+char ** bsGetStringArrayFromList(BSStringList *list, int *num);
+BSStringList * bsGetListFromStringArray(char ** array, int num);
+
 #endif
