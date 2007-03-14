@@ -624,6 +624,124 @@ Bool bsSetAction(BSSetting * setting, BSSettingActionValue data)
 	return TRUE;
 }
 
+static Bool bsCompareLists(BSSettingValueList * l1, BSSettingValueList * l2,
+						  BSSettingListInfo info)
+{
+	while (l1 && l2)
+	{
+		switch(info.listType)
+		{
+			case TypeInt:
+				if (l1->data->value.asInt != l2->data->value.asInt)
+					return FALSE;
+				break;
+			case TypeBool:
+				if (l1->data->value.asBool != l2->data->value.asBool)
+					return FALSE;
+				break;
+			case TypeFloat:
+				if (l1->data->value.asFloat != l2->data->value.asFloat)
+					return FALSE;
+				break;
+			case TypeString:
+				if (strcmp(l1->data->value.asString, l2->data->value.asString))
+					return FALSE;
+				break;
+			case TypeMatch:
+				if (strcmp(l1->data->value.asMatch, l2->data->value.asMatch))
+					return FALSE;
+				break;
+			case TypeAction:
+				if (memcmp(&l1->data->value.asAction, &l2->data->value.asAction,
+						   sizeof(BSSettingActionValue)))
+					return FALSE;
+				break;
+			case TypeColor:
+				if (memcmp(&l1->data->value.asColor, &l2->data->value.asColor,
+						   sizeof(BSSettingColorValue)))
+					return FALSE;
+				break;
+			default:
+				return FALSE;
+				break;
+		}
+		l1 = l1->next;
+		l2 = l2->next;
+	}
+	if ((!l1 && l2) || (l1 && !l2))
+		return FALSE;
+	return TRUE;
+}
+
+static BSSettingValueList * bsCopyList(BSSettingValueList * l1, BSSettingListInfo info)
+{
+	BSSettingValueList * l2 = NULL;
+	while (l1)
+	{
+		NEW(BSSettingValue, value);
+		value->parent = l1->data->parent;
+		value->isListChild = TRUE;
+		switch(info.listType)
+		{
+			case TypeInt:
+				value->value.asInt = l1->data->value.asInt;
+				break;
+			case TypeBool:
+				value->value.asBool = l1->data->value.asBool;
+				break;
+			case TypeFloat:
+				value->value.asFloat = l1->data->value.asFloat;
+				break;
+			case TypeString:
+				value->value.asString = strdup(l1->data->value.asString);
+				break;
+			case TypeMatch:
+				value->value.asMatch = strdup(l1->data->value.asMatch);
+				break;
+			case TypeAction:
+				memcpy(&value->value.asAction, &l1->data->value.asAction,
+					   sizeof(BSSettingActionValue));
+				break;
+			case TypeColor:
+				memcpy(&value->value.asColor, &l1->data->value.asColor,
+					   sizeof(BSSettingColorValue));
+				break;
+			default:
+				return FALSE;
+				break;
+		}
+		l2 = bsSettingValueListAppend(l2, value);
+		l1 = l1->next;
+	}
+	
+	return l2;
+}
+
+Bool bsSetList(BSSetting * setting, BSSettingValueList * data)
+{
+	if (setting->type != TypeList)
+		return FALSE;
+
+	Bool isDefault = bsCompareLists(setting->defaultValue.value.asList, data,
+								   setting->info.forList);
+	
+	if (setting->isDefault && isDefault)
+		return TRUE;
+
+	if (!setting->isDefault && isDefault)
+	{
+		resetToDefault(setting);
+		return TRUE;
+	}
+
+	if (setting->isDefault)
+		copyFromDefault(setting);
+
+	bsSettingValueListFree(setting->value->value.asList, TRUE);
+	setting->value->value.asList = bsCopyList(data, setting->info.forList);
+
+	return TRUE;
+}
 
 Bool bsGetInt(BSSetting * setting, int *data)
 {
