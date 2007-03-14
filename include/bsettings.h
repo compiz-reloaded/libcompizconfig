@@ -354,4 +354,20 @@ BSStringList * bsGetStringListFromValueList(BSSettingValueList *list);
 char ** bsGetStringArrayFromList(BSStringList *list, int *num);
 BSStringList * bsGetListFromStringArray(char ** array, int num);
 
+char ** bsGetStringArrayFromValueList(BSSettingValueList *list, int *num);
+char ** bsGetMatchArrayFromValueList(BSSettingValueList *list, int *num);
+int * bsGetIntArrayFromValueList(BSSettingValueList *list, int *num);
+float * bsGetFloatArrayFromValueList(BSSettingValueList *list, int *num);
+Bool * bsGetBoolArrayFromValueList(BSSettingValueList *list, int *num);
+BSSettingColorValue * bsGetColorArrayFromValueList(BSSettingValueList *list, int *num);
+BSSettingActionValue * bsGetActionArrayFromValueList(BSSettingValueList *list, int *num);
+
+BSSettingValueList * bsGetValueListFromStringArray(char ** array, int num);
+BSSettingValueList * bsGetValueListFromMatchArray(char ** array, int num);
+BSSettingValueList * bsGetValueListFromIntArray(int * array, int num);
+BSSettingValueList * bsGetValueListFromFloatArray(float * array, int num);
+BSSettingValueList * bsGetValueListFromBoolArray(Bool * array, int num);
+BSSettingValueList * bsGetValueListFromColorArray(BSSettingColorValue * array, int num);
+BSSettingValueList * bsGetValueListFromActionArray(BSSettingActionValue * array, int num);
+
 #endif
