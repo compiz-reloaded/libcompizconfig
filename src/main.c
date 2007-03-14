@@ -373,6 +373,77 @@ Bool bsSetBackend(BSContext *context, char *name)
 	return TRUE;
 }
 
+
+int bsSetInt(BSSettingValue * value, int data)
+{
+	if (!(value->parent->type == TypeInt))
+		return 0;
+	
+	value->value.asInt = data;
+	return 1;
+} 
+
+int bsSetFloat(BSSettingValue * value, float data)
+{
+	if (!(value->parent->type == TypeFloat))
+		return 0;
+	
+	value->value.asFloat = data;
+	return 1;
+}
+
+int bsSetBool(BSSettingValue * value, Bool data)
+{
+	if (!(value->parent->type = TypeBool))
+		return 0;
+	
+	value->value.asBool = data;
+	return 1;
+}
+
+int bsSetString(BSSettingValue * value, const char * data)
+{
+	if (!(value->parent->type = TypeString))
+		return 0;
+	
+	if (value->value.asString)
+		free(value->value.asString);
+	value->value.asString = strdup(data);
+
+	return 1;
+	
+}
+
+int bsSetColor(BSSettingValue * value, BSSettingColorValue data)
+{
+	if (!(value->parent->type = TypeColor))
+		return 0;
+	
+	
+	value->value.asColor = data;
+	return 1;
+	
+}
+int bsSetMatch(BSSettingValue * value, const char * data)
+{
+	if (!(value->parent->type = TypeMatch))
+		return 0;
+	
+	if (value->value.asMatch)
+		free(value->value.asMatch);
+	value->value.asMatch = strdup(data);
+	
+	return 1;
+}
+int bsSetAction(BSSettingValue * value, BSSettingActionValue data)
+{
+	if (!(value->parent->type = TypeAction))
+		return 0;
+	
+	value->value.asAction = data;
+	return 1;
+}
+
 void bsContextDestroy(BSContext * context)
 {
 	if (context->backend)
