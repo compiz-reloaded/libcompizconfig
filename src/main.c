@@ -300,7 +300,7 @@ static void * openBackend(char * backend)
 	
 	if (home && strlen(home))
 	{
-		asprintf(&dlname, "%s/.compiz/backends/lib%s.so",home,backend);
+		asprintf(&dlname, "%s/.bsettings/backends/lib%s.so",home,backend);
 		
 		err = dlerror();
 		if (err)
@@ -313,7 +313,7 @@ static void * openBackend(char * backend)
 	if (err || !dlhand)
 	{
 		free(dlname);
-		asprintf(&dlname, "%s/backends/lib%s.so",PLUGINDIR,backend);
+		asprintf(&dlname, "%s/bsettings/backends/lib%s.so",LIBDIR,backend);
 		dlhand = dlopen(dlname,RTLD_NOW);
 		err = dlerror();
 	}
