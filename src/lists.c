@@ -166,3 +166,211 @@ BSStringList * bsGetListFromStringArray(char ** array, int num)
 		rv = bsStringListAppend(rv, strdup(array[i]));
 	return rv;
 }
+
+char ** bsGetStringArrayFromValueList(BSSettingValueList *list, int *num)
+{
+	char ** rv = NULL;
+	int length = bsSettingValueListLength(list);
+	int i;
+	
+	if (length)
+		rv = malloc(length * sizeof(int));
+
+	for (i = 0; i < length; i++, list = list->next)
+		rv[i] = strdup(list->data->value.asString);
+	*num = length;
+	return rv;
+}
+
+char ** bsGetMatchArrayFromValueList(BSSettingValueList *list, int *num)
+{
+	char ** rv = NULL;
+	int length = bsSettingValueListLength(list);
+	int i;
+	
+	if (length)
+		rv = malloc(length * sizeof(int));
+
+	for (i = 0; i < length; i++, list = list->next)
+		rv[i] = strdup(list->data->value.asMatch);
+	*num = length;
+	return rv;
+}
+
+int * bsGetIntArrayFromValueList(BSSettingValueList *list, int *num)
+{
+	int * rv = NULL;
+	int length = bsSettingValueListLength(list);
+	int i;
+	
+	if (length)
+		rv = malloc(length * sizeof(int));
+
+	for (i = 0; i < length; i++, list = list->next)
+		rv[i] = list->data->value.asInt;
+	*num = length;
+	return rv;
+}
+
+float * bsGetFloatArrayFromValueList(BSSettingValueList *list, int *num)
+{
+	float * rv = NULL;
+	int length = bsSettingValueListLength(list);
+	int i;
+	
+	if (length)
+		rv = malloc(length * sizeof(float));
+
+	for (i = 0; i < length; i++, list = list->next)
+		rv[i] = list->data->value.asFloat;
+	*num = length;
+	return rv;
+}
+
+Bool * bsGetBoolArrayFromValueList(BSSettingValueList *list, int *num)
+{
+	Bool * rv = NULL;
+	int length = bsSettingValueListLength(list);
+	int i;
+	
+	if (length)
+		rv = malloc(length * sizeof(Bool));
+
+	for (i = 0; i < length; i++, list = list->next)
+		rv[i] = list->data->value.asBool;
+	*num = length;
+	return rv;
+}
+
+BSSettingColorValue * bsGetColorArrayFromValueList(BSSettingValueList *list,
+												   int *num)
+{
+	BSSettingColorValue * rv = NULL;
+	int length = bsSettingValueListLength(list);
+	int i;
+	
+	if (length)
+		rv = malloc(length * sizeof(BSSettingColorValue));
+
+	for (i = 0; i < length; i++, list = list->next)
+		memcpy(&rv[i], &list->data->value.asColor, sizeof(BSSettingColorValue));
+	*num = length;
+	return rv;
+}
+
+BSSettingActionValue * bsGetActionArrayFromValueList(BSSettingValueList *list,
+													 int *num)
+{
+	BSSettingActionValue * rv = NULL;
+	int length = bsSettingValueListLength(list);
+	int i;
+	
+	if (length)
+		rv = malloc(length * sizeof(BSSettingActionValue));
+
+	for (i = 0; i < length; i++, list = list->next)
+		memcpy(&rv[i], &list->data->value.asAction,
+			   sizeof(BSSettingActionValue));
+	*num = length;
+	return rv;
+}
+
+BSSettingValueList * bsGetValueListFromStringArray(char ** array, int num)
+{
+	BSSettingValueList *l = NULL;
+	int i;
+	for (i = 0; i < num; i++)
+	{
+		NEW(BSSettingValue, value);
+		value->isListChild = TRUE;
+		value->value.asString = strdup(array[i]);
+		l = bsSettingValueListAppend(l, value);
+	}
+	return l;
+}
+
+BSSettingValueList * bsGetValueListFromMatchArray(char ** array, int num)
+{
+	BSSettingValueList *l = NULL;
+	int i;
+	for (i = 0; i < num; i++)
+	{
+		NEW(BSSettingValue, value);
+		value->isListChild = TRUE;
+		value->value.asMatch = strdup(array[i]);
+		l = bsSettingValueListAppend(l, value);
+	}
+	return l;
+}
+
+BSSettingValueList * bsGetValueListFromIntArray(int * array, int num)
+{
+	BSSettingValueList *l = NULL;
+	int i;
+	for (i = 0; i < num; i++)
+	{
+		NEW(BSSettingValue, value);
+		value->isListChild = TRUE;
+		value->value.asInt = array[i];
+		l = bsSettingValueListAppend(l, value);
+	}
+	return l;
+}
+
+BSSettingValueList * bsGetValueListFromFloatArray(float * array, int num)
+{
+	BSSettingValueList *l = NULL;
+	int i;
+	for (i = 0; i < num; i++)
+	{
+		NEW(BSSettingValue, value);
+		value->isListChild = TRUE;
+		value->value.asFloat = array[i];
+		l = bsSettingValueListAppend(l, value);
+	}
+	return l;
+}
+	
+BSSettingValueList * bsGetValueListFromBoolArray(Bool * array, int num)
+{
+	BSSettingValueList *l = NULL;
+	int i;
+	for (i = 0; i < num; i++)
+	{
+		NEW(BSSettingValue, value);
+		value->isListChild = TRUE;
+		value->value.asBool = array[i];
+		l = bsSettingValueListAppend(l, value);
+	}
+	return l;
+}
+
+BSSettingValueList * bsGetValueListFromColorArray(BSSettingColorValue * array,
+												  int num)
+{
+	BSSettingValueList *l = NULL;
+	int i;
+	for (i = 0; i < num; i++)
+	{
+		NEW(BSSettingValue, value);
+		value->isListChild = TRUE;
+		value->value.asColor = array[i];
+		l = bsSettingValueListAppend(l, value);
+	}
+	return l;
+}
+
+BSSettingValueList * bsGetValueListFromActionArray(BSSettingActionValue * array,
+												   int num)
+{
+	BSSettingValueList *l = NULL;
+	int i;
+	for (i = 0; i < num; i++)
+	{
+		NEW(BSSettingValue, value);
+		value->isListChild = TRUE;
+		value->value.asAction = array[i];
+		l = bsSettingValueListAppend(l, value);
+	}
+	return l;
+}
