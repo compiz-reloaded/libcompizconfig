@@ -1011,30 +1011,31 @@ void bsReadSettings(BSContext *context)
 }
 
 #define FIELDCOMPARABLE(field1, field2) \
-	if (field1 != field2) \
-		return 0;
+	{ \
+		typeof(field1) _field2=field2; \
+		if (field1 != _field2) \
+			return 0;\
+	}
+#define FOURFIELDS(field1, field2, field3, field4) \
+	FIELDCOMPARABLE(field1, field2) \
+	FIELDCOMPARABLE(field3, field4) 
+#define EIGHTFIELDS(field1, field2, field3, field4, field5, field6, field7, field8) \
+	FOURFIELDS(field1, field2, field3, field4) \
+	FOURFIELDS(field5, field6, field7, field8)
 
 Bool bsIsEqualColor(BSSettingColorValue c1, BSSettingColorValue c2)
 {
-	FIELDCOMPARABLE(c1.color.red, c2.color.red)
-	FIELDCOMPARABLE(c1.color.blue, c2.color.blue)
-	FIELDCOMPARABLE(c1.color.green, c2.color.green)
-	FIELDCOMPARABLE(c1.color.alpha,c2.color.alpha)
-	FIELDCOMPARABLE(c1.array.array[0],c2.array.array[0])
-	FIELDCOMPARABLE(c1.array.array[1],c2.array.array[1])
-	FIELDCOMPARABLE(c1.array.array[2],c2.array.array[2])
-	FIELDCOMPARABLE(c1.array.array[3],c2.array.array[3])
+	EIGHTFIELDS(c1.color.red, c2.color.red, c1.color.blue, c2.color.blue, c1.color.green, c2.color.green, c1.color.alpha, c2.color.alpha)
+	EIGHTFIELDS(c1.array.array[0], c2.array.array[0], c1.array.array[1], c2.array.array[1], c1.array.array[2], c2.array.array[2], 
+	c1.array.array[3], c2.array.array[3])
+
 	return 1;
 }
 
 Bool bsIsEqualAction(BSSettingActionValue c1, BSSettingActionValue c2)
 {
-	FIELDCOMPARABLE(c1.button, c2.button)
-	FIELDCOMPARABLE(c1.buttonModMask, c2.buttonModMask)
-	FIELDCOMPARABLE(c1.keysym, c2.keysym)
-	FIELDCOMPARABLE(c1.keyModMask, c2.keyModMask)
-	FIELDCOMPARABLE(c1.onBell, c2.onBell)
-	FIELDCOMPARABLE(c1.edgeMask, c2.edgeMask)
+	EIGHTFIELDS(c1.button, c2.button, c1.buttonModMask, c2.buttonModMask, c1.keysym, c2.keysym, c1.keyModMask, c2.keyModMask)
+	FOURFIELDS(c1.onBell, c2.onBell, c1.edgeMask, c2.edgeMask)
 	return 1;
 }
 
