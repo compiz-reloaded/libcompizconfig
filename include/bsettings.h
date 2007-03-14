@@ -307,6 +307,7 @@ struct _BSPluginCategory
 
 
 BSContext * bsContextNew(void);
+void bsContextDestroy(BSContext * context);
 
 BSPlugin * bsFindPlugin(BSContext *context, char * name);
 

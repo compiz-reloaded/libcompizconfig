@@ -372,3 +372,16 @@ Bool bsSetBackend(BSContext *context, char *name)
 
 	return TRUE;
 }
+
+void bsContextDestroy(BSContext * context)
+{
+	if (context->backend)
+	{
+		if (context->backend->vTable->backendFini)
+			context->backend->vTable->backendFini(context);
+		dlclose(context->backend->dlhand);
+		free(context->backend);
+		context->backend = NULL;
+	}
+	bsFreeContext(context);
+}
