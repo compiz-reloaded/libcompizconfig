@@ -419,6 +419,12 @@ static void copyFromDefault(BSSetting *setting)
 
 Bool bsSetInt(BSSettingValue * value, int data)
 {
+	if (value->parent->isDefault && (value->parent->defaultValue.value.asInt == data))
+		return 1;
+	
+	value->parent->isDefault = FALSE;
+	copyValue(&value->parent->defaultValue, value);
+	
 	if (!(value->parent->type == TypeInt))
 		return 0;
 	
@@ -428,6 +434,11 @@ Bool bsSetInt(BSSettingValue * value, int data)
 
 Bool bsSetFloat(BSSettingValue * value, float data)
 {
+	if (value->parent->isDefault && (value->parent->defaultValue.value.asFloat == data))
+		return 1;
+	value->parent->isDefault = FALSE;
+	copyValue(&value->parent->defaultValue, value);
+
 	if (!(value->parent->type == TypeFloat))
 		return 0;
 	
@@ -437,6 +448,11 @@ Bool bsSetFloat(BSSettingValue * value, float data)
 
 Bool bsSetBool(BSSettingValue * value, Bool data)
 {
+	if (value->parent->isDefault && (value->parent->defaultValue.value.asBool == data))
+		return 1;
+	value->parent->isDefault = FALSE;
+	copyValue(&value->parent->defaultValue, value);	
+
 	if (!(value->parent->type = TypeBool))
 		return 0;
 	
@@ -446,6 +462,14 @@ Bool bsSetBool(BSSettingValue * value, Bool data)
 
 Bool bsSetString(BSSettingValue * value, const char * data)
 {
+
+	const char * defaultValue = strdup(value->parent->defaultValue.value.asString);
+	if (value->parent->isDefault && (strcmp(defaultValue, data)))	
+		return 1;
+	
+	value->parent->isDefault = FALSE;
+	copyValue(&value->parent->defaultValue, value);
+
 	if (!(value->parent->type = TypeString))
 		return 0;
 	
@@ -459,6 +483,12 @@ Bool bsSetString(BSSettingValue * value, const char * data)
 
 Bool bsSetColor(BSSettingValue * value, BSSettingColorValue data)
 {
+	BSSettingColorValue defaultValue = value->parent->defaultValue.value.asColor;
+	if (value->parent->isDefault && (memcmp(&defaultValue, &data, sizeof(BSSettingColorValue))))
+		return 1;
+	value->parent->isDefault = FALSE;
+	copyValue(&value->parent->defaultValue, value);	
+
 	if (!(value->parent->type = TypeColor))
 		return 0;
 	
@@ -469,6 +499,14 @@ Bool bsSetColor(BSSettingValue * value, BSSettingColorValue data)
 }
 Bool bsSetMatch(BSSettingValue * value, const char * data)
 {
+	const char * defaultValue = strdup(value->parent->defaultValue.value.asMatch);
+	if (value->parent->isDefault && (strcmp(defaultValue, data)))	
+		return 1;
+	value->parent->isDefault = FALSE;
+
+	copyValue(&value->parent->defaultValue, value);
+
+
 	if (!(value->parent->type = TypeMatch))
 		return 0;
 	
@@ -480,6 +518,13 @@ Bool bsSetMatch(BSSettingValue * value, const char * data)
 }
 Bool bsSetAction(BSSettingValue * value, BSSettingActionValue data)
 {
+	BSSettingActionValue defaultValue = value->parent->defaultValue.value.asAction;
+	
+	if (value->parent->isDefault && (memcmp(&defaultValue, &data, sizeof(BSSettingActionValue))))
+		return 1;
+	value->parent->isDefault = FALSE;
+	copyValue(&value->parent->defaultValue, value);	
+
 	if (!(value->parent->type = TypeAction))
 		return 0;
 	
