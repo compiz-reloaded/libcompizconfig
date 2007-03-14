@@ -426,11 +426,6 @@ static void resetToDefault(BSSetting *setting)
 	setting->isDefault = TRUE;
 }
 
-static BSSettingInfo * getSettingInfo(BSSetting *setting)
-{
-		return &setting->info;
-}
-
 Bool bsSetInt(BSSetting * setting, int data)
 {
 	if (setting->type != TypeInt)
@@ -445,8 +440,8 @@ Bool bsSetInt(BSSetting * setting, int data)
 		return TRUE;
 	}
 	
-	BSSettingInfo *info = getSettingInfo(setting);
-	if ((data < info->forInt.min) || (data > info->forInt.max))
+	if ((data < setting->info.forInt.min) || 
+	    (data > setting->info.forInt.max))
 		return FALSE;
 
 	if (setting->isDefault)
@@ -470,8 +465,8 @@ Bool bsSetFloat(BSSetting * setting, float data)
 		return TRUE;
 	}
 	
-	BSSettingInfo *info = getSettingInfo(setting);
-	if ((data < info->forFloat.min) || (data > info->forFloat.max))
+	if ((data < setting->info.forFloat.min) || 
+		(data > setting->info.forFloat.max))
 		return FALSE;
 
 	if (setting->isDefault)
@@ -518,9 +513,7 @@ Bool bsSetString(BSSetting * setting, const char * data)
 		return TRUE;
 	}
 	
-	BSSettingInfo *info = getSettingInfo(setting);
-	BSStringList *allowed = info->forString.allowedValues;
-
+	BSStringList *allowed = setting->info.forString.allowedValues;
 	while (allowed)
 	{
 		if (strcmp(allowed->data, data) == 0)
@@ -610,90 +603,88 @@ Bool bsSetAction(BSSetting * setting, BSSettingActionValue data)
 	if (setting->isDefault)
 		copyFromDefault(setting);
 
-	BSSettingInfo *info = getSettingInfo(setting);
-
-	if (info->forAction.key)
+	if (setting->info.forAction.key)
 	{
 		setting->value->value.asAction.keysym = data.keysym;
 		setting->value->value.asAction.keyModMask = data.keyModMask;
 	}
-	if (info->forAction.button)
+	if (setting->info.forAction.button)
 	{
 		setting->value->value.asAction.button = data.button;
 		setting->value->value.asAction.buttonModMask = data.buttonModMask;
 	}
-	if (info->forAction.edge)
+	if (setting->info.forAction.edge)
 	{
 		setting->value->value.asAction.edgeButton = data.edgeButton;
 		setting->value->value.asAction.edgeMask = data.edgeMask;
 	}
-	if (info->forAction.bell)
+	if (setting->info.forAction.bell)
 	    setting->value->value.asAction.onBell = data.onBell;
 
 	return TRUE;
 }
 
 
-Bool bsGetInt(BSSettingValue * value, int *data)
+Bool bsGetInt(BSSetting * setting, int *data)
 {
-	if (value->parent->type != TypeInt)
+	if (setting->type != TypeInt)
 		return FALSE;
 
-	*data = value->value.asInt;
+	*data = setting->value->value.asInt;
 	return TRUE;
 } 
 
-Bool bsGetFloat(BSSettingValue * value, float *data)
+Bool bsGetFloat(BSSetting * setting, float *data)
 {
-	if (value->parent->type != TypeFloat)
+	if (setting->type != TypeFloat)
 		return FALSE;
 	
-	*data = value->value.asFloat;
+	*data = setting->value->value.asFloat;
 	return TRUE;
 }
 
-Bool bsGetBool(BSSettingValue * value, Bool *data)
+Bool bsGetBool(BSSetting * setting, Bool *data)
 {
-	if (value->parent->type != TypeBool)
+	if (setting->type != TypeBool)
 		return FALSE;
 	
-	*data = value->value.asBool;
+	*data = setting->value->value.asBool;
 	return TRUE;
 }
 
-Bool bsGetString(BSSettingValue * value, char **data)
+Bool bsGetString(BSSetting * setting, char **data)
 {
-	if (value->parent->type != TypeString)
+	if (setting->type != TypeString)
 		return FALSE;
 
-	*data = value->value.asString;
+	*data = setting->value->value.asString;
 	return TRUE;
 }
 
-Bool bsGetColor(BSSettingValue * value, BSSettingColorValue *data)
+Bool bsGetColor(BSSetting * setting, BSSettingColorValue *data)
 {
-	if (value->parent->type != TypeColor)
+	if (setting->type != TypeColor)
 		return TRUE;
 
-	*data = value->value.asColor;
+	*data = setting->value->value.asColor;
 	return TRUE;
 }
 
-Bool bsGetMatch(BSSettingValue * value, char **data)
+Bool bsGetMatch(BSSetting * setting, char **data)
 {
-	if (value->parent->type != TypeMatch)
+	if (setting->type != TypeMatch)
 		return FALSE;
 
-	*data = value->value.asMatch;
+	*data = setting->value->value.asMatch;
 	return TRUE;
 }
 
-Bool bsGetAction(BSSettingValue * value, BSSettingActionValue *data)
+Bool bsGetAction(BSSetting * setting, BSSettingActionValue *data)
 {
-	if (value->parent->type != TypeAction)
+	if (setting->type != TypeAction)
 		return FALSE;
 	
-	*data = value->value.asAction;
+	*data = setting->value->value.asAction;
 	return TRUE;
 }
 

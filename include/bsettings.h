@@ -330,20 +330,20 @@ void bsFreeSubGroup(BSSubGroup *subGroup);
 void bsFreeSettingValue(BSSettingValue *value);
 #define bsFreeString(val) free(val)
 
-Bool bsSetInt(BSSettingValue * value, int data);
-Bool bsSetFloat(BSSettingValue * value, float data);
-Bool bsSetBool(BSSettingValue * value, Bool data);
-Bool bsSetString(BSSettingValue * value, const char * data);
-Bool bsSetColor(BSSettingValue * value, BSSettingColorValue data);
-Bool bsSetMatch(BSSettingValue * value, const char * data); 
-Bool bsSetAction(BSSettingValue * value, BSSettingActionValue data);
+Bool bsSetInt(BSSetting * setting, int data);
+Bool bsSetFloat(BSSetting * setting, float data);
+Bool bsSetBool(BSSetting * setting, Bool data);
+Bool bsSetString(BSSetting * setting, const char * data);
+Bool bsSetColor(BSSetting * setting, BSSettingColorValue data);
+Bool bsSetMatch(BSSetting * setting, const char * data); 
+Bool bsSetAction(BSSetting * setting, BSSettingActionValue data);
 
-Bool bsGetInt(BSSettingValue * value, int * data);
-Bool bsGetFloat(BSSettingValue * value, float * data);
-Bool bsGetBool(BSSettingValue * value, Bool * data);
-Bool bsGetString(BSSettingValue * value, char ** data);
-Bool bsGetColor(BSSettingValue * value, BSSettingColorValue * data);
-Bool bsGetMatch(BSSettingValue * value, char ** data); 
-Bool bsGetAction(BSSettingValue * value, BSSettingActionValue * data);
+Bool bsGetInt(BSSetting * setting, int * data);
+Bool bsGetFloat(BSSetting * setting, float * data);
+Bool bsGetBool(BSSetting * setting, Bool * data);
+Bool bsGetString(BSSetting * setting, char ** data);
+Bool bsGetColor(BSSetting * setting, BSSettingColorValue * data);
+Bool bsGetMatch(BSSetting * setting, char ** data); 
+Bool bsGetAction(BSSetting * setting, BSSettingActionValue * data);
 
 #endif
