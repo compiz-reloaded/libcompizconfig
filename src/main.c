@@ -483,10 +483,7 @@ Bool bsSetString(BSSettingValue * value, const char * data)
 	if (value->parent->type != TypeString)
 		return FALSE;
 	
-	char * defaultValue = strdup(value->parent->defaultValue.value.asString);
-	Bool equalsDefault = strcmp(defaultValue, data) == 0;
-	free(defaultValue);
-
+	Bool equalsDefault = strcmp(value->parent->defaultValue.value.asString, data) == 0;
 	if (value->parent->isDefault && equalsDefault)
 		return TRUE;
 	
@@ -538,10 +535,7 @@ Bool bsSetMatch(BSSettingValue * value, const char * data)
 	if (value->parent->type != TypeMatch)
 		return FALSE;
 	
-	char * defaultValue = strdup(value->parent->defaultValue.value.asMatch);
-	Bool equalsDefault = strcmp(defaultValue, data) == 0;
-	free(defaultValue);
-
+	Bool equalsDefault = strcmp(value->parent->defaultValue.value.asMatch, data) == 0;
 	if (value->parent->isDefault && equalsDefault)
 		return TRUE;
 
