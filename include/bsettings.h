@@ -340,6 +340,9 @@ Bool bsSetMatch(BSSetting * setting, const char * data);
 Bool bsSetAction(BSSetting * setting, BSSettingActionValue data);
 Bool bsSetList(BSSetting * setting, BSSettingValueList data);
 
+Bool bsIsEqualColor(BSSettingColorValue c1, BSSettingColorValue c2);
+Bool bsIsEqualAction(BSSettingActionValue c1, BSSettingActionValue c2);
+
 Bool bsGetInt(BSSetting * setting, int * data);
 Bool bsGetFloat(BSSetting * setting, float * data);
 Bool bsGetBool(BSSetting * setting, Bool * data);

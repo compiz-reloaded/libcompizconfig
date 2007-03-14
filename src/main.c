@@ -545,7 +545,7 @@ Bool bsSetColor(BSSetting * setting, BSSettingColorValue data)
 		return FALSE;
 	
 	BSSettingColorValue defValue = setting->defaultValue.value.asColor;
-	Bool isDefault = memcmp(&defValue, &data, sizeof(BSSettingColorValue)) == 0;
+	Bool isDefault = bsIsEqualColor(defValue, data);
 
 	if (setting->isDefault && isDefault)
 		return TRUE;
@@ -596,8 +596,7 @@ Bool bsSetAction(BSSetting * setting, BSSettingActionValue data)
 		return FALSE;
 	
 	BSSettingActionValue defValue = setting->defaultValue.value.asAction;
-	Bool isDefault =
-			memcmp(&defValue, &data, sizeof(BSSettingActionValue)) == 0;
+	Bool isDefault = bsIsEqualAction(data, defValue);
 	
 	if (setting->isDefault && isDefault)
 		return TRUE;
@@ -660,13 +659,11 @@ static Bool bsCompareLists(BSSettingValueList l1, BSSettingValueList l2,
 					return FALSE;
 				break;
 			case TypeAction:
-				if (memcmp(&l1->data->value.asAction, &l2->data->value.asAction,
-						   sizeof(BSSettingActionValue)))
+				if (!bsIsEqualAction(l1->data->value.asAction, l2->data->value.asAction))
 					return FALSE;
 				break;
 			case TypeColor:
-				if (memcmp(&l1->data->value.asColor, &l2->data->value.asColor,
-						   sizeof(BSSettingColorValue)))
+				if (!bsIsEqualColor(l1->data->value.asColor, l2->data->value.asColor))
 					return FALSE;
 				break;
 			default:
@@ -988,4 +985,31 @@ void bsProcessEvents(BSContext *context)
 		(*context->backend->vTable->executeEvents)();
 }
 
+#define FIELDCOMPARABLE(field1, field2) \
+	if (field1 != field2) \
+		return 0;
+
+Bool bsIsEqualColor(BSSettingColorValue c1, BSSettingColorValue c2)
+{
+	FIELDCOMPARABLE(c1.color.red, c2.color.red)
+	FIELDCOMPARABLE(c1.color.blue, c2.color.blue)
+	FIELDCOMPARABLE(c1.color.green, c2.color.green)
+	FIELDCOMPARABLE(c1.color.alpha,c2.color.alpha)
+	FIELDCOMPARABLE(c1.array.array[0],c2.array.array[0])
+	FIELDCOMPARABLE(c1.array.array[1],c2.array.array[1])
+	FIELDCOMPARABLE(c1.array.array[2],c2.array.array[2])
+	FIELDCOMPARABLE(c1.array.array[3],c2.array.array[3])
+	return 1;
+}
+
+Bool bsIsEqualAction(BSSettingActionValue c1, BSSettingActionValue c2)
+{
+	FIELDCOMPARABLE(c1.button, c2.button)
+	FIELDCOMPARABLE(c1.buttonModMask, c2.buttonModMask)
+	FIELDCOMPARABLE(c1.keysym, c2.keysym)
+	FIELDCOMPARABLE(c1.keyModMask, c2.keyModMask)
+	FIELDCOMPARABLE(c1.onBell, c2.onBell)
+	FIELDCOMPARABLE(c1.edgeMask, c2.edgeMask)
+	return 1;
+}
 
