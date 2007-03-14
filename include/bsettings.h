@@ -346,5 +346,6 @@ Bool bsGetString(BSSetting * setting, char ** data);
 Bool bsGetColor(BSSetting * setting, BSSettingColorValue * data);
 Bool bsGetMatch(BSSetting * setting, char ** data); 
 Bool bsGetAction(BSSetting * setting, BSSettingActionValue * data);
+Bool bsGetList(BSSetting * setting, BSSettingValueList **data);
 
 #endif

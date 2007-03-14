@@ -673,15 +673,16 @@ static Bool bsCompareLists(BSSettingValueList * l1, BSSettingValueList * l2,
 	return TRUE;
 }
 
-static BSSettingValueList * bsCopyList(BSSettingValueList * l1, BSSettingListInfo info)
+static BSSettingValueList * bsCopyList(BSSettingValueList * l1,
+									   BSSetting *setting)
 {
 	BSSettingValueList * l2 = NULL;
 	while (l1)
 	{
 		NEW(BSSettingValue, value);
-		value->parent = l1->data->parent;
+		value->parent = setting;
 		value->isListChild = TRUE;
-		switch(info.listType)
+		switch(setting->info.forList.listType)
 		{
 			case TypeInt:
 				value->value.asInt = l1->data->value.asInt;
@@ -738,7 +739,7 @@ Bool bsSetList(BSSetting * setting, BSSettingValueList * data)
 		copyFromDefault(setting);
 
 	bsSettingValueListFree(setting->value->value.asList, TRUE);
-	setting->value->value.asList = bsCopyList(data, setting->info.forList);
+	setting->value->value.asList = bsCopyList(data, setting);
 
 	return TRUE;
 }
@@ -803,6 +804,15 @@ Bool bsGetAction(BSSetting * setting, BSSettingActionValue *data)
 		return FALSE;
 	
 	*data = setting->value->value.asAction;
+	return TRUE;
+}
+
+Bool bsGetList(BSSetting * setting, BSSettingValueList **data)
+{
+	if (setting->type != TypeList)
+		return FALSE;
+	
+	*data = setting->value->value.asList;
 	return TRUE;
 }
 
