@@ -1,3 +1,4 @@
+
 #define _GNU_SOURCE
 #include <stdlib.h>
 #include <stdio.h>
@@ -453,7 +454,7 @@ Bool bsSetBool(BSSettingValue * value, Bool data)
 	value->parent->isDefault = FALSE;
 	copyValue(&value->parent->defaultValue, value);	
 
-	if (!(value->parent->type = TypeBool))
+	if (!(value->parent->type == TypeBool))
 		return 0;
 	
 	value->value.asBool = data;
@@ -470,7 +471,7 @@ Bool bsSetString(BSSettingValue * value, const char * data)
 	value->parent->isDefault = FALSE;
 	copyValue(&value->parent->defaultValue, value);
 
-	if (!(value->parent->type = TypeString))
+	if (!(value->parent->type == TypeString))
 		return 0;
 	
 	if (value->value.asString)
@@ -489,7 +490,7 @@ Bool bsSetColor(BSSettingValue * value, BSSettingColorValue data)
 	value->parent->isDefault = FALSE;
 	copyValue(&value->parent->defaultValue, value);	
 
-	if (!(value->parent->type = TypeColor))
+	if (!(value->parent->type == TypeColor))
 		return 0;
 	
 	
@@ -507,7 +508,7 @@ Bool bsSetMatch(BSSettingValue * value, const char * data)
 	copyValue(&value->parent->defaultValue, value);
 
 
-	if (!(value->parent->type = TypeMatch))
+	if (!(value->parent->type == TypeMatch))
 		return 0;
 	
 	if (value->value.asMatch)
@@ -525,7 +526,7 @@ Bool bsSetAction(BSSettingValue * value, BSSettingActionValue data)
 	value->parent->isDefault = FALSE;
 	copyValue(&value->parent->defaultValue, value);	
 
-	if (!(value->parent->type = TypeAction))
+	if (!(value->parent->type == TypeAction))
 		return 0;
 	
 	value->value.asAction = data;
