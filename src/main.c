@@ -374,7 +374,7 @@ Bool bsSetBackend(BSContext *context, char *name)
 }
 
 
-int bsSetInt(BSSettingValue * value, int data)
+Bool bsSetInt(BSSettingValue * value, int data)
 {
 	if (!(value->parent->type == TypeInt))
 		return 0;
@@ -383,7 +383,7 @@ int bsSetInt(BSSettingValue * value, int data)
 	return 1;
 } 
 
-int bsSetFloat(BSSettingValue * value, float data)
+Bool bsSetFloat(BSSettingValue * value, float data)
 {
 	if (!(value->parent->type == TypeFloat))
 		return 0;
@@ -392,7 +392,7 @@ int bsSetFloat(BSSettingValue * value, float data)
 	return 1;
 }
 
-int bsSetBool(BSSettingValue * value, Bool data)
+Bool bsSetBool(BSSettingValue * value, Bool data)
 {
 	if (!(value->parent->type = TypeBool))
 		return 0;
@@ -401,7 +401,7 @@ int bsSetBool(BSSettingValue * value, Bool data)
 	return 1;
 }
 
-int bsSetString(BSSettingValue * value, const char * data)
+Bool bsSetString(BSSettingValue * value, const char * data)
 {
 	if (!(value->parent->type = TypeString))
 		return 0;
@@ -414,7 +414,7 @@ int bsSetString(BSSettingValue * value, const char * data)
 	
 }
 
-int bsSetColor(BSSettingValue * value, BSSettingColorValue data)
+Bool bsSetColor(BSSettingValue * value, BSSettingColorValue data)
 {
 	if (!(value->parent->type = TypeColor))
 		return 0;
@@ -424,7 +424,7 @@ int bsSetColor(BSSettingValue * value, BSSettingColorValue data)
 	return 1;
 	
 }
-int bsSetMatch(BSSettingValue * value, const char * data)
+Bool bsSetMatch(BSSettingValue * value, const char * data)
 {
 	if (!(value->parent->type = TypeMatch))
 		return 0;
@@ -435,7 +435,7 @@ int bsSetMatch(BSSettingValue * value, const char * data)
 	
 	return 1;
 }
-int bsSetAction(BSSettingValue * value, BSSettingActionValue data)
+Bool bsSetAction(BSSettingValue * value, BSSettingActionValue data)
 {
 	if (!(value->parent->type = TypeAction))
 		return 0;
