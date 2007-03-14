@@ -985,6 +985,31 @@ void bsProcessEvents(BSContext *context)
 		(*context->backend->vTable->executeEvents)();
 }
 
+void bsReadSettings(BSContext *context)
+{
+	if (!context || !context->backend)
+		return;
+	if (!context->backend->vTable->readSetting)
+		return;
+	
+	if (context->backend->vTable->readInit)
+		if (!(*context->backend->vTable->readInit)(context))
+			return;
+	BSPluginList pl = context->plugins;
+	while (pl)
+	{
+		BSSettingList sl = pl->data->settings;
+		while (sl)
+		{
+			(*context->backend->vTable->readSetting)(context, sl->data);
+			sl = sl->next;
+		}	
+		pl = pl->next;
+	}
+	if (context->backend->vTable->readDone)
+		(*context->backend->vTable->readDone)(context);
+}
+
 #define FIELDCOMPARABLE(field1, field2) \
 	if (field1 != field2) \
 		return 0;
