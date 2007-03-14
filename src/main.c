@@ -980,4 +980,12 @@ char * bsGetProfile(BSContext *context)
 	return context->profile;
 }
 
+void bsProcessEvents(BSContext *context)
+{
+	if (!context)
+		return;
+	if (context->backend && context->backend->vTable->executeEvents)
+		(*context->backend->vTable->executeEvents)();
+}
+
 

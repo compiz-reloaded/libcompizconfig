@@ -271,7 +271,7 @@ typedef union _BSSettingValueUnion
 	char *					asMatch;
 	BSSettingActionValue	asAction;
 	BSSettingColorValue		asColor;
-	BSSettingValueList	asList;        // list_of(BerylSettingValue *)
+	BSSettingValueList		asList;        // list_of(BerylSettingValue *)
 } BSSettingValueUnion;
 
 struct _BSSettingValue
@@ -380,5 +380,7 @@ char * bsGetProfile(BSContext *context);
 //utility functions
 unsigned int bsGetModsAndEndptr(char * src, char ** ret);
 char * bsModsToString(unsigned int mods);
+
+void bsProcessEvents(BSContext *context);
 
 #endif
