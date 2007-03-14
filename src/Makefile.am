@@ -2,7 +2,8 @@ INCLUDES =			     \
 	@COMPIZ_CFLAGS@ \
 	-I$(top_srcdir)/include	     \
 	-I$(top_srcdir)/src \
-	-DPLUGINDIR=\"$(PLUGINDIR)\"
+	-DPLUGINDIR=\"$(PLUGINDIR)\" \
+	-DLIBDIR=\"$(libdir)\"
 
 
 libbsettings_la_SOURCES=main.c lists.c compiz.c match.c
