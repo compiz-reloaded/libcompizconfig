@@ -373,6 +373,49 @@ Bool bsSetBackend(BSContext *context, char *name)
 	return TRUE;
 }
 
+static void copyValue(BSSettingValue *from, BSSettingValue *to)
+{
+	memcpy(to, from, sizeof(BSSettingValue));
+	BSSettingType type = from->parent->type;
+
+	if (from->isListChild)
+		type = from->parent->info.forList.listType;
+	
+	switch (type)
+	{
+		case TypeString:
+			to->value.asString = strdup(from->value.asString);
+			break;
+		case TypeMatch:
+			to->value.asMatch = strdup(from->value.asMatch);
+			break;
+		case TypeList:
+			to->value.asList = NULL;
+			BSSettingValueList *l = from->value.asList;
+			while (l)
+			{
+				NEW(BSSettingValue, value);
+				copyValue(l->data, value);
+				to->value.asList = bsSettingValueListAppend(to->value.asList,
+															value);
+				l = l->next;
+			}
+			break;
+		default:
+			break;
+	}
+}
+
+static void copyFromDefault(BSSetting *setting)
+{
+	if (setting->value != &setting->defaultValue)
+		bsFreeSettingValue(setting->value);
+	
+	NEW(BSSettingValue, value);
+	copyValue(&setting->defaultValue, value);
+	setting->value = value;
+}
+
 
 Bool bsSetInt(BSSettingValue * value, int data)
 {
