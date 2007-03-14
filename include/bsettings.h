@@ -59,8 +59,8 @@ struct _BSContext
 
 struct _BSBackend
 {
-	void *				dlHand;
-	BSBackendVTable *	vtable;
+	void *				dlhand;
+	BSBackendVTable *	vTable;
 };
 
 typedef BSBackendVTable *(*BackendGetInfoProc) (void);
@@ -312,6 +312,8 @@ BSPlugin * bsFindPlugin(BSContext *context, char * name);
 
 BSSetting * bsFindSetting(BSPlugin *plugin, char * name,
 						  Bool isScreen, unsigned int screenNum);
+
+Bool bsSetBackend(BSContext *context, char *name);
 
 void bsFreeContext(BSContext *context);
 void bsFreePlugin(BSPlugin *plugin);

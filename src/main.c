@@ -52,6 +52,40 @@ static void loadPlugins(BSContext * context, char * path)
 	
 }
 
+static void initGeneralOptions(BSContext *context)
+{
+	/*
+	GKeyFile * f;
+	gchar * s;
+	s = g_strconcat(g_get_home_dir(),"/.beryl/libberylsettings.ini",NULL);
+	f = g_key_file_new();
+	g_key_file_load_from_file(f,s,0,NULL);
+	g_free(s);
+	GError *e = NULL;
+	context->de_integration =
+			g_key_file_get_boolean(f,"general","integration",&e);
+	if (e)
+		context->de_integration = TRUE;
+
+	s=g_key_file_get_string(f,"general","backend",NULL);
+	if (!s)
+		beryl_settings_context_set_backend(context,"ini");
+	else
+	{
+		if (!beryl_settings_context_set_backend(context,s))
+			beryl_settings_context_set_backend(context,"ini");
+		g_free(s);
+	}
+	s=g_key_file_get_string(f,"general","profile",NULL);
+	beryl_settings_context_set_profile(context,s);
+	if (s)
+		g_free(s);
+	g_key_file_free(f);
+	*/
+	context->deIntegration = FALSE;
+	bsSetBackend(context, "ini");
+}
+
 BSContext * bsContextNew(void)
 {
 
@@ -67,6 +101,8 @@ BSContext * bsContextNew(void)
 		free(homeplugins);
 	}
 	loadPlugins(context,PLUGINDIR);
+
+	initGeneralOptions(context);
 	
 	return context;
 }
@@ -253,4 +289,86 @@ void bsFreeSettingValue(BSSettingValue *v)
 	
 	if (v != &v->parent->defaultValue)
 		free(v);
+}
+
+static void * openBackend(char * backend)
+{
+	char * home = getenv("HOME");
+	void * dlhand = NULL;
+	char * dlname = NULL;
+	char * err = NULL;
+	
+	if (home && strlen(home))
+	{
+		asprintf(&dlname, "%s/.compiz/backends/lib%s.so",home,backend);
+		
+		err = dlerror();
+		if (err)
+			free(err);
+
+		dlhand = dlopen(dlname,RTLD_NOW);
+		err = dlerror();
+	}
+		
+	if (err || !dlhand)
+	{
+		free(dlname);
+		asprintf(&dlname, "%s/backends/lib%s.so",PLUGINDIR,backend);
+		dlhand = dlopen(dlname,RTLD_NOW);
+		err = dlerror();
+	}
+
+	free(dlname);
+	
+	if (err || !dlhand)
+	{
+		fprintf(stderr, "libbsettings: dlopen: %s\n",err);
+		return NULL;
+	}
+
+	free(err);
+
+	return dlhand;
+}
+
+Bool bsSetBackend(BSContext *context, char *name)
+{
+	if (context->backend)
+	{
+		if (context->backend->vTable->backendFini)
+			context->backend->vTable->backendFini(context);
+		dlclose(context->backend->dlhand);
+		free(context->backend);
+		context->backend = NULL;
+	}
+	
+	void *dlhand = openBackend(name);
+	if (!dlhand)
+		dlhand = openBackend("ini");
+
+	if (!dlhand)
+		return FALSE;
+
+	BackendGetInfoProc getInfo = dlsym(dlhand,"getBackendInfo");
+
+
+	if (!getInfo)
+	{
+		dlclose(dlhand);
+		return FALSE;
+	}
+
+	BSBackendVTable *vt = getInfo();
+
+	if (vt)
+	{
+		dlclose(dlhand);
+		return FALSE;
+	}
+	
+	context->backend = malloc(sizeof(BSBackend));
+	context->backend->dlhand = dlhand;
+	context->backend->vTable = vt;
+
+	return TRUE;
 }
