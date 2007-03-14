@@ -1,0 +1,10 @@
+
+- write a simple ini file implementation to read/write general options without
+  glib (maybe for inport/export of setting too)
+- complete list functions
+- implement all needed set/get functions
+- python bindings (and beryl-settings then)
+- active plugins list generation based on plugin loading rules
+- port ini, kconfig, gconf backend
+- settings plugin
+
