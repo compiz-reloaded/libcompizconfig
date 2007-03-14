@@ -14,20 +14,20 @@
 #endif
 
 #define BSLIST_HDR(type,dtype)		\
-typedef struct _BS##type##List	BS##type##List;\
+typedef struct _BS##type##List *	BS##type##List;\
 struct _BS##type##List	\
 {								\
 	dtype   * data;			\
-	BS##type##List * next;		\
+	BS##type##List next;		\
 }; \
-BS##type##List * bs##type##ListAppend (BS##type##List * list, dtype *data); \
-BS##type##List * bs##type##ListPrepend (BS##type##List * list, dtype *data); \
-BS##type##List * bs##type##ListInsert (BS##type##List * list, dtype *data, int position); \
-BS##type##List * bs##type##ListInsertBefore (BS##type##List  *list, BS##type##List * sibling, dtype *data); \
-unsigned int bs##type##ListLength (BS##type##List * list); \
-BS##type##List * bs##type##ListFind (BS##type##List * list, dtype *data); \
-BS##type##List * bs##type##ListGetItem (BS##type##List * list, unsigned int index); \
-BS##type##List * bs##type##ListFree (BS##type##List * list, Bool freeObj);
+BS##type##List bs##type##ListAppend (BS##type##List list, dtype *data); \
+BS##type##List bs##type##ListPrepend (BS##type##List list, dtype *data); \
+BS##type##List bs##type##ListInsert (BS##type##List list, dtype *data, int position); \
+BS##type##List bs##type##ListInsertBefore (BS##type##List list, BS##type##List sibling, dtype *data); \
+unsigned int bs##type##ListLength (BS##type##List list); \
+BS##type##List bs##type##ListFind (BS##type##List list, dtype *data); \
+BS##type##List bs##type##ListGetItem (BS##type##List list, unsigned int index); \
+BS##type##List bs##type##ListFree (BS##type##List list, Bool freeObj);
 
 typedef struct _BSContext			BSContext;
 typedef struct _BSPlugin			BSPlugin;
@@ -49,7 +49,7 @@ BSLIST_HDR(SettingValue,BSSettingValue)
 
 struct _BSContext
 {
-	BSPluginList *		plugins;
+	BSPluginList		plugins;
 	BSPluginCategory *	categories;
 	void *				privatePtr;
 
@@ -58,7 +58,7 @@ struct _BSContext
 	char *				profile;
 	Bool				deIntegration;
 
-	BSSettingList * 	changedSettings;
+	BSSettingList 	changedSettings;
 	Bool 				pluginsChanged;
 };
 
@@ -88,7 +88,7 @@ typedef void (*BSContextWriteDoneFunc) (BSContext * context);
 typedef Bool (*BSGetIsIntegratedFunc) (BSSetting * setting);
 typedef Bool (*BSGetIsReadOnlyFunc) (BSSetting * setting);
 
-typedef BSStringList * (*BSGetExistingProfilesFunc) (void);
+typedef BSStringList (*BSGetExistingProfilesFunc) (void);
 typedef Bool (*BSDeleteProfileFunc) (char * name);
 
 struct _BSBackendVTable
@@ -131,12 +131,12 @@ struct _BSPlugin
 	char *				category;		// simple name
 	char *				filename;		// filename of the so
 	
-	BSStringList *		loadAfter;
-	BSStringList *		loadBefore;
-	BSStringList *		provides;
-	BSStringList *		requires;
-	BSSettingList *		settings;
-	BSGroupList   *		groups;
+	BSStringList		loadAfter;
+	BSStringList		loadBefore;
+	BSStringList		provides;
+	BSStringList		requires;
+	BSSettingList		settings;
+	BSGroupList			groups;
 	void *				privatePtr;
 	BSContext *			context;
 };
@@ -157,13 +157,13 @@ typedef enum _BSSettingType
 struct _BSSubGroup
 {
 	char *				name;		//in current locale
-	BSSettingList *		settings;	//list of BerylSetting
+	BSSettingList		settings;	//list of BerylSetting
 };
 
 struct _BSGroup
 {
 	char *				name;		//in current locale
-	BSSubGroupList *	subGroups;	//list of BerylSettingsSubGroup
+	BSSubGroupList	subGroups;	//list of BerylSettingsSubGroup
 };
 
 typedef enum _BSConflictType
@@ -176,7 +176,7 @@ typedef enum _BSConflictType
 
 typedef struct _BSSettingConflict
 {
-	BSSettingList *		settings;	// settings that conflict over the binding
+	BSSettingList		settings;	// settings that conflict over the binding
 	BSConflictType		type;		// type of the conflict, note that a setting may show up again in another
 									// list for a different type
 } BSConflict;
@@ -198,7 +198,7 @@ typedef struct _BSSettingFloatInfo
 
 typedef struct _BSSettingStringInfo
 {
-	BSStringList *	allowedValues; //list_of(char *) in current locale
+	BSStringList	allowedValues; //list_of(char *) in current locale
 } BSSettingStringInfo;
 
 typedef struct _BSSettingActionInfo
@@ -270,7 +270,7 @@ typedef union _BSSettingValueUnion
 	char *					asMatch;
 	BSSettingActionValue	asAction;
 	BSSettingColorValue		asColor;
-	BSSettingValueList *	asList;        // list_of(BerylSettingValue *)
+	BSSettingValueList	asList;        // list_of(BerylSettingValue *)
 } BSSettingValueUnion;
 
 struct _BSSettingValue
@@ -308,7 +308,7 @@ struct _BSPluginCategory
 	const char *		name;
 	const char *		shortDesc;
 	const char *		longDesc;
-	BSStringList *		plugins;
+	BSStringList		plugins;
 };
 
 
@@ -337,7 +337,7 @@ Bool bsSetString(BSSetting * setting, const char * data);
 Bool bsSetColor(BSSetting * setting, BSSettingColorValue data);
 Bool bsSetMatch(BSSetting * setting, const char * data);
 Bool bsSetAction(BSSetting * setting, BSSettingActionValue data);
-Bool bsSetList(BSSetting * setting, BSSettingValueList * data);
+Bool bsSetList(BSSetting * setting, BSSettingValueList data);
 
 Bool bsGetInt(BSSetting * setting, int * data);
 Bool bsGetFloat(BSSetting * setting, float * data);
@@ -346,28 +346,29 @@ Bool bsGetString(BSSetting * setting, char ** data);
 Bool bsGetColor(BSSetting * setting, BSSettingColorValue * data);
 Bool bsGetMatch(BSSetting * setting, char ** data); 
 Bool bsGetAction(BSSetting * setting, BSSettingActionValue * data);
-Bool bsGetList(BSSetting * setting, BSSettingValueList **data);
+Bool bsGetList(BSSetting * setting, BSSettingValueList*data);
 
-BSSettingValueList * bsGetValueListFromStringList(BSStringList *list);
-BSStringList * bsGetStringListFromValueList(BSSettingValueList *list);
+BSSettingValueList bsGetValueListFromStringList(BSStringList list);
+BSStringList bsGetStringListFromValueList(BSSettingValueList list);
 
-char ** bsGetStringArrayFromList(BSStringList *list, int *num);
-BSStringList * bsGetListFromStringArray(char ** array, int num);
+char ** bsGetStringArrayFromList(BSStringList list, int *num);
+BSStringList bsGetListFromStringArray(char ** array, int num);
 
-char ** bsGetStringArrayFromValueList(BSSettingValueList *list, int *num);
-char ** bsGetMatchArrayFromValueList(BSSettingValueList *list, int *num);
-int * bsGetIntArrayFromValueList(BSSettingValueList *list, int *num);
-float * bsGetFloatArrayFromValueList(BSSettingValueList *list, int *num);
-Bool * bsGetBoolArrayFromValueList(BSSettingValueList *list, int *num);
-BSSettingColorValue * bsGetColorArrayFromValueList(BSSettingValueList *list, int *num);
-BSSettingActionValue * bsGetActionArrayFromValueList(BSSettingValueList *list, int *num);
+char ** bsGetStringArrayFromValueList(BSSettingValueList list, int *num);
+char ** bsGetMatchArrayFromValueList(BSSettingValueList list, int *num);
+int * bsGetIntArrayFromValueList(BSSettingValueList list, int *num);
+float * bsGetFloatArrayFromValueList(BSSettingValueList list, int *num);
+Bool * bsGetBoolArrayFromValueList(BSSettingValueList list, int *num);
+BSSettingColorValue * bsGetColorArrayFromValueList(BSSettingValueList list, int *num);
+BSSettingActionValue * bsGetActionArrayFromValueList(BSSettingValueList list, int *num);
 
-BSSettingValueList * bsGetValueListFromStringArray(char ** array, int num);
-BSSettingValueList * bsGetValueListFromMatchArray(char ** array, int num);
-BSSettingValueList * bsGetValueListFromIntArray(int * array, int num);
-BSSettingValueList * bsGetValueListFromFloatArray(float * array, int num);
-BSSettingValueList * bsGetValueListFromBoolArray(Bool * array, int num);
-BSSettingValueList * bsGetValueListFromColorArray(BSSettingColorValue * array, int num);
-BSSettingValueList * bsGetValueListFromActionArray(BSSettingActionValue * array, int num);
+BSSettingValueList bsGetValueListFromStringArray(char ** array, int num);
+BSSettingValueList bsGetValueListFromMatchArray(char ** array, int num);
+BSSettingValueList bsGetValueListFromIntArray(int * array, int num);
+BSSettingValueList bsGetValueListFromFloatArray(float * array, int num);
+BSSettingValueList bsGetValueListFromBoolArray(Bool * array, int num);
+BSSettingValueList bsGetValueListFromColorArray(BSSettingColorValue * array, int num);
+BSSettingValueList bsGetValueListFromActionArray(BSSettingActionValue * array, int num);
+
 
 #endif
