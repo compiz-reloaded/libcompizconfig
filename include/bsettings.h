@@ -371,5 +371,7 @@ BSSettingValueList bsGetValueListFromBoolArray(Bool * array, int num);
 BSSettingValueList bsGetValueListFromColorArray(BSSettingColorValue * array, int num);
 BSSettingValueList bsGetValueListFromActionArray(BSSettingActionValue * array, int num);
 
+BSPluginList bsGetActivePluginList(BSContext *context);
+BSStringList bsGetSortedPluginStringList(BSContext *context);
 
 #endif

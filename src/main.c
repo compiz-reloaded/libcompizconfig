@@ -828,3 +828,132 @@ void bsContextDestroy(BSContext * context)
 	}
 	bsFreeContext(context);
 }
+
+BSPluginList bsGetActivePluginList(BSContext *context)
+{
+	BSPluginList rv = NULL;
+	BSPluginList l = context->plugins;
+	Bool active;
+	while (l)
+	{
+		BSSetting *setting = bsFindSetting(l->data, "____plugin_enabled",
+						  				   FALSE, 0);
+		if (setting && bsGetBool(setting, &active) && active)
+			rv = bsPluginListAppend(rv, l->data);
+		l = l->next;
+	}
+	return rv;
+}
+
+static BSPlugin * findPluginInList(BSPluginList list, char *name)
+{
+	if (!name || !strlen(name))
+		return NULL;
+	
+	while (list)
+	{
+		if (!strcmp(list->data->name, name))
+			return list->data;
+		list = list->next;
+	}
+	return NULL;
+}
+
+typedef struct _PluginSortHelper
+{
+	BSPlugin * plugin;
+	BSPluginList after;
+} PluginSortHelper;
+
+BSStringList bsGetSortedPluginStringList(BSContext *context)
+{
+	BSPluginList ap = bsGetActivePluginList(context);
+	BSPluginList list = ap;
+	BSPlugin * p = NULL;
+	BSStringList rv = NULL;
+	PluginSortHelper *ph = NULL;
+	
+	int len = bsPluginListLength(ap);
+	int i,j;
+	// TODO: conflict handling
+
+	PluginSortHelper * plugins = malloc(len * sizeof(PluginSortHelper));
+	for (i = 0; i < len; i++, list = list->next)
+	{
+		plugins[i].plugin = list->data;
+		plugins[i].after = NULL;
+	}
+
+	for (i = 0; i < len; i++)
+	{
+		BSStringList l = plugins[i].plugin->loadAfter;
+		while (l)
+		{
+			p = findPluginInList(ap, l->data);
+			if (p)
+				plugins[i].after =	bsPluginListAppend(plugins[i].after, p);
+			l = l->next;
+		}
+
+		l = plugins[i].plugin->loadBefore;
+		while (l)
+		{
+			p = findPluginInList(ap, l->data);
+			if (p)
+			{
+				ph = NULL;
+				for (j = 0; j < len; j++)
+					if (p == plugins[j].plugin)
+						ph = &plugins[j];
+				if (ph)
+ 					ph->after = bsPluginListAppend(ph->after,
+												   plugins[i].plugin);
+			}
+			l = l->next;
+		}
+	}
+
+	bsPluginListFree(ap, FALSE);
+	
+	Bool error = FALSE;
+	int removed = 0;
+	Bool found;
+	
+	while (!error && removed < len)
+	{
+		found = FALSE;
+		for (i = 0; i < len; i++)
+		{
+			if (!plugins[i].plugin)
+				continue;
+			if (plugins[i].after)
+				continue;
+			found = TRUE;
+			removed++;
+			p = plugins[i].plugin;
+			plugins[i].plugin = NULL;
+
+			
+			for (j = 0; j < len; j++)
+				plugins[j].after =
+						bsPluginListRemove(plugins[j].after, p, FALSE);
+			
+			rv = bsStringListAppend(rv, strdup(p->name));
+		}
+		if (!found)
+			error = TRUE;
+	}
+
+	if (error)
+	{
+		fprintf(stderr,"libbsettings: unable to generate sorted plugin list\n");
+		for (i = 0; i < len; i++)
+		{
+			bsPluginListFree(plugins[i].after, FALSE);
+		}
+		bsStringListFree(rv, TRUE);
+		rv = NULL;
+	}
+	free(plugins);
+	return rv;
+}
