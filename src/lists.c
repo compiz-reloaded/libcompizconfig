@@ -96,6 +96,31 @@ BS##type##List bs##type##ListGetItem (BS##type##List list, unsigned int index) \
 	return l; \
 } \
 \
+BS##type##List bs##type##ListRemove (BS##type##List list, dtype *data, Bool freeObj) \
+{ \
+	BS##type##List l = list; \
+	BS##type##List prev = NULL; \
+	while (l) \
+	{ \
+		if (!data && !l->data) break; \
+		if (memcmp(l->data, data, sizeof(dtype)) == 0) break; \
+		prev = l; \
+		l = l->next; \
+	} \
+	if (l) \
+	{ \
+		if (prev) prev->next = l->next; \
+		else list = l->next; \
+		if (freeObj) \
+		    bsFree##type (l->data); \
+		free (l); \
+	} \
+	if (prev) \
+	    return prev; \
+	else \
+	    return list; \
+} \
+\
 BS##type##List bs##type##ListFree (BS##type##List list, Bool freeObj) \
 { \
 	BS##type##List l = list; \

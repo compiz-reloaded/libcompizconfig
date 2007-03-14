@@ -27,6 +27,7 @@ BS##type##List bs##type##ListInsertBefore (BS##type##List list, BS##type##List s
 unsigned int bs##type##ListLength (BS##type##List list); \
 BS##type##List bs##type##ListFind (BS##type##List list, dtype *data); \
 BS##type##List bs##type##ListGetItem (BS##type##List list, unsigned int index); \
+BS##type##List bs##type##ListRemove (BS##type##List list, dtype *data, Bool freeObj); \
 BS##type##List bs##type##ListFree (BS##type##List list, Bool freeObj);
 
 typedef struct _BSContext			BSContext;
