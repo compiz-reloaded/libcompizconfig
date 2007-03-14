@@ -415,79 +415,110 @@ static void copyFromDefault(BSSetting *setting)
 	NEW(BSSettingValue, value);
 	copyValue(&setting->defaultValue, value);
 	setting->value = value;
+	setting->isDefault = FALSE;
 }
 
-static BSSettingInfo * getSettingInfo(BSSettingValue *value)
+static void resetToDefault(BSSetting *setting)
 {
-	if (value->isListChild)
-		return value->parent->info.forList.listInfo;
-	else
-		return &value->parent->info;
+	if (setting->value != &setting->defaultValue)
+		bsFreeSettingValue(setting->value);
+	setting->value = &setting->defaultValue;
+	setting->isDefault = TRUE;
 }
 
-Bool bsSetInt(BSSettingValue * value, int data)
+static BSSettingInfo * getSettingInfo(BSSetting *setting)
 {
-	if (value->parent->type != TypeInt)
+		return &setting->info;
+}
+
+Bool bsSetInt(BSSetting * setting, int data)
+{
+	if (setting->type != TypeInt)
 		return FALSE;
 
-	if (value->parent->isDefault && (value->parent->defaultValue.value.asInt == data))
+	if (setting->isDefault && (setting->defaultValue.value.asInt == data))
 		return TRUE;
+
+	if (!setting->isDefault && (setting->defaultValue.value.asInt == data))
+	{
+		resetToDefault(setting);
+		return TRUE;
+	}
 	
-	BSSettingInfo *info = getSettingInfo(value);
+	BSSettingInfo *info = getSettingInfo(setting);
 	if ((data < info->forInt.min) || (data > info->forInt.max))
 		return FALSE;
 
-	value->parent->isDefault = FALSE;
-	copyValue(&value->parent->defaultValue, value);
-	
-	value->value.asInt = data;
-	return TRUE;
-} 
+	if (setting->isDefault)
+		copyFromDefault(setting);
 
-Bool bsSetFloat(BSSettingValue * value, float data)
+	setting->value->value.asInt = data;
+	return TRUE;
+}
+
+Bool bsSetFloat(BSSetting * setting, float data)
 {
-	if (value->parent->type != TypeFloat)
+	if (setting->type != TypeFloat)
 		return FALSE;
 
-	if (value->parent->isDefault && (value->parent->defaultValue.value.asFloat == data))
+	if (setting->isDefault && (setting->defaultValue.value.asFloat == data))
 		return TRUE;
 
-	BSSettingInfo *info = getSettingInfo(value);
+	if (!setting->isDefault && (setting->defaultValue.value.asFloat == data))
+	{
+		resetToDefault(setting);
+		return TRUE;
+	}
+	
+	BSSettingInfo *info = getSettingInfo(setting);
 	if ((data < info->forFloat.min) || (data > info->forFloat.max))
 		return FALSE;
 
-	value->parent->isDefault = FALSE;
-	copyValue(&value->parent->defaultValue, value);
-	
-	value->value.asFloat = data;
+	if (setting->isDefault)
+		copyFromDefault(setting);
+
+	setting->value->value.asFloat = data;
 	return TRUE;
 }
 
-Bool bsSetBool(BSSettingValue * value, Bool data)
+Bool bsSetBool(BSSetting * setting, Bool data)
 {
-	if (value->parent->type != TypeBool)
+	if (setting->type != TypeBool)
 		return FALSE;
 
-	if (value->parent->isDefault && (value->parent->defaultValue.value.asBool == data))
+	if (setting->isDefault && (setting->defaultValue.value.asBool == data))
 		return TRUE;
 
-	value->parent->isDefault = FALSE;
-	copyValue(&value->parent->defaultValue, value);	
+	if (!setting->isDefault && (setting->defaultValue.value.asBool == data))
+	{
+		resetToDefault(setting);
+		return TRUE;
+	}
 	
-	value->value.asBool = data;
+	if (setting->isDefault)
+		copyFromDefault(setting);
+
+	setting->value->value.asBool = data;
 	return TRUE;
 }
 
-Bool bsSetString(BSSettingValue * value, const char * data)
+Bool bsSetString(BSSetting * setting, const char * data)
 {
-	if (value->parent->type != TypeString)
+	if (setting->type != TypeString)
 		return FALSE;
-	
-	Bool equalsDefault = strcmp(value->parent->defaultValue.value.asString, data) == 0;
-	if (value->parent->isDefault && equalsDefault)
+
+	Bool isDefault = strcmp(setting->defaultValue.value.asString, data) == 0;
+
+	if (setting->isDefault && isDefault)
 		return TRUE;
+
+	if (!setting->isDefault && isDefault)
+	{
+		resetToDefault(setting);
+		return TRUE;
+	}
 	
-	BSSettingInfo *info = getSettingInfo(value);
+	BSSettingInfo *info = getSettingInfo(setting);
 	BSStringList *allowed = info->forString.allowedValues;
 
 	while (allowed)
@@ -498,90 +529,106 @@ Bool bsSetString(BSSettingValue * value, const char * data)
 	}
 
 	if (!allowed)
-		/* if allowed is NULL here, it means that none of the 
+		/* if allowed is NULL here, it means that none of the
 		   allowed values matched the string to set */
 		return FALSE;
 
-	value->parent->isDefault = FALSE;
-	copyValue(&value->parent->defaultValue, value);
+	if (setting->isDefault)
+		copyFromDefault(setting);
 
-	if (value->value.asString)
-		free(value->value.asString);
-	value->value.asString = strdup(data);
-
+	free(setting->value->value.asString);
+	setting->value->value.asString = strdup(data);
 	return TRUE;
 }
 
-Bool bsSetColor(BSSettingValue * value, BSSettingColorValue data)
+Bool bsSetColor(BSSetting * setting, BSSettingColorValue data)
 {
-	if (value->parent->type != TypeColor)
+	if (setting->type != TypeColor)
 		return FALSE;
 	
-	BSSettingColorValue defaultValue = value->parent->defaultValue.value.asColor;
-	Bool equalsDefault = memcmp(&defaultValue, &data, sizeof(BSSettingColorValue)) == 0;
+	BSSettingColorValue defValue = setting->defaultValue.value.asColor;
+	Bool isDefault = memcmp(&defValue, &data, sizeof(BSSettingColorValue)) == 0;
 
-	if (value->parent->isDefault && equalsDefault)
+	if (setting->isDefault && isDefault)
 		return TRUE;
 
-	value->parent->isDefault = FALSE;
-	copyValue(&value->parent->defaultValue, value);	
+	if (!setting->isDefault && isDefault)
+	{
+		resetToDefault(setting);
+		return TRUE;
+	}
 
-	value->value.asColor = data;
+	if (setting->isDefault)
+		copyFromDefault(setting);
+
+	setting->value->value.asColor = data;
 	return TRUE;
 }
 
-Bool bsSetMatch(BSSettingValue * value, const char * data)
+Bool bsSetMatch(BSSetting * setting, const char * data)
 {
-	if (value->parent->type != TypeMatch)
+	if (setting->type != TypeMatch)
 		return FALSE;
-	
-	Bool equalsDefault = strcmp(value->parent->defaultValue.value.asMatch, data) == 0;
-	if (value->parent->isDefault && equalsDefault)
+
+	Bool isDefault = strcmp(setting->defaultValue.value.asMatch, data) == 0;
+
+	if (setting->isDefault && isDefault)
 		return TRUE;
 
-	value->parent->isDefault = FALSE;
-	copyValue(&value->parent->defaultValue, value);
-
-	if (value->value.asMatch)
-		free(value->value.asMatch);
-	value->value.asMatch = strdup(data);
+	if (!setting->isDefault && isDefault)
+	{
+		resetToDefault(setting);
+		return TRUE;
+	}
 	
+	if (setting->isDefault)
+		copyFromDefault(setting);
+
+	free(setting->value->value.asMatch);
+	setting->value->value.asMatch = strdup(data);
 	return TRUE;
 }
 
-Bool bsSetAction(BSSettingValue * value, BSSettingActionValue data)
+Bool bsSetAction(BSSetting * setting, BSSettingActionValue data)
 {
-	if (value->parent->type != TypeAction)
+	if (setting->type != TypeAction)
 		return FALSE;
 	
-	BSSettingActionValue defaultValue = value->parent->defaultValue.value.asAction;
-	Bool equalsDefault = memcmp(&defaultValue, &data, sizeof(BSSettingActionValue)) == 0;
+	BSSettingActionValue defValue = setting->defaultValue.value.asAction;
+	Bool isDefault =
+			memcmp(&defValue, &data, sizeof(BSSettingActionValue)) == 0;
 	
-	if (value->parent->isDefault && equalsDefault)
+	if (setting->isDefault && isDefault)
 		return TRUE;
 
-	value->parent->isDefault = FALSE;
-	copyValue(&value->parent->defaultValue, value);	
+	if (!setting->isDefault && isDefault)
+	{
+		resetToDefault(setting);
+		return TRUE;
+	}
 
-	BSSettingInfo *info = getSettingInfo(value);
+	if (setting->isDefault)
+		copyFromDefault(setting);
+
+	BSSettingInfo *info = getSettingInfo(setting);
 
 	if (info->forAction.key)
 	{
-		value->value.asAction.keysym = data.keysym;
-		value->value.asAction.keyModMask = data.keyModMask;
+		setting->value->value.asAction.keysym = data.keysym;
+		setting->value->value.asAction.keyModMask = data.keyModMask;
 	}
 	if (info->forAction.button)
 	{
-		value->value.asAction.button = data.button;
-		value->value.asAction.buttonModMask = data.buttonModMask;
+		setting->value->value.asAction.button = data.button;
+		setting->value->value.asAction.buttonModMask = data.buttonModMask;
 	}
 	if (info->forAction.edge)
 	{
-		value->value.asAction.edgeButton = data.edgeButton;
-		value->value.asAction.edgeMask = data.edgeMask;
+		setting->value->value.asAction.edgeButton = data.edgeButton;
+		setting->value->value.asAction.edgeMask = data.edgeMask;
 	}
 	if (info->forAction.bell)
-	    value->value.asAction.onBell = data.onBell;
+	    setting->value->value.asAction.onBell = data.onBell;
 
 	return TRUE;
 }
