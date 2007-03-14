@@ -417,17 +417,28 @@ static void copyFromDefault(BSSetting *setting)
 	setting->value = value;
 }
 
+static BSSettingInfo * getSettingInfo(BSSettingValue *value)
+{
+	if (value->isListChild)
+		return value->parent->info.forList.listInfo;
+	else
+		return &value->parent->info;
+}
 
 Bool bsSetInt(BSSettingValue * value, int data)
 {
+	if (value->parent->type != TypeInt)
+		return FALSE;
+
 	if (value->parent->isDefault && (value->parent->defaultValue.value.asInt == data))
 		return TRUE;
 	
+	BSSettingInfo *info = getSettingInfo(value);
+	if ((data < info->forInt.min) || (data > info->forInt.max))
+		return FALSE;
+
 	value->parent->isDefault = FALSE;
 	copyValue(&value->parent->defaultValue, value);
-	
-	if (value->parent->type != TypeInt)
-		return FALSE;
 	
 	value->value.asInt = data;
 	return TRUE;
@@ -435,14 +446,18 @@ Bool bsSetInt(BSSettingValue * value, int data)
 
 Bool bsSetFloat(BSSettingValue * value, float data)
 {
+	if (value->parent->type != TypeFloat)
+		return FALSE;
+
 	if (value->parent->isDefault && (value->parent->defaultValue.value.asFloat == data))
 		return TRUE;
 
+	BSSettingInfo *info = getSettingInfo(value);
+	if ((data < info->forFloat.min) || (data > info->forFloat.max))
+		return FALSE;
+
 	value->parent->isDefault = FALSE;
 	copyValue(&value->parent->defaultValue, value);
-
-	if (value->parent->type != TypeFloat)
-		return FALSE;
 	
 	value->value.asFloat = data;
 	return TRUE;
@@ -450,14 +465,14 @@ Bool bsSetFloat(BSSettingValue * value, float data)
 
 Bool bsSetBool(BSSettingValue * value, Bool data)
 {
+	if (value->parent->type != TypeBool)
+		return FALSE;
+
 	if (value->parent->isDefault && (value->parent->defaultValue.value.asBool == data))
 		return TRUE;
 
 	value->parent->isDefault = FALSE;
 	copyValue(&value->parent->defaultValue, value);	
-
-	if (value->parent->type != TypeBool)
-		return FALSE;
 	
 	value->value.asBool = data;
 	return TRUE;
@@ -465,7 +480,9 @@ Bool bsSetBool(BSSettingValue * value, Bool data)
 
 Bool bsSetString(BSSettingValue * value, const char * data)
 {
-
+	if (value->parent->type != TypeString)
+		return FALSE;
+	
 	char * defaultValue = strdup(value->parent->defaultValue.value.asString);
 	Bool equalsDefault = strcmp(defaultValue, data) == 0;
 	free(defaultValue);
@@ -473,12 +490,24 @@ Bool bsSetString(BSSettingValue * value, const char * data)
 	if (value->parent->isDefault && equalsDefault)
 		return TRUE;
 	
+	BSSettingInfo *info = getSettingInfo(value);
+	BSStringList *allowed = info->forString.allowedValues;
+
+	while (allowed)
+	{
+		if (strcmp(allowed->data, data) == 0)
+			break;
+		allowed = allowed->next;
+	}
+
+	if (!allowed)
+		/* if allowed is NULL here, it means that none of the 
+		   allowed values matched the string to set */
+		return FALSE;
+
 	value->parent->isDefault = FALSE;
 	copyValue(&value->parent->defaultValue, value);
 
-	if (value->parent->type != TypeString)
-		return FALSE;
-	
 	if (value->value.asString)
 		free(value->value.asString);
 	value->value.asString = strdup(data);
@@ -488,6 +517,9 @@ Bool bsSetString(BSSettingValue * value, const char * data)
 
 Bool bsSetColor(BSSettingValue * value, BSSettingColorValue data)
 {
+	if (value->parent->type != TypeColor)
+		return FALSE;
+	
 	BSSettingColorValue defaultValue = value->parent->defaultValue.value.asColor;
 	Bool equalsDefault = memcmp(&defaultValue, &data, sizeof(BSSettingColorValue)) == 0;
 
@@ -497,15 +529,15 @@ Bool bsSetColor(BSSettingValue * value, BSSettingColorValue data)
 	value->parent->isDefault = FALSE;
 	copyValue(&value->parent->defaultValue, value);	
 
-	if (value->parent->type != TypeColor)
-		return FALSE;
-	
 	value->value.asColor = data;
 	return TRUE;
 }
 
 Bool bsSetMatch(BSSettingValue * value, const char * data)
 {
+	if (value->parent->type != TypeMatch)
+		return FALSE;
+	
 	char * defaultValue = strdup(value->parent->defaultValue.value.asMatch);
 	Bool equalsDefault = strcmp(defaultValue, data) == 0;
 	free(defaultValue);
@@ -516,9 +548,6 @@ Bool bsSetMatch(BSSettingValue * value, const char * data)
 	value->parent->isDefault = FALSE;
 	copyValue(&value->parent->defaultValue, value);
 
-	if (value->parent->type != TypeMatch)
-		return FALSE;
-	
 	if (value->value.asMatch)
 		free(value->value.asMatch);
 	value->value.asMatch = strdup(data);
@@ -528,6 +557,9 @@ Bool bsSetMatch(BSSettingValue * value, const char * data)
 
 Bool bsSetAction(BSSettingValue * value, BSSettingActionValue data)
 {
+	if (value->parent->type != TypeAction)
+		return FALSE;
+	
 	BSSettingActionValue defaultValue = value->parent->defaultValue.value.asAction;
 	Bool equalsDefault = memcmp(&defaultValue, &data, sizeof(BSSettingActionValue)) == 0;
 	
@@ -537,10 +569,71 @@ Bool bsSetAction(BSSettingValue * value, BSSettingActionValue data)
 	value->parent->isDefault = FALSE;
 	copyValue(&value->parent->defaultValue, value);	
 
+	value->value.asAction = data;
+	return TRUE;
+}
+
+
+Bool bsGetInt(BSSettingValue * value, int *data)
+{
+	if (value->parent->type != TypeInt)
+		return FALSE;
+
+	*data = value->value.asInt;
+	return TRUE;
+} 
+
+Bool bsGetFloat(BSSettingValue * value, float *data)
+{
+	if (value->parent->type != TypeFloat)
+		return FALSE;
+	
+	*data = value->value.asFloat;
+	return TRUE;
+}
+
+Bool bsGetBool(BSSettingValue * value, Bool *data)
+{
+	if (value->parent->type != TypeBool)
+		return FALSE;
+	
+	*data = value->value.asBool;
+	return TRUE;
+}
+
+Bool bsGetString(BSSettingValue * value, char **data)
+{
+	if (value->parent->type != TypeString)
+		return FALSE;
+
+	*data = value->value.asString;
+	return TRUE;
+}
+
+Bool bsGetColor(BSSettingValue * value, BSSettingColorValue *data)
+{
+	if (value->parent->type != TypeColor)
+		return TRUE;
+
+	*data = value->value.asColor;
+	return TRUE;
+}
+
+Bool bsGetMatch(BSSettingValue * value, char **data)
+{
+	if (value->parent->type != TypeMatch)
+		return FALSE;
+
+	*data = value->value.asMatch;
+	return TRUE;
+}
+
+Bool bsGetAction(BSSettingValue * value, BSSettingActionValue *data)
+{
 	if (value->parent->type != TypeAction)
 		return FALSE;
 	
-	value->value.asAction = data;
+	*data = value->value.asAction;
 	return TRUE;
 }
 
