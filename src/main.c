@@ -569,7 +569,26 @@ Bool bsSetAction(BSSettingValue * value, BSSettingActionValue data)
 	value->parent->isDefault = FALSE;
 	copyValue(&value->parent->defaultValue, value);	
 
-	value->value.asAction = data;
+	BSSettingInfo *info = getSettingInfo(value);
+
+	if (info->forAction.key)
+	{
+		value->value.asAction.keysym = data.keysym;
+		value->value.asAction.keyModMask = data.keyModMask;
+	}
+	if (info->forAction.button)
+	{
+		value->value.asAction.button = data.button;
+		value->value.asAction.buttonModMask = data.buttonModMask;
+	}
+	if (info->forAction.edge)
+	{
+		value->value.asAction.edgeButton = data.edgeButton;
+		value->value.asAction.edgeMask = data.edgeMask;
+	}
+	if (info->forAction.bell)
+	    value->value.asAction.onBell = data.onBell;
+
 	return TRUE;
 }
 

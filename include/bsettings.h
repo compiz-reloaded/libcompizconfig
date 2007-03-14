@@ -258,6 +258,7 @@ typedef struct _BSSettingActionValue
 	unsigned int	keyModMask;
 	Bool			onBell;
 	int				edgeMask;
+	int             edgeButton;
 } BSSettingActionValue;
 
 typedef union _BSSettingValueUnion

@@ -46,6 +46,7 @@ static void initValue(BSSettingValue * value, CompOptionValue * from,
 			value->value.asAction.keyModMask = from->action.key.modifiers;
 			value->value.asAction.onBell = from->action.bell;
 			value->value.asAction.edgeMask = from->action.edgeMask;
+			value->value.asAction.edgeButton = from->action.edgeButton;
 			break;
 		default:
 			break;
