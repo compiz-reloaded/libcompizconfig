@@ -386,4 +386,6 @@ char * bsModsToString(unsigned int mods);
 
 void bsProcessEvents(BSContext *context);
 
+void bsReadSettings(BSContext *context);
+
 #endif
