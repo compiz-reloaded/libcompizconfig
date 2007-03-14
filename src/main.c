@@ -1026,8 +1026,7 @@ void bsReadSettings(BSContext *context)
 Bool bsIsEqualColor(BSSettingColorValue c1, BSSettingColorValue c2)
 {
 	EIGHTFIELDS(c1.color.red, c2.color.red, c1.color.blue, c2.color.blue, c1.color.green, c2.color.green, c1.color.alpha, c2.color.alpha)
-	EIGHTFIELDS(c1.array.array[0], c2.array.array[0], c1.array.array[1], c2.array.array[1], c1.array.array[2], c2.array.array[2], 
-	c1.array.array[3], c2.array.array[3])
+
 
 	return 1;
 }
