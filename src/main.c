@@ -421,115 +421,127 @@ static void copyFromDefault(BSSetting *setting)
 Bool bsSetInt(BSSettingValue * value, int data)
 {
 	if (value->parent->isDefault && (value->parent->defaultValue.value.asInt == data))
-		return 1;
+		return TRUE;
 	
 	value->parent->isDefault = FALSE;
 	copyValue(&value->parent->defaultValue, value);
 	
 	if (value->parent->type != TypeInt)
-		return 0;
+		return FALSE;
 	
 	value->value.asInt = data;
-	return 1;
+	return TRUE;
 } 
 
 Bool bsSetFloat(BSSettingValue * value, float data)
 {
 	if (value->parent->isDefault && (value->parent->defaultValue.value.asFloat == data))
-		return 1;
+		return TRUE;
+
 	value->parent->isDefault = FALSE;
 	copyValue(&value->parent->defaultValue, value);
 
 	if (value->parent->type != TypeFloat)
-		return 0;
+		return FALSE;
 	
 	value->value.asFloat = data;
-	return 1;
+	return TRUE;
 }
 
 Bool bsSetBool(BSSettingValue * value, Bool data)
 {
 	if (value->parent->isDefault && (value->parent->defaultValue.value.asBool == data))
-		return 1;
+		return TRUE;
+
 	value->parent->isDefault = FALSE;
 	copyValue(&value->parent->defaultValue, value);	
 
 	if (value->parent->type != TypeBool)
-		return 0;
+		return FALSE;
 	
 	value->value.asBool = data;
-	return 1;
+	return TRUE;
 }
 
 Bool bsSetString(BSSettingValue * value, const char * data)
 {
 
-	const char * defaultValue = strdup(value->parent->defaultValue.value.asString);
-	if (value->parent->isDefault && (strcmp(defaultValue, data)))	
-		return 1;
+	char * defaultValue = strdup(value->parent->defaultValue.value.asString);
+	Bool equalsDefault = strcmp(defaultValue, data) == 0;
+	free(defaultValue);
+
+	if (value->parent->isDefault && equalsDefault)
+		return TRUE;
 	
 	value->parent->isDefault = FALSE;
 	copyValue(&value->parent->defaultValue, value);
 
 	if (value->parent->type != TypeString)
-		return 0;
+		return FALSE;
 	
 	if (value->value.asString)
 		free(value->value.asString);
 	value->value.asString = strdup(data);
 
-	return 1;
-	
+	return TRUE;
 }
 
 Bool bsSetColor(BSSettingValue * value, BSSettingColorValue data)
 {
 	BSSettingColorValue defaultValue = value->parent->defaultValue.value.asColor;
-	if (value->parent->isDefault && (memcmp(&defaultValue, &data, sizeof(BSSettingColorValue))))
-		return 1;
+	Bool equalsDefault = memcmp(&defaultValue, &data, sizeof(BSSettingColorValue)) == 0;
+
+	if (value->parent->isDefault && equalsDefault)
+		return TRUE;
+
 	value->parent->isDefault = FALSE;
 	copyValue(&value->parent->defaultValue, value);	
 
 	if (value->parent->type != TypeColor)
-		return 0;
-	
+		return FALSE;
 	
 	value->value.asColor = data;
-	return 1;
-	
+	return TRUE;
 }
+
 Bool bsSetMatch(BSSettingValue * value, const char * data)
 {
-	const char * defaultValue = strdup(value->parent->defaultValue.value.asMatch);
-	if (value->parent->isDefault && (strcmp(defaultValue, data)))	
-		return 1;
-	value->parent->isDefault = FALSE;
+	char * defaultValue = strdup(value->parent->defaultValue.value.asMatch);
+	Bool equalsDefault = strcmp(defaultValue, data) == 0;
+	free(defaultValue);
 
+	if (value->parent->isDefault && equalsDefault)
+		return TRUE;
+
+	value->parent->isDefault = FALSE;
 	copyValue(&value->parent->defaultValue, value);
 
 	if (value->parent->type != TypeMatch)
-		return 0;
+		return FALSE;
 	
 	if (value->value.asMatch)
 		free(value->value.asMatch);
 	value->value.asMatch = strdup(data);
 	
-	return 1;
+	return TRUE;
 }
+
 Bool bsSetAction(BSSettingValue * value, BSSettingActionValue data)
 {
 	BSSettingActionValue defaultValue = value->parent->defaultValue.value.asAction;
+	Bool equalsDefault = memcmp(&defaultValue, &data, sizeof(BSSettingActionValue)) == 0;
 	
-	if (value->parent->isDefault && (memcmp(&defaultValue, &data, sizeof(BSSettingActionValue))))
-		return 1;
+	if (value->parent->isDefault && equalsDefault)
+		return TRUE;
+
 	value->parent->isDefault = FALSE;
 	copyValue(&value->parent->defaultValue, value);	
 
 	if (value->parent->type != TypeAction)
-		return 0;
+		return FALSE;
 	
 	value->value.asAction = data;
-	return 1;
+	return TRUE;
 }
 
 void bsContextDestroy(BSContext * context)
