@@ -11,10 +11,10 @@ typedef void (*freeFunc) (void *ptr);
 
 #define BSLIST(type,dtype) \
 \
-BS##type##List * bs##type##ListAppend (BS##type##List * list, dtype *data) \
+BS##type##List bs##type##ListAppend (BS##type##List list, dtype *data) \
 { \
-	BS##type##List * l = list; \
-	BS##type##List * ne = malloc(sizeof(BS##type##List)); \
+	BS##type##List l = list; \
+	BS##type##List ne = malloc(sizeof(struct _BS##type##List)); \
 	ne->data = data; \
 	ne->next = NULL; \
 	if (!list) \
@@ -24,18 +24,18 @@ BS##type##List * bs##type##ListAppend (BS##type##List * list, dtype *data) \
 	return list; \
 } \
 \
-BS##type##List * bs##type##ListPrepend (BS##type##List * list, dtype *data) \
+BS##type##List bs##type##ListPrepend (BS##type##List list, dtype *data) \
 { \
-	BS##type##List * ne = malloc(sizeof(BS##type##List)); \
+	BS##type##List ne = malloc(sizeof(struct _BS##type##List)); \
 	ne->data = data; \
 	ne->next = list; \
 	return ne; \
 } \
 \
-BS##type##List * bs##type##ListInsert (BS##type##List * list, dtype *data, int position) \
+BS##type##List bs##type##ListInsert (BS##type##List list, dtype *data, int position) \
 { \
-	BS##type##List * l = list; \
-	BS##type##List * ne = malloc(sizeof(BS##type##List)); \
+	BS##type##List l = list; \
+	BS##type##List ne = malloc(sizeof(struct _BS##type##List)); \
 	ne->data = data; \
 	ne->next = list; \
 	if (!list || !position) \
@@ -51,20 +51,20 @@ BS##type##List * bs##type##ListInsert (BS##type##List * list, dtype *data, int p
 	return list; \
 } \
 \
-BS##type##List * bs##type##ListInsertBefore (BS##type##List * list, BS##type##List * sibling, dtype *data) \
+BS##type##List bs##type##ListInsertBefore (BS##type##List list, BS##type##List sibling, dtype *data) \
 { \
-	BS##type##List * l = list; \
-	BS##type##List * ne = malloc(sizeof(BS##type##List)); \
+	BS##type##List l = list; \
+	BS##type##List ne = malloc(sizeof(struct _BS##type##List)); \
 	while (l && (l != sibling)) l = l->next; \
 	ne->data = data; \
 	ne->next = l; \
 	return ne; \
 } \
 \
-unsigned int bs##type##ListLength (BS##type##List * list) \
+unsigned int bs##type##ListLength (BS##type##List list) \
 { \
 	unsigned int count = 0; \
-	BS##type##List * l = list; \
+	BS##type##List l = list; \
 	while (l) \
 	{ \
 		l = l->next; \
@@ -73,9 +73,9 @@ unsigned int bs##type##ListLength (BS##type##List * list) \
 	return count; \
 } \
 \
-BS##type##List * bs##type##ListFind (BS##type##List * list, dtype *data) \
+BS##type##List bs##type##ListFind (BS##type##List list, dtype *data) \
 { \
-	BS##type##List * l = list; \
+	BS##type##List l = list; \
 	while (l) \
 	{ \
 		if (!data && !l->data) break; \
@@ -85,9 +85,9 @@ BS##type##List * bs##type##ListFind (BS##type##List * list, dtype *data) \
 	return l; \
 } \
 \
-BS##type##List * bs##type##ListGetItem (BS##type##List * list, unsigned int index) \
+BS##type##List bs##type##ListGetItem (BS##type##List list, unsigned int index) \
 { \
-	BS##type##List * l = list; \
+	BS##type##List l = list; \
 	while (l && index) \
 	{ \
 		l = l->next; \
@@ -96,10 +96,10 @@ BS##type##List * bs##type##ListGetItem (BS##type##List * list, unsigned int inde
 	return l; \
 } \
 \
-BS##type##List * bs##type##ListFree (BS##type##List * list, Bool freeObj) \
+BS##type##List bs##type##ListFree (BS##type##List list, Bool freeObj) \
 { \
-	BS##type##List *l = list; \
-	BS##type##List *le = NULL; \
+	BS##type##List l = list; \
+	BS##type##List le = NULL; \
 	while (l) \
 	{ \
 		le = l; \
@@ -118,9 +118,9 @@ BSLIST(Group,BSGroup)
 BSLIST(SubGroup,BSSubGroup)
 BSLIST(SettingValue,BSSettingValue)
 
-BSSettingValueList * bsGetValueListFromStringList(BSStringList *list)
+BSSettingValueList bsGetValueListFromStringList(BSStringList list)
 {
-	BSSettingValueList *rv = NULL;
+	BSSettingValueList rv = NULL;
 	while (list)
 	{
 		NEW(BSSettingValue, value);
@@ -132,9 +132,9 @@ BSSettingValueList * bsGetValueListFromStringList(BSStringList *list)
 	return rv;
 }
 
-BSStringList * bsGetStringListFromValueList(BSSettingValueList *list)
+BSStringList bsGetStringListFromValueList(BSSettingValueList list)
 {
-	BSStringList *rv = NULL;
+	BSStringList rv = NULL;
 	while (list)
 	{
 		rv = bsStringListAppend(rv, strdup(list->data->value.asString));
@@ -143,7 +143,7 @@ BSStringList * bsGetStringListFromValueList(BSSettingValueList *list)
 	return rv;
 }
 
-char ** bsGetStringArrayFromList(BSStringList *list, int *num)
+char ** bsGetStringArrayFromList(BSStringList list, int *num)
 {
 	char ** rv = NULL;
 	int length = bsStringListLength(list);
@@ -158,16 +158,16 @@ char ** bsGetStringArrayFromList(BSStringList *list, int *num)
 	return rv;
 }
 
-BSStringList * bsGetListFromStringArray(char ** array, int num)
+BSStringList bsGetListFromStringArray(char ** array, int num)
 {
-	BSStringList *rv = NULL;
+	BSStringList rv = NULL;
 	int i;
 	for (i = 0; i < num; i++)
 		rv = bsStringListAppend(rv, strdup(array[i]));
 	return rv;
 }
 
-char ** bsGetStringArrayFromValueList(BSSettingValueList *list, int *num)
+char ** bsGetStringArrayFromValueList(BSSettingValueList list, int *num)
 {
 	char ** rv = NULL;
 	int length = bsSettingValueListLength(list);
@@ -182,7 +182,7 @@ char ** bsGetStringArrayFromValueList(BSSettingValueList *list, int *num)
 	return rv;
 }
 
-char ** bsGetMatchArrayFromValueList(BSSettingValueList *list, int *num)
+char ** bsGetMatchArrayFromValueList(BSSettingValueList list, int *num)
 {
 	char ** rv = NULL;
 	int length = bsSettingValueListLength(list);
@@ -197,7 +197,7 @@ char ** bsGetMatchArrayFromValueList(BSSettingValueList *list, int *num)
 	return rv;
 }
 
-int * bsGetIntArrayFromValueList(BSSettingValueList *list, int *num)
+int * bsGetIntArrayFromValueList(BSSettingValueList list, int *num)
 {
 	int * rv = NULL;
 	int length = bsSettingValueListLength(list);
@@ -212,7 +212,7 @@ int * bsGetIntArrayFromValueList(BSSettingValueList *list, int *num)
 	return rv;
 }
 
-float * bsGetFloatArrayFromValueList(BSSettingValueList *list, int *num)
+float * bsGetFloatArrayFromValueList(BSSettingValueList list, int *num)
 {
 	float * rv = NULL;
 	int length = bsSettingValueListLength(list);
@@ -227,7 +227,7 @@ float * bsGetFloatArrayFromValueList(BSSettingValueList *list, int *num)
 	return rv;
 }
 
-Bool * bsGetBoolArrayFromValueList(BSSettingValueList *list, int *num)
+Bool * bsGetBoolArrayFromValueList(BSSettingValueList list, int *num)
 {
 	Bool * rv = NULL;
 	int length = bsSettingValueListLength(list);
@@ -242,7 +242,7 @@ Bool * bsGetBoolArrayFromValueList(BSSettingValueList *list, int *num)
 	return rv;
 }
 
-BSSettingColorValue * bsGetColorArrayFromValueList(BSSettingValueList *list,
+BSSettingColorValue * bsGetColorArrayFromValueList(BSSettingValueList list,
 												   int *num)
 {
 	BSSettingColorValue * rv = NULL;
@@ -258,7 +258,7 @@ BSSettingColorValue * bsGetColorArrayFromValueList(BSSettingValueList *list,
 	return rv;
 }
 
-BSSettingActionValue * bsGetActionArrayFromValueList(BSSettingValueList *list,
+BSSettingActionValue * bsGetActionArrayFromValueList(BSSettingValueList list,
 													 int *num)
 {
 	BSSettingActionValue * rv = NULL;
@@ -275,9 +275,9 @@ BSSettingActionValue * bsGetActionArrayFromValueList(BSSettingValueList *list,
 	return rv;
 }
 
-BSSettingValueList * bsGetValueListFromStringArray(char ** array, int num)
+BSSettingValueList bsGetValueListFromStringArray(char ** array, int num)
 {
-	BSSettingValueList *l = NULL;
+	BSSettingValueList l = NULL;
 	int i;
 	for (i = 0; i < num; i++)
 	{
@@ -289,9 +289,9 @@ BSSettingValueList * bsGetValueListFromStringArray(char ** array, int num)
 	return l;
 }
 
-BSSettingValueList * bsGetValueListFromMatchArray(char ** array, int num)
+BSSettingValueList bsGetValueListFromMatchArray(char ** array, int num)
 {
-	BSSettingValueList *l = NULL;
+	BSSettingValueList l = NULL;
 	int i;
 	for (i = 0; i < num; i++)
 	{
@@ -303,9 +303,9 @@ BSSettingValueList * bsGetValueListFromMatchArray(char ** array, int num)
 	return l;
 }
 
-BSSettingValueList * bsGetValueListFromIntArray(int * array, int num)
+BSSettingValueList bsGetValueListFromIntArray(int * array, int num)
 {
-	BSSettingValueList *l = NULL;
+	BSSettingValueList l = NULL;
 	int i;
 	for (i = 0; i < num; i++)
 	{
@@ -317,9 +317,9 @@ BSSettingValueList * bsGetValueListFromIntArray(int * array, int num)
 	return l;
 }
 
-BSSettingValueList * bsGetValueListFromFloatArray(float * array, int num)
+BSSettingValueList bsGetValueListFromFloatArray(float * array, int num)
 {
-	BSSettingValueList *l = NULL;
+	BSSettingValueList l = NULL;
 	int i;
 	for (i = 0; i < num; i++)
 	{
@@ -331,9 +331,9 @@ BSSettingValueList * bsGetValueListFromFloatArray(float * array, int num)
 	return l;
 }
 	
-BSSettingValueList * bsGetValueListFromBoolArray(Bool * array, int num)
+BSSettingValueList bsGetValueListFromBoolArray(Bool * array, int num)
 {
-	BSSettingValueList *l = NULL;
+	BSSettingValueList l = NULL;
 	int i;
 	for (i = 0; i < num; i++)
 	{
@@ -345,10 +345,10 @@ BSSettingValueList * bsGetValueListFromBoolArray(Bool * array, int num)
 	return l;
 }
 
-BSSettingValueList * bsGetValueListFromColorArray(BSSettingColorValue * array,
+BSSettingValueList bsGetValueListFromColorArray(BSSettingColorValue * array,
 												  int num)
 {
-	BSSettingValueList *l = NULL;
+	BSSettingValueList l = NULL;
 	int i;
 	for (i = 0; i < num; i++)
 	{
@@ -360,10 +360,10 @@ BSSettingValueList * bsGetValueListFromColorArray(BSSettingColorValue * array,
 	return l;
 }
 
-BSSettingValueList * bsGetValueListFromActionArray(BSSettingActionValue * array,
+BSSettingValueList bsGetValueListFromActionArray(BSSettingActionValue * array,
 												   int num)
 {
-	BSSettingValueList *l = NULL;
+	BSSettingValueList l = NULL;
 	int i;
 	for (i = 0; i < num; i++)
 	{

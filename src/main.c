@@ -110,7 +110,7 @@ BSContext * bsContextNew(void)
 
 BSPlugin * bsFindPlugin(BSContext *context, char * name)
 {
-	BSPluginList *l = context->plugins;
+	BSPluginList l = context->plugins;
 	while (l)
 	{
 		if (!strcmp(l->data->name, name))
@@ -123,7 +123,7 @@ BSPlugin * bsFindPlugin(BSContext *context, char * name)
 BSSetting * bsFindSetting(BSPlugin *plugin, char * name,
 						  Bool isScreen, unsigned int screenNum)
 {
-	BSSettingList *l = plugin->settings;
+	BSSettingList l = plugin->settings;
 	while (l)
 	{
 		if (!strcmp(l->data->name, name) && l->data->isScreen == isScreen &&
@@ -136,7 +136,7 @@ BSSetting * bsFindSetting(BSPlugin *plugin, char * name,
 
 static void subGroupAdd(BSSetting * setting, BSGroup * group)
 {
-	BSSubGroupList *l = group->subGroups;
+	BSSubGroupList l = group->subGroups;
 	while (l)
 	{
 		if (!strcmp(l->data->name, setting->subGroup))
@@ -156,7 +156,7 @@ static void subGroupAdd(BSSetting * setting, BSGroup * group)
 
 static void groupAdd(BSSetting * setting, BSPlugin * plugin)
 {
-	BSGroupList *l = plugin->groups;
+	BSGroupList l = plugin->groups;
 	while (l)
 	{
 		if (!strcmp(l->data->name, setting->group))
@@ -175,7 +175,7 @@ static void groupAdd(BSSetting * setting, BSPlugin * plugin)
 
 void collateGroups(BSPlugin * plugin)
 {
-	BSSettingList *l = plugin->settings;
+	BSSettingList l = plugin->settings;
 	while (l)
 	{
 		groupAdd(l->data, plugin);
@@ -392,7 +392,7 @@ static void copyValue(BSSettingValue *from, BSSettingValue *to)
 			break;
 		case TypeList:
 			to->value.asList = NULL;
-			BSSettingValueList *l = from->value.asList;
+			BSSettingValueList l = from->value.asList;
 			while (l)
 			{
 				NEW(BSSettingValue, value);
@@ -513,7 +513,7 @@ Bool bsSetString(BSSetting * setting, const char * data)
 		return TRUE;
 	}
 	
-	BSStringList *allowed = setting->info.forString.allowedValues;
+	BSStringList allowed = setting->info.forString.allowedValues;
 	while (allowed)
 	{
 		if (strcmp(allowed->data, data) == 0)
@@ -624,7 +624,7 @@ Bool bsSetAction(BSSetting * setting, BSSettingActionValue data)
 	return TRUE;
 }
 
-static Bool bsCompareLists(BSSettingValueList * l1, BSSettingValueList * l2,
+static Bool bsCompareLists(BSSettingValueList l1, BSSettingValueList l2,
 						  BSSettingListInfo info)
 {
 	while (l1 && l2)
@@ -673,10 +673,10 @@ static Bool bsCompareLists(BSSettingValueList * l1, BSSettingValueList * l2,
 	return TRUE;
 }
 
-static BSSettingValueList * bsCopyList(BSSettingValueList * l1,
+static BSSettingValueList bsCopyList(BSSettingValueList l1,
 									   BSSetting *setting)
 {
-	BSSettingValueList * l2 = NULL;
+	BSSettingValueList l2 = NULL;
 	while (l1)
 	{
 		NEW(BSSettingValue, value);
@@ -718,7 +718,7 @@ static BSSettingValueList * bsCopyList(BSSettingValueList * l1,
 	return l2;
 }
 
-Bool bsSetList(BSSetting * setting, BSSettingValueList * data)
+Bool bsSetList(BSSetting * setting, BSSettingValueList data)
 {
 	if (setting->type != TypeList)
 		return FALSE;
@@ -807,7 +807,7 @@ Bool bsGetAction(BSSetting * setting, BSSettingActionValue *data)
 	return TRUE;
 }
 
-Bool bsGetList(BSSetting * setting, BSSettingValueList **data)
+Bool bsGetList(BSSetting * setting, BSSettingValueList*data)
 {
 	if (setting->type != TypeList)
 		return FALSE;
