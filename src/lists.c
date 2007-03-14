@@ -143,13 +143,15 @@ BSLIST(Group,BSGroup)
 BSLIST(SubGroup,BSSubGroup)
 BSLIST(SettingValue,BSSettingValue)
 
-BSSettingValueList bsGetValueListFromStringList(BSStringList list)
+BSSettingValueList bsGetValueListFromStringList(BSStringList list,
+												BSSetting *parent)
 {
 	BSSettingValueList rv = NULL;
 	while (list)
 	{
 		NEW(BSSettingValue, value);
 		value->isListChild = TRUE;
+		value->parent = parent;
 		value->value.asString = strdup(list->data);
 		rv = bsSettingValueListAppend(rv, value);
 		list = list->next;
@@ -300,7 +302,8 @@ BSSettingActionValue * bsGetActionArrayFromValueList(BSSettingValueList list,
 	return rv;
 }
 
-BSSettingValueList bsGetValueListFromStringArray(char ** array, int num)
+BSSettingValueList bsGetValueListFromStringArray(char ** array, int num,
+												 BSSetting *parent)
 {
 	BSSettingValueList l = NULL;
 	int i;
@@ -308,13 +311,15 @@ BSSettingValueList bsGetValueListFromStringArray(char ** array, int num)
 	{
 		NEW(BSSettingValue, value);
 		value->isListChild = TRUE;
+		value->parent = parent;
 		value->value.asString = strdup(array[i]);
 		l = bsSettingValueListAppend(l, value);
 	}
 	return l;
 }
 
-BSSettingValueList bsGetValueListFromMatchArray(char ** array, int num)
+BSSettingValueList bsGetValueListFromMatchArray(char ** array, int num,
+												BSSetting *parent)
 {
 	BSSettingValueList l = NULL;
 	int i;
@@ -322,13 +327,15 @@ BSSettingValueList bsGetValueListFromMatchArray(char ** array, int num)
 	{
 		NEW(BSSettingValue, value);
 		value->isListChild = TRUE;
+		value->parent = parent;
 		value->value.asMatch = strdup(array[i]);
 		l = bsSettingValueListAppend(l, value);
 	}
 	return l;
 }
 
-BSSettingValueList bsGetValueListFromIntArray(int * array, int num)
+BSSettingValueList bsGetValueListFromIntArray(int * array, int num,
+											  BSSetting *parent)
 {
 	BSSettingValueList l = NULL;
 	int i;
@@ -336,13 +343,15 @@ BSSettingValueList bsGetValueListFromIntArray(int * array, int num)
 	{
 		NEW(BSSettingValue, value);
 		value->isListChild = TRUE;
+		value->parent = parent;
 		value->value.asInt = array[i];
 		l = bsSettingValueListAppend(l, value);
 	}
 	return l;
 }
 
-BSSettingValueList bsGetValueListFromFloatArray(float * array, int num)
+BSSettingValueList bsGetValueListFromFloatArray(float * array, int num,
+												BSSetting *parent)
 {
 	BSSettingValueList l = NULL;
 	int i;
@@ -350,13 +359,15 @@ BSSettingValueList bsGetValueListFromFloatArray(float * array, int num)
 	{
 		NEW(BSSettingValue, value);
 		value->isListChild = TRUE;
+		value->parent = parent;
 		value->value.asFloat = array[i];
 		l = bsSettingValueListAppend(l, value);
 	}
 	return l;
 }
 	
-BSSettingValueList bsGetValueListFromBoolArray(Bool * array, int num)
+BSSettingValueList bsGetValueListFromBoolArray(Bool * array, int num,
+											   BSSetting *parent)
 {
 	BSSettingValueList l = NULL;
 	int i;
@@ -364,6 +375,7 @@ BSSettingValueList bsGetValueListFromBoolArray(Bool * array, int num)
 	{
 		NEW(BSSettingValue, value);
 		value->isListChild = TRUE;
+		value->parent = parent;
 		value->value.asBool = array[i];
 		l = bsSettingValueListAppend(l, value);
 	}
@@ -371,7 +383,7 @@ BSSettingValueList bsGetValueListFromBoolArray(Bool * array, int num)
 }
 
 BSSettingValueList bsGetValueListFromColorArray(BSSettingColorValue * array,
-												  int num)
+												  int num, BSSetting *parent)
 {
 	BSSettingValueList l = NULL;
 	int i;
@@ -379,6 +391,7 @@ BSSettingValueList bsGetValueListFromColorArray(BSSettingColorValue * array,
 	{
 		NEW(BSSettingValue, value);
 		value->isListChild = TRUE;
+		value->parent = parent;
 		value->value.asColor = array[i];
 		l = bsSettingValueListAppend(l, value);
 	}
@@ -386,7 +399,7 @@ BSSettingValueList bsGetValueListFromColorArray(BSSettingColorValue * array,
 }
 
 BSSettingValueList bsGetValueListFromActionArray(BSSettingActionValue * array,
-												   int num)
+												   int num, BSSetting *parent)
 {
 	BSSettingValueList l = NULL;
 	int i;
@@ -394,6 +407,7 @@ BSSettingValueList bsGetValueListFromActionArray(BSSettingActionValue * array,
 	{
 		NEW(BSSettingValue, value);
 		value->isListChild = TRUE;
+		value->parent = parent;
 		value->value.asAction = array[i];
 		l = bsSettingValueListAppend(l, value);
 	}

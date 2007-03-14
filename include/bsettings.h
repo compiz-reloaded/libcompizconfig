@@ -59,7 +59,7 @@ struct _BSContext
 	char *				profile;
 	Bool				deIntegration;
 
-	BSSettingList 	changedSettings;
+	BSSettingList		changedSettings;
 	Bool 				pluginsChanged;
 };
 
@@ -349,7 +349,7 @@ Bool bsGetMatch(BSSetting * setting, char ** data);
 Bool bsGetAction(BSSetting * setting, BSSettingActionValue * data);
 Bool bsGetList(BSSetting * setting, BSSettingValueList*data);
 
-BSSettingValueList bsGetValueListFromStringList(BSStringList list);
+BSSettingValueList bsGetValueListFromStringList(BSStringList list, BSSetting *parent);
 BSStringList bsGetStringListFromValueList(BSSettingValueList list);
 
 char ** bsGetStringArrayFromList(BSStringList list, int *num);
@@ -363,15 +363,22 @@ Bool * bsGetBoolArrayFromValueList(BSSettingValueList list, int *num);
 BSSettingColorValue * bsGetColorArrayFromValueList(BSSettingValueList list, int *num);
 BSSettingActionValue * bsGetActionArrayFromValueList(BSSettingValueList list, int *num);
 
-BSSettingValueList bsGetValueListFromStringArray(char ** array, int num);
-BSSettingValueList bsGetValueListFromMatchArray(char ** array, int num);
-BSSettingValueList bsGetValueListFromIntArray(int * array, int num);
-BSSettingValueList bsGetValueListFromFloatArray(float * array, int num);
-BSSettingValueList bsGetValueListFromBoolArray(Bool * array, int num);
-BSSettingValueList bsGetValueListFromColorArray(BSSettingColorValue * array, int num);
-BSSettingValueList bsGetValueListFromActionArray(BSSettingActionValue * array, int num);
+BSSettingValueList bsGetValueListFromStringArray(char ** array, int num, BSSetting *parent);
+BSSettingValueList bsGetValueListFromMatchArray(char ** array, int num, BSSetting *parent);
+BSSettingValueList bsGetValueListFromIntArray(int * array, int num, BSSetting *parent);
+BSSettingValueList bsGetValueListFromFloatArray(float * array, int num, BSSetting *parent);
+BSSettingValueList bsGetValueListFromBoolArray(Bool * array, int num, BSSetting *parent);
+BSSettingValueList bsGetValueListFromColorArray(BSSettingColorValue * array, int num, BSSetting *parent);
+BSSettingValueList bsGetValueListFromActionArray(BSSettingActionValue * array, int num, BSSetting *parent);
 
 BSPluginList bsGetActivePluginList(BSContext *context);
 BSStringList bsGetSortedPluginStringList(BSContext *context);
+
+Bool bsGetIntegrationEnabled(BSContext *context);
+char * bsGetProfile(BSContext *context);
+
+//utility functions
+unsigned int bsGetModsAndEndptr(char * src, char ** ret);
+char * bsModsToString(unsigned int mods);
 
 #endif

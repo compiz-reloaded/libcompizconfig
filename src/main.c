@@ -361,7 +361,7 @@ Bool bsSetBackend(BSContext *context, char *name)
 
 	BSBackendVTable *vt = getInfo();
 
-	if (vt)
+	if (!vt)
 	{
 		dlclose(dlhand);
 		return FALSE;
@@ -370,6 +370,8 @@ Bool bsSetBackend(BSContext *context, char *name)
 	context->backend = malloc(sizeof(BSBackend));
 	context->backend->dlhand = dlhand;
 	context->backend->vTable = vt;
+	if (context->backend->vTable->backendInit)
+			context->backend->vTable->backendInit(context);
 
 	return TRUE;
 }
@@ -502,6 +504,9 @@ Bool bsSetString(BSSetting * setting, const char * data)
 	if (setting->type != TypeString)
 		return FALSE;
 
+	if (!data)
+		return FALSE;
+
 	Bool isDefault = strcmp(setting->defaultValue.value.asString, data) == 0;
 
 	if (setting->isDefault && isDefault)
@@ -561,6 +566,9 @@ Bool bsSetColor(BSSetting * setting, BSSettingColorValue data)
 Bool bsSetMatch(BSSetting * setting, const char * data)
 {
 	if (setting->type != TypeMatch)
+		return FALSE;
+
+	if (!data)
 		return FALSE;
 
 	Bool isDefault = strcmp(setting->defaultValue.value.asMatch, data) == 0;
@@ -957,3 +965,19 @@ BSStringList bsGetSortedPluginStringList(BSContext *context)
 	free(plugins);
 	return rv;
 }
+
+Bool bsGetIntegrationEnabled(BSContext *context)
+{
+	if (!context)
+		return FALSE;
+	return context->deIntegration;
+}
+
+char * bsGetProfile(BSContext *context)
+{
+	if (!context)
+		return NULL;
+	return context->profile;
+}
+
+
