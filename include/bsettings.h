@@ -324,12 +324,12 @@ void bsFreeSubGroup(BSSubGroup *subGroup);
 void bsFreeSettingValue(BSSettingValue *value);
 #define bsFreeString(val) free(val)
 
-int bsSetInt(BSSettingValue * value, int data);
-int bsSetFloat(BSSettingValue * value, float data);
-int bsSetBool(BSSettingValue * value, Bool data);
-int bsSetString(BSSettingValue * value, const char * data);
-int bsSetColor(BSSettingValue * value, BSSettingColorValue data);
-int bsSetMatch(BSSettingValue * value, const char * data); 
-int bsSetAction(BSSettingValue * value, BSSettingActionValue data);
+Bool bsSetInt(BSSettingValue * value, int data);
+Bool bsSetFloat(BSSettingValue * value, float data);
+Bool bsSetBool(BSSettingValue * value, Bool data);
+Bool bsSetString(BSSettingValue * value, const char * data);
+Bool bsSetColor(BSSettingValue * value, BSSettingColorValue data);
+Bool bsSetMatch(BSSettingValue * value, const char * data); 
+Bool bsSetAction(BSSettingValue * value, BSSettingActionValue data);
 
 #endif
