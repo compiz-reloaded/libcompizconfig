@@ -30,6 +30,70 @@ BS##type##List * bs##type##ListPrepend (BS##type##List * list, dtype *data) \
 	return ne; \
 } \
 \
+BS##type##List * bs##type##ListInsert (BS##type##List * list, dtype *data, int position) \
+{ \
+	BS##type##List * l = list; \
+	BS##type##List * ne = malloc(sizeof(BS##type##List)); \
+	ne->data = data; \
+	ne->next = list; \
+	if (!list || !position) \
+	    return ne; \
+	position--; \
+	while (l->next && position) \
+	{ \
+		l = l->next; \
+		position--; \
+	} \
+	ne->next = l->next; \
+	l->next = ne; \
+	return list; \
+} \
+\
+BS##type##List * bs##type##ListInsertBefore (BS##type##List * list, BS##type##List * sibling, dtype *data) \
+{ \
+	BS##type##List * l = list; \
+	BS##type##List * ne = malloc(sizeof(BS##type##List)); \
+	while (l && (l != sibling)) l = l->next; \
+	ne->data = data; \
+	ne->next = l; \
+	return ne; \
+} \
+\
+unsigned int bs##type##ListLength (BS##type##List * list) \
+{ \
+	unsigned int count = 0; \
+	BS##type##List * l = list; \
+	while (l) \
+	{ \
+		l = l->next; \
+		count++; \
+	} \
+	return count; \
+} \
+\
+BS##type##List * bs##type##ListFind (BS##type##List * list, dtype *data) \
+{ \
+	BS##type##List * l = list; \
+	while (l) \
+	{ \
+		if (!data && !l->data) break; \
+		if (memcmp(l->data, data, sizeof(dtype)) == 0) break; \
+		l = l->next; \
+	} \
+	return l; \
+} \
+\
+BS##type##List * bs##type##ListGetItem (BS##type##List * list, unsigned int index) \
+{ \
+	BS##type##List * l = list; \
+	while (l && index) \
+	{ \
+		l = l->next; \
+		index--; \
+	} \
+	return l; \
+} \
+\
 BS##type##List * bs##type##ListFree (BS##type##List * list, Bool freeObj) \
 { \
 	BS##type##List *l = list; \
