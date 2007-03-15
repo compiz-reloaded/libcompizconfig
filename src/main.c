@@ -12,7 +12,6 @@
 
 #include "bsettings-private.h"
 
-
 static int pluginNameFilter (const struct dirent *name)
 {
     int length = strlen (name->d_name);
@@ -55,36 +54,34 @@ static void loadPlugins(BSContext * context, char * path)
 
 static void initGeneralOptions(BSContext *context)
 {
-	/*
-	GKeyFile * f;
-	gchar * s;
-	s = g_strconcat(g_get_home_dir(),"/.beryl/libberylsettings.ini",NULL);
-	f = g_key_file_new();
-	g_key_file_load_from_file(f,s,0,NULL);
-	g_free(s);
-	GError *e = NULL;
-	context->de_integration =
-			g_key_file_get_boolean(f,"general","integration",&e);
-	if (e)
-		context->de_integration = TRUE;
-
-	s=g_key_file_get_string(f,"general","backend",NULL);
-	if (!s)
-		beryl_settings_context_set_backend(context,"ini");
+	char *val;
+	if (bsReadConfig(OptionBackend, &val))
+	{
+		bsSetBackend(context, val);
+		free(val);
+	}
 	else
 	{
-		if (!beryl_settings_context_set_backend(context,s))
-			beryl_settings_context_set_backend(context,"ini");
-		g_free(s);
+		bsSetBackend(context, "ini");
 	}
-	s=g_key_file_get_string(f,"general","profile",NULL);
-	beryl_settings_context_set_profile(context,s);
-	if (s)
-		g_free(s);
-	g_key_file_free(f);
-	*/
-	context->deIntegration = FALSE;
-	bsSetBackend(context, "ini");
+	if (bsReadConfig(OptionProfile, &val))
+	{
+		bsSetProfile(context, val);
+		free(val);
+	}
+	else
+	{
+		bsSetProfile(context, "");
+	}
+	if (bsReadConfig(OptionIntegration, &val))
+	{
+		bsSetIntegrationEnabled(context, !strcasecmp(val,"true"));
+		free(val);
+	}
+	else
+	{
+		bsSetIntegrationEnabled(context, TRUE);
+	}	
 }
 
 BSContext * bsContextNew(void)
@@ -345,8 +342,11 @@ Bool bsSetBackend(BSContext *context, char *name)
 	
 	void *dlhand = openBackend(name);
 	if (!dlhand)
-		dlhand = openBackend("ini");
-
+	{
+		name = "ini";
+		dlhand = openBackend(name);
+	}
+	
 	if (!dlhand)
 		return FALSE;
 
@@ -373,6 +373,7 @@ Bool bsSetBackend(BSContext *context, char *name)
 	if (context->backend->vTable->backendInit)
 			context->backend->vTable->backendInit(context);
 
+	bsWriteConfig(OptionBackend, name);
 	return TRUE;
 }
 
@@ -975,6 +976,20 @@ char * bsGetProfile(BSContext *context)
 	if (!context)
 		return NULL;
 	return context->profile;
+}
+
+void bsSetIntegrationEnabled(BSContext *context, Bool value)
+{
+	context->deIntegration = value;
+	bsWriteConfig(OptionIntegration, (value)? "true": "false");
+}
+
+void bsSetProfile(BSContext *context, char *name)
+{
+	if (context->profile)
+		free(context->profile);
+	context->profile = (name)? strdup(name) : strdup("");
+	bsWriteConfig(OptionProfile, context->profile);
 }
 
 void bsProcessEvents(BSContext *context)

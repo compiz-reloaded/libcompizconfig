@@ -321,8 +321,6 @@ BSPlugin * bsFindPlugin(BSContext *context, char * name);
 BSSetting * bsFindSetting(BSPlugin *plugin, char * name,
 						  Bool isScreen, unsigned int screenNum);
 
-Bool bsSetBackend(BSContext *context, char *name);
-
 void bsFreeContext(BSContext *context);
 void bsFreePlugin(BSPlugin *plugin);
 void bsFreeSetting(BSSetting *setting);
@@ -377,6 +375,11 @@ BSSettingValueList bsGetValueListFromActionArray(BSSettingActionValue * array, i
 BSPluginList bsGetActivePluginList(BSContext *context);
 BSStringList bsGetSortedPluginStringList(BSContext *context);
 
+Bool bsSetBackend(BSContext *context, char *name);
+void bsSetIntegrationEnabled(BSContext *context, Bool value);
+void bsSetProfile(BSContext *context, char *name);
+
+char * bsGetProfile(BSContext *context);
 Bool bsGetIntegrationEnabled(BSContext *context);
 char * bsGetProfile(BSContext *context);
 
