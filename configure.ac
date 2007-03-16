@@ -76,8 +76,6 @@ fi
 AC_C_BIGENDIAN
 
 PKG_CHECK_MODULES(COMPIZ, "compiz")
-PKG_CHECK_MODULES(GLIB, "glib-2.0")
-PKG_CHECK_MODULES(GCONF, "gconf-2.0")
 
 if test -z "$PKG_CONFIG"; then
     AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
