@@ -440,6 +440,9 @@ Bool bsSetInt(BSSetting * setting, int data)
 	if (!setting->isDefault && (setting->defaultValue.value.asInt == data))
 	{
 		resetToDefault(setting);
+		setting->parent->context->changedSettings =
+				bsSettingListAppend(setting->parent->context->changedSettings,
+									setting);
 		return TRUE;
 	}
 	
@@ -451,6 +454,9 @@ Bool bsSetInt(BSSetting * setting, int data)
 		copyFromDefault(setting);
 
 	setting->value->value.asInt = data;
+	setting->parent->context->changedSettings =
+				bsSettingListAppend(setting->parent->context->changedSettings,
+									setting);
 	return TRUE;
 }
 
@@ -465,6 +471,9 @@ Bool bsSetFloat(BSSetting * setting, float data)
 	if (!setting->isDefault && (setting->defaultValue.value.asFloat == data))
 	{
 		resetToDefault(setting);
+		setting->parent->context->changedSettings =
+				bsSettingListAppend(setting->parent->context->changedSettings,
+									setting);
 		return TRUE;
 	}
 	
@@ -476,6 +485,9 @@ Bool bsSetFloat(BSSetting * setting, float data)
 		copyFromDefault(setting);
 
 	setting->value->value.asFloat = data;
+	setting->parent->context->changedSettings =
+				bsSettingListAppend(setting->parent->context->changedSettings,
+									setting);
 	return TRUE;
 }
 
@@ -490,6 +502,12 @@ Bool bsSetBool(BSSetting * setting, Bool data)
 	if (!setting->isDefault && (setting->defaultValue.value.asBool == data))
 	{
 		resetToDefault(setting);
+		if (!strcmp(setting->name, "____plugin_enabled"))
+			setting->parent->context->pluginsChanged = TRUE;
+		else
+			setting->parent->context->changedSettings =
+				bsSettingListAppend(setting->parent->context->changedSettings,
+									setting);
 		return TRUE;
 	}
 	
@@ -497,6 +515,13 @@ Bool bsSetBool(BSSetting * setting, Bool data)
 		copyFromDefault(setting);
 
 	setting->value->value.asBool = data;
+
+	if (!strcmp(setting->name, "____plugin_enabled"))
+			setting->parent->context->pluginsChanged = TRUE;
+	else
+		setting->parent->context->changedSettings =
+				bsSettingListAppend(setting->parent->context->changedSettings,
+									setting);
 	return TRUE;
 }
 
@@ -516,6 +541,9 @@ Bool bsSetString(BSSetting * setting, const char * data)
 	if (!setting->isDefault && isDefault)
 	{
 		resetToDefault(setting);
+		setting->parent->context->changedSettings =
+				bsSettingListAppend(setting->parent->context->changedSettings,
+									setting);
 		return TRUE;
 	}
 	
@@ -537,6 +565,9 @@ Bool bsSetString(BSSetting * setting, const char * data)
 
 	free(setting->value->value.asString);
 	setting->value->value.asString = strdup(data);
+	setting->parent->context->changedSettings =
+				bsSettingListAppend(setting->parent->context->changedSettings,
+									setting);
 	return TRUE;
 }
 
@@ -554,6 +585,9 @@ Bool bsSetColor(BSSetting * setting, BSSettingColorValue data)
 	if (!setting->isDefault && isDefault)
 	{
 		resetToDefault(setting);
+		setting->parent->context->changedSettings =
+				bsSettingListAppend(setting->parent->context->changedSettings,
+									setting);
 		return TRUE;
 	}
 
@@ -561,6 +595,9 @@ Bool bsSetColor(BSSetting * setting, BSSettingColorValue data)
 		copyFromDefault(setting);
 
 	setting->value->value.asColor = data;
+	setting->parent->context->changedSettings =
+				bsSettingListAppend(setting->parent->context->changedSettings,
+									setting);
 	return TRUE;
 }
 
@@ -580,6 +617,9 @@ Bool bsSetMatch(BSSetting * setting, const char * data)
 	if (!setting->isDefault && isDefault)
 	{
 		resetToDefault(setting);
+		setting->parent->context->changedSettings =
+				bsSettingListAppend(setting->parent->context->changedSettings,
+									setting);
 		return TRUE;
 	}
 	
@@ -588,6 +628,9 @@ Bool bsSetMatch(BSSetting * setting, const char * data)
 
 	free(setting->value->value.asMatch);
 	setting->value->value.asMatch = strdup(data);
+	setting->parent->context->changedSettings =
+				bsSettingListAppend(setting->parent->context->changedSettings,
+									setting);
 	return TRUE;
 }
 
@@ -605,6 +648,9 @@ Bool bsSetAction(BSSetting * setting, BSSettingActionValue data)
 	if (!setting->isDefault && isDefault)
 	{
 		resetToDefault(setting);
+		setting->parent->context->changedSettings =
+				bsSettingListAppend(setting->parent->context->changedSettings,
+									setting);
 		return TRUE;
 	}
 
@@ -629,6 +675,10 @@ Bool bsSetAction(BSSetting * setting, BSSettingActionValue data)
 	if (setting->info.forAction.bell)
 	    setting->value->value.asAction.onBell = data.onBell;
 
+	setting->parent->context->changedSettings =
+				bsSettingListAppend(setting->parent->context->changedSettings,
+									setting);
+	
 	return TRUE;
 }
 
@@ -738,6 +788,9 @@ Bool bsSetList(BSSetting * setting, BSSettingValueList data)
 	if (!setting->isDefault && isDefault)
 	{
 		resetToDefault(setting);
+		setting->parent->context->changedSettings =
+				bsSettingListAppend(setting->parent->context->changedSettings,
+									setting);
 		return TRUE;
 	}
 
@@ -747,6 +800,10 @@ Bool bsSetList(BSSetting * setting, BSSettingValueList data)
 	bsSettingValueListFree(setting->value->value.asList, TRUE);
 	setting->value->value.asList = bsCopyList(data, setting);
 
+	setting->parent->context->changedSettings =
+				bsSettingListAppend(setting->parent->context->changedSettings,
+									setting);
+	
 	return TRUE;
 }
 
