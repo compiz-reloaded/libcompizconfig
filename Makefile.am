@@ -2,7 +2,8 @@
 
 ALL_SUBDIRS = 	 \
     include	 \
-    src	     
+    src	         \
+    plugin
 
 SUBDIRS = $(ALL_SUBDIRS)
 

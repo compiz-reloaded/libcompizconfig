@@ -903,7 +903,8 @@ BSPluginList bsGetActivePluginList(BSContext *context)
 	{
 		BSSetting *setting = bsFindSetting(l->data, "____plugin_enabled",
 						  				   FALSE, 0);
-		if (setting && bsGetBool(setting, &active) && active)
+		if (setting && bsGetBool(setting, &active) && active &&
+				  strcmp(l->data->name, "bset"))
 			rv = bsPluginListAppend(rv, l->data);
 		l = l->next;
 	}

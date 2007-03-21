@@ -89,8 +89,8 @@ AC_CONFIG_FILES([
 bsettings.pc
 Makefile
 src/Makefile
+plugin/Makefile
 include/Makefile
-po/Makefile.in
 ])
 
 AC_OUTPUT
