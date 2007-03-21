@@ -40,13 +40,37 @@ static void initValue(BSSettingValue * value, CompOptionValue * from,
 			value->value.asMatch = matchToString(&from->match);
 			break;
 		case TypeAction:
-			value->value.asAction.button = from->action.button.button;
-			value->value.asAction.buttonModMask = from->action.button.modifiers;
-			value->value.asAction.keysym = from->action.key.keysym;
-			value->value.asAction.keyModMask = from->action.key.modifiers;
+			if (from->action.type & CompBindingTypeButton)
+			{
+				value->value.asAction.button = from->action.button.button;
+				value->value.asAction.buttonModMask =
+						from->action.button.modifiers;
+			}
+			else
+			{
+				value->value.asAction.button = 0;
+				value->value.asAction.buttonModMask = 0;
+			}
+
+			if (from->action.type & CompBindingTypeKey)
+			{
+				value->value.asAction.keysym = from->action.key.keysym;
+				value->value.asAction.keyModMask = from->action.key.modifiers;
+			}
+			else
+			{
+				value->value.asAction.keysym = 0;
+				value->value.asAction.keyModMask = 0;
+			}
+			
 			value->value.asAction.onBell = from->action.bell;
 			value->value.asAction.edgeMask = from->action.edgeMask;
-			value->value.asAction.edgeButton = from->action.edgeButton;
+			
+			if (from->action.type & CompBindingTypeEdgeButton)
+				value->value.asAction.edgeButton = from->action.edgeButton;
+			else
+				value->value.asAction.edgeButton = 0;
+
 			break;
 		default:
 			break;
