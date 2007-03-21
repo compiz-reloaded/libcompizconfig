@@ -127,6 +127,98 @@ bsSettingToValue (BSSetting *s, CompOptionValue *v)
 	}
 }
 
+static void bsInitValue(BSSettingValue * value, CompOptionValue * from,
+					  BSSettingType type)
+{
+	switch(type)
+	{
+		case TypeInt:
+			value->value.asInt = from->i;
+			break;
+		case TypeFloat:
+			value->value.asFloat = from->f;
+			break;
+		case TypeBool:
+			value->value.asBool = from->b;
+			break;
+		case TypeColor:
+			{
+				int i;
+				for (i=0;i<4;i++)
+					value->value.asColor.array.array[i] = from->c[i];
+			}
+			break;
+		case TypeString:
+			value->value.asString = strdup(from->s);
+			break;
+		case TypeMatch:
+			value->value.asMatch = matchToString(&from->match);
+			break;
+		case TypeAction:
+			if (from->action.type & CompBindingTypeButton)
+			{
+				value->value.asAction.button = from->action.button.button;
+				value->value.asAction.buttonModMask =
+						from->action.button.modifiers;
+			}
+			else
+			{
+				value->value.asAction.button = 0;
+				value->value.asAction.buttonModMask = 0;
+			}
+
+			if (from->action.type & CompBindingTypeKey)
+			{
+				value->value.asAction.keysym = from->action.key.keysym;
+				value->value.asAction.keyModMask = from->action.key.modifiers;
+			}
+			else
+			{
+				value->value.asAction.keysym = 0;
+				value->value.asAction.keyModMask = 0;
+			}
+			
+			value->value.asAction.onBell = from->action.bell;
+			value->value.asAction.edgeMask = from->action.edgeMask;
+			
+			if (from->action.type & CompBindingTypeEdgeButton)
+				value->value.asAction.edgeButton = from->action.edgeButton;
+			else
+				value->value.asAction.edgeButton = 0;
+
+			break;
+		default:
+			break;
+	}
+}
+
+static void
+bsValueToSetting (BSSetting *s, CompOptionValue *v)
+{
+	NEW(BSSettingValue, value);
+	value->parent = s;
+	
+	if (s->type == TypeList)
+	{
+		int i;
+		for (i = 0; i < v->list.nValue; i++)
+		{
+			NEW(BSSettingValue, val);
+			val->parent = s;
+			val->isListChild = TRUE;
+			bsInitValue(val, &v->list.value[i],
+					  s->info.forList.listType);
+			value->value.asList = bsSettingValueListAppend(
+					value->value.asList, val);
+		}
+	}
+	else
+		bsInitValue(value, v, s->type);
+	
+	bsSetValue(s, value);
+	bsFreeSettingValue(value);
+}
+
 static void
 bsFreeValue(CompOptionValue *v, BSSettingType type)
 {
@@ -194,6 +286,27 @@ bsUpdatePluginList(CompDisplay *d)
 	
 	free(value.list.value);
 	bsStringListFree(list, TRUE);
+}
+
+static void
+bsUpdateActivePlugins(CompDisplay *d, CompOption *o)
+{
+	BS_DISPLAY(d);
+	
+	BSPluginList l = bd->context->plugins;
+	while (l)
+	{
+		Bool found = FALSE;
+		int i;
+
+		for (i = 0; i < o->value.list.nValue; i++)
+			if (!strcmp(l->data->name, o->value.list.value[i].s))
+				found = TRUE;
+
+		bsPluginSetActive(l->data, found);
+		
+		l = l->next;
+	}
 }
 
 static void
@@ -303,6 +416,96 @@ bsSetOptionFromContext( CompDisplay *d,
 	bsFreeCompValue(setting, &value);
 }
 
+static void
+bsSetContextFromOption( CompDisplay *d,
+						char *plugin,
+						char *name,
+						Bool screen,
+						int screenNum)
+{
+	CompPlugin *p = NULL;
+	CompScreen *s = NULL;
+	CompOption *o = NULL;
+	CompOption *option = NULL;
+	int	       nOption;
+	BSPlugin *bsp;
+	BSSetting *setting;
+	BS_DISPLAY(d);
+
+	if (plugin && strlen(plugin))
+	{
+		p = findActivePlugin (plugin);
+		if (!p)
+			return;
+	}
+
+	if (!name)
+		return;
+
+	if (screen)
+	{
+		Bool found = FALSE;
+		for (s = d->screens; s; s = s->next)
+	    	if (s->screenNum == screenNum)
+			{
+				found = TRUE;
+				break;
+			}
+		if (!found)
+			return;
+	}
+
+	if (p)
+	{
+		if (s)
+		{
+			if (p->vTable->getScreenOptions)
+				option = (*p->vTable->getScreenOptions) (s, &nOption);
+		}
+		else
+		{
+			if (p->vTable->getDisplayOptions)
+				option = (*p->vTable->getDisplayOptions) (d, &nOption);
+		}
+	}
+	else
+	{
+		if (s)
+			option = compGetScreenOptions (s, &nOption);
+		else
+			option = compGetDisplayOptions (d, &nOption);
+	}
+
+	if (!option)
+		return;
+	
+	o = compFindOption (option, nOption, name, 0);
+
+	if (!o)
+		return;
+
+	if (!p && !strcmp(name, "active_plugins"))
+	{
+		bsUpdateActivePlugins(d, o);
+		return;
+	}
+
+	bsp = bsFindPlugin(bd->context, plugin);
+
+	if (!bsp)
+		return;
+	
+	setting = bsFindSetting(bsp, name, screen, screenNum);
+
+	if (!setting)
+		return;
+
+	bsValueToSetting(setting, &o->value);
+
+	bsWriteChangedSettings(bd->context);
+
+}
+
 static Bool
 bsSetDisplayOption (CompDisplay     *d,
 		       char	       *name,
@@ -366,6 +569,11 @@ bsSetScreenOptionForPlugin (CompScreen      *s,
     status = (*s->setScreenOptionForPlugin) (s, plugin, name, value);
     WRAP (bs, s, setScreenOptionForPlugin, bsSetScreenOptionForPlugin);
 
+	if (status)
+    {
+		bsSetContextFromOption (s->display, plugin,	name, TRUE, s->screenNum);
+    }
+	
     return status;
 }
 

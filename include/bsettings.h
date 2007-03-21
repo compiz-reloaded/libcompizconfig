@@ -13,6 +13,9 @@
 #define FALSE 0
 #endif
 
+#define NEW(a,b) \
+	a * b = malloc(sizeof(a)); memset((b),0,sizeof(a))
+
 #define BSLIST_HDR(type,dtype)		\
 typedef struct _BS##type##List *	BS##type##List;\
 struct _BS##type##List	\
@@ -337,6 +340,7 @@ Bool bsSetColor(BSSetting * setting, BSSettingColorValue data);
 Bool bsSetMatch(BSSetting * setting, const char * data);
 Bool bsSetAction(BSSetting * setting, BSSettingActionValue data);
 Bool bsSetList(BSSetting * setting, BSSettingValueList data);
+Bool bsSetValue(BSSetting * setting, BSSettingValue *data);
 
 Bool bsIsEqualColor(BSSettingColorValue c1, BSSettingColorValue c2);
 Bool bsIsEqualAction(BSSettingActionValue c1, BSSettingActionValue c2);
@@ -348,7 +352,7 @@ Bool bsGetString(BSSetting * setting, char ** data);
 Bool bsGetColor(BSSetting * setting, BSSettingColorValue * data);
 Bool bsGetMatch(BSSetting * setting, char ** data); 
 Bool bsGetAction(BSSetting * setting, BSSettingActionValue * data);
-Bool bsGetList(BSSetting * setting, BSSettingValueList*data);
+Bool bsGetList(BSSetting * setting, BSSettingValueList * data);
 
 BSSettingValueList bsGetValueListFromStringList(BSStringList list, BSSetting *parent);
 BSStringList bsGetStringListFromValueList(BSSettingValueList list);
@@ -383,6 +387,8 @@ char * bsGetProfile(BSContext *context);
 Bool bsGetIntegrationEnabled(BSContext *context);
 char * bsGetProfile(BSContext *context);
 
+Bool bsPluginSetActive(BSPlugin *plugin, Bool value);
+
 //utility functions
 unsigned int bsGetModsAndEndptr(char * src, char ** ret);
 char * bsModsToString(unsigned int mods);
@@ -390,5 +396,7 @@ char * bsModsToString(unsigned int mods);
 void bsProcessEvents(BSContext *context);
 
 void bsReadSettings(BSContext *context);
+void bsWriteSettings(BSContext *context);
+void bsWriteChangedSettings(BSContext *context);
 
 #endif
