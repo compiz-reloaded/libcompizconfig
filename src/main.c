@@ -809,6 +809,39 @@ Bool bsSetList(BSSetting * setting, BSSettingValueList data)
 	return TRUE;
 }
 
+Bool bsSetValue(BSSetting * setting, BSSettingValue *data)
+{
+	switch (setting->type)
+	{
+		case TypeInt:
+			return bsSetInt(setting, data->value.asInt);
+			break;
+		case TypeFloat:
+			return bsSetFloat(setting, data->value.asFloat);
+			break;
+		case TypeBool:
+			return bsSetBool(setting, data->value.asBool);
+			break;
+		case TypeColor:
+			return bsSetColor(setting, data->value.asColor);
+			break;
+		case TypeString:
+			return bsSetString(setting, data->value.asString);
+			break;
+		case TypeMatch:
+			return bsSetMatch(setting, data->value.asMatch);
+			break;
+		case TypeAction:
+			return bsSetAction(setting, data->value.asAction);
+			break;
+		case TypeList:
+			return bsSetList(setting, data->value.asList);
+		default:
+			break;
+	}
+	return FALSE;
+}
+
 Bool bsGetInt(BSSetting * setting, int *data)
 {
 	if (setting->type != TypeInt)
@@ -1085,6 +1118,69 @@ void bsReadSettings(BSContext *context)
 		(*context->backend->vTable->readDone)(context);
 }
 
+void bsWriteSettings(BSContext *context)
+{
+	if (!context || !context->backend)
+		return;
+	if (!context->backend->vTable->writeSetting)
+		return;
+	
+	if (context->backend->vTable->writeInit)
+		if (!(*context->backend->vTable->writeInit)(context))
+			return;
+	BSPluginList pl = context->plugins;
+	while (pl)
+	{
+		BSSettingList sl = pl->data->settings;
+		while (sl)
+		{
+			(*context->backend->vTable->writeSetting)(context, sl->data);
+			sl = sl->next;
+		}	
+		pl = pl->next;
+	}
+	if (context->backend->vTable->writeDone)
+		(*context->backend->vTable->writeDone)(context);
+	context->pluginsChanged = FALSE;
+	context->changedSettings =
+			bsSettingListFree(context->changedSettings, FALSE);
+}
+
+void bsWriteChangedSettings(BSContext *context)
+{
+	if (!context || !context->backend)
+		return;
+	if (!context->backend->vTable->writeSetting)
+		return;
+	
+	if (context->backend->vTable->writeInit)
+		if (!(*context->backend->vTable->writeInit)(context))
+			return;
+	if (context->pluginsChanged)
+	{
+		BSPluginList pl = context->plugins;
+		while (pl)
+		{
+			BSSetting *s = bsFindSetting(pl->data , "____plugin_enabled", FALSE, 0);
+			(*context->backend->vTable->writeSetting)(context, s);
+		}
+	}
+	if (bsSettingListLength(context->changedSettings))
+	{
+		BSSettingList l = context->changedSettings;
+		while (l)
+		{
+			(*context->backend->vTable->writeSetting)(context, l->data);
+			l = l->next;
+		}
+	}
+	if (context->backend->vTable->writeDone)
+		(*context->backend->vTable->writeDone)(context);
+	context->pluginsChanged = FALSE;
+	context->changedSettings =
+			bsSettingListFree(context->changedSettings, FALSE);
+}
+
 #define FIELDCOMPARABLE(field1, field2) \
 	{ \
 		typeof(field1) _field2=field2; \
@@ -1111,5 +1207,17 @@ Bool bsIsEqualAction(BSSettingActionValue c1, BSSettingActionValue c2)
 	EIGHTFIELDS(c1.button, c2.button, c1.buttonModMask, c2.buttonModMask, c1.keysym, c2.keysym, c1.keyModMask, c2.keyModMask)
 	FOURFIELDS(c1.onBell, c2.onBell, c1.edgeMask, c2.edgeMask)
 	return 1;
+}
+
+
+Bool bsPluginSetActive(BSPlugin *plugin, Bool value)
+{
+	if (!plugin)
+		return FALSE;
+	BSSetting *s = bsFindSetting(plugin, "____plugin_enabled", FALSE, 0);
+	if (!s)
+		return FALSE;
+	bsSetBool(s, value);
+	return TRUE;
 }
 
