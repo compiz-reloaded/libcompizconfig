@@ -107,6 +107,8 @@ BSContext * bsContextNew(void)
 
 BSPlugin * bsFindPlugin(BSContext *context, char * name)
 {
+	if (!name)
+		name = "";
 	BSPluginList l = context->plugins;
 	while (l)
 	{
