@@ -27,6 +27,11 @@
 #include <malloc.h>
 #include <string.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <errno.h>
+
 #include <bsettings.h>
 #include "iniparser.h"
 #include "dictionary.h"
@@ -40,14 +45,72 @@
 #define CompSuperMask      (1 << 18)
 #define CompHyperMask      (1 << 19)
 #define CompModeSwitchMask (1 << 20)
+
 #define CompNumLockMask    (1 << 21)
 #define CompScrollLockMask (1 << 22)
 
 #define DEFAULTPROF "Default"
+#define SETTINGPATH ".bsettings/"
 
 static char * currentProfile = NULL;
+static char * lastProfile = NULL;
+static dictionary * iniFile = NULL;
 
+static char* getIniFileName(char *profile)
+{
+	char *homeDir = NULL;
+	char *fileName;
+	int  pathLen = 0;
 
+	homeDir = getenv ("HOME");
+
+	if (!homeDir)
+		return NULL;
+
+	pathLen = strlen (homeDir) + strlen (SETTINGPATH) + strlen (profile) + 6;
+	fileName = malloc (pathLen * sizeof(char));
+
+	snprintf (fileName, pathLen, "%s/%s%s.ini", homeDir, SETTINGPATH, profile);
+
+	return fileName;
+}
+
+static void setProfile(char *profile)
+{
+	char *fileName;
+	struct stat fileStat;
+
+	if (iniFile)
+		iniparser_freedict (iniFile);
+
+	iniFile = NULL;
+
+	/* first we need to find the file name */
+	fileName = getIniFileName (profile);
+
+	if (!fileName)
+		return;
+
+	/* if the file does not exist, we have to create it */
+	if (stat (fileName, &fileStat) == -1)
+	{
+		if (errno == ENOENT)
+		{
+			FILE *file;
+			file = fopen (fileName, "w");
+			if (!file)
+				return;
+			fclose (file);
+		}
+		else
+			return;
+	}
+
+	/* load the data from the file */
+	iniFile = iniparser_load (fileName);
+
+	free (fileName);
+}
 
 static void processEvents(void)
 {
@@ -60,7 +123,15 @@ static Bool initBackend(BSContext * context)
 
 static Bool finiBackend(BSContext * context)
 {
-	return FALSE;
+	if (iniFile)
+		iniparser_freedict (iniFile);
+	iniFile = NULL;
+
+	if (lastProfile)
+		free (lastProfile);
+	lastProfile = NULL;
+
+	return TRUE;
 }
 
 static Bool readInit(BSContext * context)
@@ -69,6 +140,17 @@ static Bool readInit(BSContext * context)
 	if (!currentProfile)
 		currentProfile = DEFAULTPROF;
 
+	if (!lastProfile || (strcmp(lastProfile, currentProfile) != 0))
+		setProfile (currentProfile);
+
+	if (lastProfile)
+		free (lastProfile);
+
+	if (!iniFile)
+		return FALSE;
+
+	lastProfile = strdup (currentProfile);
+	
 	return TRUE;
 }
 
@@ -92,6 +174,17 @@ static Bool writeInit(BSContext * context)
 	if (!currentProfile)
 		currentProfile = DEFAULTPROF;
 
+	if (!lastProfile || (strcmp(lastProfile, currentProfile) != 0))
+		setProfile (currentProfile);
+
+	if (lastProfile)
+		free (lastProfile);
+
+	if (!iniFile)
+		return FALSE;
+
+	lastProfile = strdup (currentProfile);
+	
 	return TRUE;
 }
 
@@ -101,6 +194,16 @@ static void writeSetting(BSContext * context, BSSetting * setting)
 
 static void writeDone(BSContext * context)
 {
+	/* export the data to ensure the changes are on disk */
+	FILE *file;
+	char *fileName;
+
+	fileName = getIniFileName (currentProfile);
+
+	file = fopen (fileName, "w");
+	iniparser_dump_ini (iniFile, file);
+	fclose (file);
+	free (fileName);
 }
 
 static Bool getSettingIsReadOnly(BSSetting * setting)
