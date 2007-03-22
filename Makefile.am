@@ -2,7 +2,9 @@
 
 ALL_SUBDIRS = 	 \
     include	 \
+    po           \
     src	         \
+    backend      \
     plugin
 
 SUBDIRS = $(ALL_SUBDIRS)
