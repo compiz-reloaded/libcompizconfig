@@ -6,7 +6,7 @@ INCLUDES =			     \
 	-DLIBDIR=\"$(libdir)\"
 
 
-libbsettings_la_SOURCES=main.c lists.c compiz.c match.c config.c
+libini_la_SOURCES=ini.c iniparser.c dictionary.c strlib.c
 
-lib_LTLIBRARIES=libbsettings.la
+lib_LTLIBRARIES=libini.la
 
