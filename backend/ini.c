@@ -110,41 +110,34 @@ static Bool readActionValue (BSSettingActionValue * action, char * keyName)
 
 	memset (action, 0, sizeof(BSSettingActionValue));
 
-	token = strchr (value, ',');
+	token = strsep (&value, ",");
 	if (!token)
 		return FALSE;
-	/* key binding */
-	*token = 0;
-	stringToKeyBinding (value, action);
 
-	value = token + 1;
-	token = strchr (value, ',');
+	/* key binding */
+	stringToKeyBinding (token, action);
+
+	token = strsep (&value, ",");
 	if (!token)
 		return FALSE;
 
 	/* button binding */
-	*token = 0;
-	stringToButtonBinding (value, action);
+	stringToButtonBinding (token, action);
 
-	value = token + 1;
-	token = strchr (value, ',');
+	token = strsep (&value, ",");
 	if (!token)
 		return FALSE;
 
 	/* edge binding */
-	*token = 0;
-	stringToEdge (value, action);
+	stringToEdge (token, action);
 
-	value = token + 1;
-	token = strchr (value, ',');
+	token = strsep (&value, ",");
 	if (!token)
 		return FALSE;
 
 	/* edge button */
-	*token = 0;
-	action->edgeButton = atoi (value);
+	action->edgeButton = atoi (token);
 
-	value = token + 1;
 	/* bell */
 	action->onBell = (strcmp (value, "true") == 0);
 
@@ -175,6 +168,16 @@ static void writeActionValue (BSSettingActionValue * action, char * keyName)
 			  action->onBell ? "true" : "false");
 
 	iniparser_setstr (iniFile, keyName, actionString);
+}
+
+static Bool readListValue (BSSetting * setting, char * keyName)
+{
+	return FALSE;
+}
+
+static void writeListValue (BSSetting * setting, char * keyName)
+{
+
 }
 
 static void processEvents(void)
@@ -313,6 +316,7 @@ static void readSetting(BSContext * context, BSSetting * setting)
 			}
 			break;
 		case TypeList:
+			status = readListValue (setting, keyName);
 			break;
 		default:
 			break;
@@ -434,6 +438,7 @@ static void writeSetting(BSContext * context, BSSetting * setting)
 			}
 			break;
 		case TypeList:
+			writeListValue (setting, keyName);
 			break;
 		default:
 			break;
@@ -493,7 +498,7 @@ static BSStringList getExistingProfiles(void)
 	nFile = scandir(filePath, &nameList, profileNameFilter, NULL);
 
 	if (nFile <= 0)
-		return;
+		return NULL;
 
 	for (i = 0; i < nFile; i++)
 	{
