@@ -35,20 +35,10 @@
 
 #include <bsettings.h>
 #include "iniparser.h"
-#include "dictionary.h"
-#include "strlib.h"
+#include "option.h"
 
 #include <X11/X.h>
 #include <X11/Xlib.h>
-
-#define CompAltMask        (1 << 16)
-#define CompMetaMask       (1 << 17)
-#define CompSuperMask      (1 << 18)
-#define CompHyperMask      (1 << 19)
-#define CompModeSwitchMask (1 << 20)
-
-#define CompNumLockMask    (1 << 21)
-#define CompScrollLockMask (1 << 22)
 
 #define DEFAULTPROF "Default"
 #define SETTINGPATH ".bsettings/"
@@ -221,6 +211,17 @@ static void readSetting(BSContext * context, BSSetting * setting)
 			}
 			break;
 		case TypeColor:
+			{
+				char *value;
+				BSSettingColorValue color;
+				value = iniparser_getstring (iniFile, keyName, NULL);
+
+				if (value && stringToColor (value, &color.array))
+				{
+					bsSetColor (setting, color);
+					status = TRUE;
+				}
+			}
 			break;
 		case TypeList:
 			break;
@@ -317,6 +318,19 @@ static void writeSetting(BSContext * context, BSSetting * setting)
 			}
 			break;
 		case TypeColor:
+			{
+				BSSettingColorValue value;
+				if (bsGetColor (setting, &value))
+				{
+					char *colString;
+					colString = colorToString (&value.array);
+					if (!colString)
+						break;
+
+					iniparser_setstr (iniFile, keyName, colString);
+					free (colString);
+				}
+			}
 			break;
 		case TypeAction:
 			break;
