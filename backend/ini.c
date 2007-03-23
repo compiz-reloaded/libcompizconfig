@@ -29,6 +29,7 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <dirent.h>
 #include <unistd.h>
 #include <errno.h>
 
@@ -321,6 +322,8 @@ static void writeSetting(BSContext * context, BSSetting * setting)
 			break;
 		case TypeList:
 			break;
+		default:
+			break;
 	}
 
 	if (keyName)
@@ -347,9 +350,51 @@ static Bool getSettingIsReadOnly(BSSetting * setting)
 	return FALSE;
 }
 
+static int profileNameFilter (const struct dirent *name)
+{
+	int length = strlen (name->d_name);
+
+	if (strncmp (name->d_name + length - 4, ".ini", 4))
+		return 0;
+
+	return 1;
+}
+
 static BSStringList getExistingProfiles(void)
 {
-	BSStringList ret = NULL;
+	BSStringList  ret = NULL;
+	struct dirent **nameList;
+	char          *homeDir = NULL;
+	char          *filePath = NULL;
+   	char          *pos;
+	int           nFile, i;
+
+	homeDir = getenv ("HOME");
+	if (!homeDir)
+		return NULL;
+
+	asprintf (&filePath, "%s/%s", homeDir, SETTINGPATH);
+	if (!filePath)
+		return NULL;
+
+	nFile = scandir(filePath, &nameList, profileNameFilter, NULL);
+
+	if (nFile <= 0)
+		return;
+
+	for (i = 0; i < nFile; i++)
+	{
+		pos = strrchr (nameList[i]->d_name);
+		if (pos)
+		{
+			*pos = 0;
+			ret = bsStringListAppend (ret, nameList[i]->d_name);
+		}
+		free(nameList[i]);
+	}
+
+	free (filePath);
+	free (nameList);
 
 	return ret;
 }
