@@ -384,7 +384,7 @@ static BSStringList getExistingProfiles(void)
 
 	for (i = 0; i < nFile; i++)
 	{
-		pos = strrchr (nameList[i]->d_name);
+		pos = strrchr (nameList[i]->d_name, '.');
 		if (pos)
 		{
 			*pos = 0;
