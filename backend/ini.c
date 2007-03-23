@@ -173,6 +173,8 @@ static void writeActionValue (BSSettingActionValue * action, char * keyName)
 	asprintf (&actionString, "%s,%s,%s,%d,%s\n", keyBinding,
 			  buttonBinding, edge, action->edgeButton,
 			  action->onBell ? "true" : "false");
+
+	iniparser_setstr (iniFile, keyName, actionString);
 }
 
 static void processEvents(void)
