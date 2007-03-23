@@ -37,7 +37,7 @@ static void loadPlugins(BSContext * context, char * path)
 	
 	nFile = scandir(path, &nameList, pluginNameFilter, NULL);
 
-	if (!nFile)
+	if (nFile <= 0)
 		return;
 
 	for (i = 0; i < nFile; i++)
