@@ -99,6 +99,82 @@ static void setProfile(char *profile)
 	free (fileName);
 }
 
+static Bool readActionValue (BSSettingActionValue * action, char * keyName)
+{
+	char *value;
+	char *token;
+
+	value = iniparser_getstring (iniFile, keyName, NULL);
+	if (!value)
+		return FALSE;
+
+	memset (action, 0, sizeof(BSSettingActionValue));
+
+	token = strchr (value, ',');
+	if (!token)
+		return FALSE;
+	/* key binding */
+	*token = 0;
+	stringToKeyBinding (value, action);
+
+	value = token + 1;
+	token = strchr (value, ',');
+	if (!token)
+		return FALSE;
+
+	/* button binding */
+	*token = 0;
+	stringToButtonBinding (value, action);
+
+	value = token + 1;
+	token = strchr (value, ',');
+	if (!token)
+		return FALSE;
+
+	/* edge binding */
+	*token = 0;
+	stringToEdge (value, action);
+
+	value = token + 1;
+	token = strchr (value, ',');
+	if (!token)
+		return FALSE;
+
+	/* edge button */
+	*token = 0;
+	action->edgeButton = atoi (value);
+
+	value = token + 1;
+	/* bell */
+	action->onBell = (strcmp (value, "true") == 0);
+
+	return TRUE;
+}
+
+static void writeActionValue (BSSettingActionValue * action, char * keyName)
+{
+	char *keyBinding;
+	char *buttonBinding;
+	char *edge;
+	char *actionString;
+
+	keyBinding = keyBindingToString(action);
+	if (!keyBinding)
+		keyBinding = strdup("");
+
+	buttonBinding = buttonBindingToString(action);
+	if (!buttonBinding)
+		buttonBinding = strdup("");
+
+	edge = edgeToString(action->edgeMask);
+	if (!edge)
+		edge = strdup("");
+
+	asprintf (&actionString, "%s,%s,%s,%d,%s\n", keyBinding,
+			  buttonBinding, edge, action->edgeButton,
+			  action->onBell ? "true" : "false");
+}
+
 static void processEvents(void)
 {
 }
@@ -223,9 +299,18 @@ static void readSetting(BSContext * context, BSSetting * setting)
 				}
 			}
 			break;
-		case TypeList:
-			break;
 		case TypeAction:
+			{
+				BSSettingActionValue action;
+
+				if (readActionValue (&action, keyName))
+				{
+					bsSetAction (setting, action);
+					status = TRUE;
+				}
+			}
+			break;
+		case TypeList:
 			break;
 		default:
 			break;
@@ -271,6 +356,13 @@ static void writeSetting(BSContext * context, BSSetting * setting)
 	char *keyName;
 
 	asprintf (&keyName, "%s:%s", setting->parent->name, setting->name);
+
+	if (setting->isDefault)
+	{
+		iniparser_unset (iniFile, keyName);
+		free (keyName);
+		return;
+	}
 
 	switch (setting->type)
 	{
@@ -333,6 +425,11 @@ static void writeSetting(BSContext * context, BSSetting * setting)
 			}
 			break;
 		case TypeAction:
+			{
+				BSSettingActionValue value;
+				if (bsGetAction (setting, &value))
+					writeActionValue (&value, keyName);
+			}
 			break;
 		case TypeList:
 			break;
