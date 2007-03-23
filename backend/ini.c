@@ -356,9 +356,16 @@ static BSStringList getExistingProfiles(void)
 
 static Bool deleteProfile(char * profile)
 {
-	Bool status = FALSE;
+	char *fileName;
 
-	return status;
+	fileName = getIniFileName (profile);
+	if (!fileName)
+		return FALSE;
+
+	remove (fileName);
+	free (fileName);
+
+	return TRUE;
 }
 
 
