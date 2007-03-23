@@ -59,18 +59,14 @@ static dictionary * iniFile = NULL;
 static char* getIniFileName(char *profile)
 {
 	char *homeDir = NULL;
-	char *fileName;
-	int  pathLen = 0;
+	char *fileName = NULL;
 
 	homeDir = getenv ("HOME");
 
 	if (!homeDir)
 		return NULL;
 
-	pathLen = strlen (homeDir) + strlen (SETTINGPATH) + strlen (profile) + 6;
-	fileName = malloc (pathLen * sizeof(char));
-
-	snprintf (fileName, pathLen, "%s/%s%s.ini", homeDir, SETTINGPATH, profile);
+	asprintf (&fileName, "%s/%s%s.ini", homeDir, SETTINGPATH, profile);
 
 	return fileName;
 }
@@ -157,11 +153,91 @@ static Bool readInit(BSContext * context)
 static void readSetting(BSContext * context, BSSetting * setting)
 {
 	Bool status = FALSE;
+	char *keyName;
+
+	asprintf (&keyName, "%s:%s", setting->parent->name, setting->name);
+
+	switch (setting->type)
+	{
+	    case TypeString:
+			{
+				char *value;
+				value = iniparser_getstring (iniFile, keyName, NULL);
+
+				if (value)
+				{
+					bsSetString (setting, value);
+					status = TRUE;
+				}
+			}
+			break;
+		case TypeMatch:
+			{
+				char *value;
+				value = iniparser_getstring (iniFile, keyName, NULL);
+
+				if (value)
+				{
+					bsSetMatch (setting, value);
+					status = TRUE;
+				}
+			}
+			break;
+		case TypeInt:
+			{
+				int value;
+				value = iniparser_getint (iniFile, keyName, 0x7fffffff);
+
+				if (value != 0x7fffffff)
+				{
+					bsSetInt (setting, value);
+					status = TRUE;
+				}
+			}
+			break;
+		case TypeBool:
+			{
+				int value;
+				value = iniparser_getboolean (iniFile, keyName, 0x7fffffff);
+
+				if (value != 0x7fffffff)
+				{
+					bsSetBool (setting, (value != 0));
+					status = TRUE;
+				}
+			}
+			break;
+		case TypeFloat:
+			{
+				float value;
+				value = (float) iniparser_getdouble (iniFile, keyName, 0x7ffffffff);
+
+				if (value != 0x7ffffffff)
+				{
+					bsSetFloat (setting, value);
+					status = TRUE;
+				}
+			}
+			break;
+		case TypeColor:
+			break;
+		case TypeList:
+			break;
+		case TypeAction:
+			break;
+		default:
+			break;
+	}
 
 	if (status)
+	{
 		if (strcmp(setting->name, "____plugin_enabled") == 0)
 			context->pluginsChanged = TRUE;
 		context->changedSettings = bsSettingListAppend(context->changedSettings, setting);
+	}
+
+	if (keyName)
+		free (keyName);
 }
 
 static void readDone(BSContext * context)
@@ -190,6 +266,65 @@ static Bool writeInit(BSContext * context)
 
 static void writeSetting(BSContext * context, BSSetting * setting)
 {
+	char *keyName;
+
+	asprintf (&keyName, "%s:%s", setting->parent->name, setting->name);
+
+	switch (setting->type)
+	{
+		case TypeString:
+			{
+				char *value;
+				if (bsGetString (setting, &value))
+					iniparser_setstr (iniFile, keyName, value);
+			}
+			break;
+		case TypeMatch:
+			{
+				char *value;
+				if (bsGetMatch (setting, &value))
+					iniparser_setstr (iniFile, keyName, value);
+			}
+			break;
+		case TypeInt:
+			{
+				int value;
+				if (bsGetInt (setting, &value))
+				{
+					char string[64]; // should be enough for an int
+					snprintf (string, 64, "%i", value);
+					iniparser_setstr (iniFile, keyName, string);
+				}
+			}
+			break;
+		case TypeFloat:
+			{
+				float value;
+				if (bsGetFloat (setting, &value))
+				{
+					char string[64];
+					snprintf (string, 64, "%f", value);
+					iniparser_setstr (iniFile, keyName, string);
+				}
+			}
+			break;
+		case TypeBool:
+			{
+				Bool value;
+				if (bsGetBool (setting, &value))
+					iniparser_setstr (iniFile, keyName, value ? "true" : "false");
+			}
+			break;
+		case TypeColor:
+			break;
+		case TypeAction:
+			break;
+		case TypeList:
+			break;
+	}
+
+	if (keyName)
+		free (keyName);
 }
 
 static void writeDone(BSContext * context)
