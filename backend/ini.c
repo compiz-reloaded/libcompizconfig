@@ -101,14 +101,16 @@ static void setProfile(char *profile)
 
 static Bool readActionValue (BSSettingActionValue * action, char * keyName)
 {
-	char *value;
+	char *value, *valueStart, *valString;
 	char *token;
 
-	value = iniparser_getstring (iniFile, keyName, NULL);
-	if (!value)
+	valString = iniparser_getstring (iniFile, keyName, NULL);
+	if (!valString)
 		return FALSE;
 
 	memset (action, 0, sizeof(BSSettingActionValue));
+	value = strdup (valString);
+	valueStart = value;
 
 	token = strsep (&value, ",");
 	if (!token)
@@ -140,6 +142,8 @@ static Bool readActionValue (BSSettingActionValue * action, char * keyName)
 
 	/* bell */
 	action->onBell = (strcmp (value, "true") == 0);
+
+	free (valueStart);
 
 	return TRUE;
 }
