@@ -134,7 +134,7 @@ static Bool readActionValue (BSSettingActionValue * action, char * valueString)
 		goto invalidaction;
 
 	/* edge button */
-	action->edgeButton = stroul (token, NULL, 10);
+	action->edgeButton = strtoul (token, NULL, 10);
 
 	/* bell */
 	action->onBell = (strcmp (value, "true") == 0);
@@ -176,7 +176,7 @@ static void writeActionValue (BSSettingActionValue * action, char * keyName)
 
 static Bool readListValue (BSSetting * setting, char * keyName)
 {
-	BSSettingValueList = NULL;
+	BSSettingValueList list = NULL;
 	char *value, *valueStart, *valString;
 	char *token;
 	int nItems = 0, i = 0;
