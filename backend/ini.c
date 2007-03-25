@@ -99,46 +99,42 @@ static void setProfile(char *profile)
 	free (fileName);
 }
 
-static Bool readActionValue (BSSettingActionValue * action, char * keyName)
+static Bool readActionValue (BSSettingActionValue * action, char * valueString)
 {
-	char *value, *valueStart, *valString;
+	char *value, *valueStart;
 	char *token;
 
-	valString = iniparser_getstring (iniFile, keyName, NULL);
-	if (!valString)
-		return FALSE;
-
 	memset (action, 0, sizeof(BSSettingActionValue));
-	value = strdup (valString);
+	value = strdup (valueString);
 	valueStart = value;
 
 	token = strsep (&value, ",");
 	if (!token)
-		return FALSE;
+		goto invalidaction;
 
 	/* key binding */
 	stringToKeyBinding (token, action);
 
 	token = strsep (&value, ",");
 	if (!token)
-		return FALSE;
+		goto invalidaction;
 
 	/* button binding */
 	stringToButtonBinding (token, action);
 
 	token = strsep (&value, ",");
 	if (!token)
-		return FALSE;
+		goto invalidaction;
 
 	/* edge binding */
 	stringToEdge (token, action);
 
 	token = strsep (&value, ",");
 	if (!token)
-		return FALSE;
+		goto invalidaction;
 
 	/* edge button */
-	action->edgeButton = atoi (token);
+	action->edgeButton = stroul (token, NULL, 10);
 
 	/* bell */
 	action->onBell = (strcmp (value, "true") == 0);
@@ -146,6 +142,10 @@ static Bool readActionValue (BSSettingActionValue * action, char * keyName)
 	free (valueStart);
 
 	return TRUE;
+
+invalidaction:
+	free (valueStart);
+	return FALSE;
 }
 
 static void writeActionValue (BSSettingActionValue * action, char * keyName)
@@ -176,6 +176,123 @@ static void writeActionValue (BSSettingActionValue * action, char * keyName)
 
 static Bool readListValue (BSSetting * setting, char * keyName)
 {
+	BSSettingValueList = NULL;
+	char *value, *valueStart, *valString;
+	char *token;
+	int nItems = 0, i = 0;
+
+	valString = iniparser_getstring (iniFile, keyName, NULL);
+	if (!valString)
+		return FALSE;
+
+	value = strdup (valString);
+	valueStart = value;
+
+	while (token)
+	{
+		token = strsep (&value, ";");
+		nItems++;
+	}
+	value = valueStart;
+
+	token = strsep (&value, ";");
+
+	switch (setting->info.forList.listType)
+	{
+		case TypeString:
+		case TypeMatch:
+			{
+				char **array = malloc (nItems * sizeof(char*));
+				while (token)
+				{
+					array[i++] = strdup (token);
+					token = strsep (&value, ";");
+				}
+				list = bsGetValueListFromStringArray (array, nItems, setting);
+				for (i = 0; i < nItems; i++)
+					free (array[i]);
+				free (array);
+			}
+			break;
+		case TypeColor:
+			{
+				BSSettingColorValue *array = malloc (nItems * sizeof(BSSettingColorValue));
+				while (token)
+				{
+                    memset(&array[i], 0, sizeof(BSSettingColorValue));
+                   	stringToColor(token, &array[i]);
+					token = strsep (&value, ";");
+					i++;
+				}
+				list = bsGetValueListFromColorArray (array, nItems, setting);
+				free (array);
+			}
+			break;
+		case TypeBool:
+			{
+				Bool *array = malloc (nItems * sizeof(Bool));
+				Bool isTrue;
+				while (token)
+				{
+					isTrue = (token[0] == 'y' || token[0] == 'Y' || token[0] == '1' ||
+							  token[0] == 't' || token[0] == 'T');
+					array[i++] = isTrue;
+					token = strsep (&value, ";");
+				}
+				list = bsGetValueListFromBoolArray (array, nItems, setting);
+				free (array);
+			}
+			break;
+		case TypeInt:
+			{
+				int *array = malloc (nItems * sizeof(int));
+				while (token)
+				{
+					array[i++] = strtoul (token, NULL, 10);
+					token = strsep (&value, ";");
+				}
+				list = bsGetValueListFromIntArray (array, nItems, setting);
+				free (array);
+			}
+			break;
+		case TypeFloat:
+			{
+				float *array = malloc (nItems * sizeof(float));
+				while (token)
+				{
+					array[i++] = strtod (token, NULL);
+					token = strsep (&value, ";");
+				}
+				list = bsGetValueListFromFloatArray (array, nItems, setting);
+				free (array);
+			}
+			break;
+		case TypeAction:
+			{
+				BSSettingActionValue *array = malloc (nItems * sizeof(BSSettingActionValue));
+				while (token)
+				{
+					readActionValue (&array[i++], token);
+					token = strsep (&value, ";");
+				}
+				list = bsGetValueListFromActionArray (array, nItems, setting);
+				free (array);
+			}
+			break;
+		default:
+			break;
+	}
+
+	if (list)
+	{
+		bsSetList (setting, list);
+		bsSettingValueListFree (list, TRUE);
+		free (valueStart);
+		return TRUE;
+	}
+
+	free (valueStart);
+
 	return FALSE;
 }
 
@@ -315,8 +432,13 @@ static void readSetting(BSContext * context, BSSetting * setting)
 		case TypeAction:
 			{
 				BSSettingActionValue action;
+				char *value;
 
-				if (readActionValue (&action, keyName))
+				value = iniparser_getstring (iniFile, keyName, NULL);
+				if (!value)
+					break;
+				
+				if (readActionValue (&action, value))
 				{
 					bsSetAction (setting, action);
 					status = TRUE;
