@@ -231,7 +231,11 @@ static void readSetting(BSContext * context, BSSetting * setting)
 	Bool status = FALSE;
 	char *keyName;
 
-	asprintf (&keyName, "%s:%s", setting->parent->name, setting->name);
+	if (setting->isScreen)
+		asprintf (&keyName, "%s:s%d_%s", setting->parent->name, 
+				  setting->screenNum, setting->name);
+	else
+		asprintf (&keyName, "%s:as_%s", setting->parent->name, setting->name);
 
 	switch (setting->type)
 	{
@@ -365,7 +369,11 @@ static void writeSetting(BSContext * context, BSSetting * setting)
 {
 	char *keyName;
 
-	asprintf (&keyName, "%s:%s", setting->parent->name, setting->name);
+	if (setting->isScreen)
+		asprintf (&keyName, "%s:s%d_%s", setting->parent->name, 
+				  setting->screenNum, setting->name);
+	else
+		asprintf (&keyName, "%s:as_%s", setting->parent->name, setting->name);
 
 	if (setting->isDefault)
 	{
