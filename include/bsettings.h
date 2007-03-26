@@ -389,9 +389,18 @@ char * bsGetProfile(BSContext *context);
 
 Bool bsPluginSetActive(BSPlugin *plugin, Bool value);
 
-//utility functions
-unsigned int bsGetModsAndEndptr(char * src, char ** ret);
-char * bsModsToString(unsigned int mods);
+/* functions parsing/creating an action string -
+   the returned strings must be free'd after usage! */
+
+char * bsKeyBindingToString (BSSettingActionValue *action);
+char * bsButtonBindingToString (BSSettingActionValue *action);
+char * bsEdgeToString (BSSettingActionValue *action);
+char * bsColorToString (BSSettingColorValue *color);
+
+Bool bsStringToKeyBinding (const char *binding, BSSettingActionValue *action);
+Bool bsStringToButtonBinding (const char *binding, BSSettingActionValue *action);
+void bsStringToEdge (const char *edge, BSSettingActionValue *action);
+Bool bsStringToColor (const char *value, BSSettingColorValue *color);
 
 void bsProcessEvents(BSContext *context);
 

@@ -37,7 +37,6 @@
 
 #include <bsettings.h>
 #include "iniparser.h"
-#include "option.h"
 
 #include <X11/X.h>
 #include <X11/Xlib.h>
@@ -156,21 +155,21 @@ static Bool readActionValue (BSSettingActionValue * action, char * valueString)
 		goto invalidaction;
 
 	/* key binding */
-	stringToKeyBinding (token, action);
+	bsStringToKeyBinding (token, action);
 
 	token = strsep (&value, ",");
 	if (!token)
 		goto invalidaction;
 
 	/* button binding */
-	stringToButtonBinding (token, action);
+	bsStringToButtonBinding (token, action);
 
 	token = strsep (&value, ",");
 	if (!token)
 		goto invalidaction;
 
 	/* edge binding */
-	stringToEdge (token, action);
+	bsStringToEdge (token, action);
 
 	token = strsep (&value, ",");
 	if (!token)
@@ -198,15 +197,15 @@ static char * writeActionValue (BSSettingActionValue * action)
 	char *edge;
 	char *actionString = NULL;
 
-	keyBinding = keyBindingToString(action);
+	keyBinding = bsKeyBindingToString (action);
 	if (!keyBinding)
 		keyBinding = strdup("");
 
-	buttonBinding = buttonBindingToString(action);
+	buttonBinding = bsButtonBindingToString (action);
 	if (!buttonBinding)
 		buttonBinding = strdup("");
 
-	edge = edgeToString(action->edgeMask);
+	edge = bsEdgeToString (action);
 	if (!edge)
 		edge = strdup("");
 
@@ -264,7 +263,7 @@ static Bool readListValue (IniPrivData *data, BSSetting * setting, char * keyNam
 				while (token)
 				{
                     memset(&array[i], 0, sizeof(BSSettingColorValue));
-                   	stringToColor(token, &array[i]);
+                   	bsStringToColor(token, &array[i]);
 					token = strsep (&value, ";");
 					i++;
 				}
@@ -390,7 +389,7 @@ static void writeListValue (IniPrivData *data, BSSetting * setting, char * keyNa
 			case TypeColor:
 				{
 					char *color = NULL;
-					color = colorToString(&list->data->value.asColor.array);
+					color = bsColorToString(&list->data->value.asColor);
 					if (!color)
 						break;
 
@@ -618,7 +617,7 @@ static void readSetting(BSContext * context, BSSetting * setting)
 				BSSettingColorValue color;
 				value = iniparser_getstring (data->iniFile, keyName, NULL);
 
-				if (value && stringToColor (value, &color.array))
+				if (value && bsStringToColor (value, &color))
 				{
 					bsSetColor (setting, color);
 					status = TRUE;
@@ -772,7 +771,7 @@ static void writeSetting(BSContext * context, BSSetting * setting)
 				if (bsGetColor (setting, &value))
 				{
 					char *colString = NULL;
-					colString = colorToString (&value.array);
+					colString = bsColorToString (&value);
 					if (!colString)
 						break;
 

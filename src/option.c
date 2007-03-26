@@ -34,7 +34,6 @@
 #include <X11/X.h>
 #include <X11/Xlib.h>
 #include <bsettings.h>
-#include "option.h"
 
 #define CompAltMask        (1 << 16)
 #define CompMetaMask       (1 << 17)
@@ -58,7 +57,7 @@ struct _Modifier {
     { "<Alt>",	      CompAltMask        },
     { "<Meta>",	      CompMetaMask       },
     { "<Super>",      CompSuperMask      },
-    { "<Hyper>",      CompHyperMask	 },
+	{ "<Hyper>",      CompHyperMask	     },
     { "<ModeSwitch>", CompModeSwitchMask },
 };
 
@@ -79,31 +78,31 @@ static char *edgeName[] = {
 
 static char *
 stringAppend (char *s,
-	      char *a)
+			  char *a)
 {
     char *r;
     int  len;
 
     len = strlen (a);
 
-    if (s)
-	len += strlen (s);
-
-    r = malloc (len + 1);
-    if (r)
-    {
 	if (s)
-	{
-	    sprintf (r, "%s%s", s, a);
-	    free (s);
-	}
-	else
-	{
-	    sprintf (r, "%s", a);
-	}
+		len += strlen (s);
 
-	s = r;
-    }
+	r = malloc (len + 1);
+	if (r)
+	{
+		if (s)
+		{
+			sprintf (r, "%s%s", s, a);
+			free (s);
+		}
+		else
+		{
+			sprintf (r, "%s", a);
+		}
+
+		s = r;
+	}
 
     return s;
 }
@@ -116,37 +115,37 @@ modifiersToString (unsigned int modMask)
 
     for (i = 0; i < N_MODIFIERS; i++)
     {
-	if (modMask & modifiers[i].modifier)
-	    binding = stringAppend (binding, modifiers[i].name);
-    }
-
-    return binding;
-}
-
-char *
-keyBindingToString (BSSettingActionValue *action)
-{
-    char *binding;
-
-    binding = modifiersToString (action->keyModMask);
-
-    if (action->keysym != NoSymbol)
-    {
-	char   *keyname;
-
-	keyname = XKeysymToString (action->keysym);
-
-	if (keyname)
-	{
-	    binding = stringAppend (binding, keyname);
+		if (modMask & modifiers[i].modifier)
+			binding = stringAppend (binding, modifiers[i].name);
 	}
-    }
 
     return binding;
 }
 
 char *
-buttonBindingToString (BSSettingActionValue *action)
+bsKeyBindingToString (BSSettingActionValue *action)
+{
+	char *binding;
+
+	binding = modifiersToString (action->keyModMask);
+
+	if (action->keysym != NoSymbol)
+	{
+		char   *keyname;
+
+		keyname = XKeysymToString (action->keysym);
+
+		if (keyname)
+		{
+			binding = stringAppend (binding, keyname);
+		}
+	}
+
+    return binding;
+}
+
+char *
+bsButtonBindingToString (BSSettingActionValue *action)
 {
     char *binding;
     char buttonStr[256];
@@ -167,16 +166,16 @@ stringToModifiers (const char *binding)
 
     for (i = 0; i < N_MODIFIERS; i++)
     {
-	if (strcasestr (binding, modifiers[i].name))
-	    mods |= modifiers[i].modifier;
-    }
+		if (strcasestr (binding, modifiers[i].name))
+			mods |= modifiers[i].modifier;
+	}
 
     return mods;
 }
 
 Bool
-stringToKeyBinding (const char           *binding,
-		    BSSettingActionValue *action)
+bsStringToKeyBinding (const char           *binding,
+  					  BSSettingActionValue *action)
 {
     char	  *ptr;
     unsigned int  mods;
@@ -186,26 +185,26 @@ stringToKeyBinding (const char           *binding,
 
     ptr = strrchr (binding, '>');
     if (ptr)
-	binding = ptr + 1;
+		binding = ptr + 1;
 
-    while (*binding && !isalnum (*binding))
-	binding++;
+	while (*binding && !isalnum (*binding))
+		binding++;
 
-    keysym = XStringToKeysym (binding);
-    if (keysym != NoSymbol)
-    {
-	action->keysym     = keysym;
-	action->keyModMask = mods;
+	keysym = XStringToKeysym (binding);
+	if (keysym != NoSymbol)
+	{
+		action->keysym     = keysym;
+		action->keyModMask = mods;
 
-    	return TRUE;
+		return TRUE;
     }
 
     return FALSE;
 }
 
 Bool
-stringToButtonBinding (const char           *binding,
-		       BSSettingActionValue *action)
+bsStringToButtonBinding (const char           *binding,
+		  				 BSSettingActionValue *action)
 {
     char	 *ptr;
     unsigned int mods;
@@ -214,76 +213,87 @@ stringToButtonBinding (const char           *binding,
 
     ptr = strrchr (binding, '>');
     if (ptr)
-	binding = ptr + 1;
+		binding = ptr + 1;
 
     while (*binding && !isalnum (*binding))
-	binding++;
+		binding++;
 
     if (strncmp (binding, "Button", strlen ("Button")) == 0)
     {
-	int buttonNum;
+		int buttonNum;
 
-	if (sscanf (binding + strlen ("Button"), "%d", &buttonNum) == 1)
-	{
-	    action->button        = buttonNum;
-	    action->buttonModMask = mods;
+		if (sscanf (binding + strlen ("Button"), "%d", &buttonNum) == 1)
+		{
+			action->button        = buttonNum;
+			action->buttonModMask = mods;
 
-	    return TRUE;
-	}
+			return TRUE;
+		}
     }
 
     return FALSE;
 }
 
 char *
-edgeToString (unsigned int edge)
+bsEdgeToString (BSSettingActionValue *action)
 {
-    return edgeName[edge];
+	int i;
+
+	for (i = 0; i < N_EDGENAMES; i++)
+	{
+		if (action->edgeMask & (1 << i))
+			return strdup (edgeName[i]);
+	}
+
+	return strdup ("");
 }
 
-void stringToEdge (const char           *edge,
-		   BSSettingActionValue *action)
+void bsStringToEdge (const char           *edge,
+		  			 BSSettingActionValue *action)
 {
     int i;
 
     action->edgeMask = 0;
 
     for (i = 0; i < N_EDGENAMES; i++)
-    {
-	if (strcmp(edge, edgeName[i]) == 0)
 	{
-	    action->edgeMask = (1 << i);
-	    break;
+		if (strcmp(edge, edgeName[i]) == 0)
+		{
+			action->edgeMask = (1 << i);
+			break;
+		}
 	}
-    }
 }
 
 Bool
-stringToColor (const char     *color,
-	       unsigned short *rgba)
+bsStringToColor (const char          *value,
+				 BSSettingColorValue *color)
 {
     int c[4];
 
-    if (sscanf (color, "#%2x%2x%2x%2x", &c[0], &c[1], &c[2], &c[3]) == 4)
-    {
-	rgba[0] = c[0] << 8 | c[0];
-	rgba[1] = c[1] << 8 | c[1];
-	rgba[2] = c[2] << 8 | c[2];
-	rgba[3] = c[3] << 8 | c[3];
+    if (sscanf (value, "#%2x%2x%2x%2x", &c[0], &c[1], &c[2], &c[3]) == 4)
+	{
+		color->color.red   = c[0] << 8 | c[0];
+		color->color.green = c[1] << 8 | c[1];
+		color->color.blue  = c[2] << 8 | c[2];
+		color->color.alpha = c[3] << 8 | c[3];
 
-	return TRUE;
+		return TRUE;
     }
 
     return FALSE;
 }
 
 char *
-colorToString (unsigned short *rgba)
+bsColorToString (BSSettingColorValue *color)
 {
     char tmp[256];
 
     snprintf (tmp, 256, "#%.2x%.2x%.2x%.2x",
-	      rgba[0] / 256, rgba[1] / 256, rgba[2] / 256, rgba[3] / 256);
+	      color->color.red / 256, 
+		  color->color.green / 256, 
+		  color->color.blue / 256, 
+		  color->color.alpha / 256);
 
     return strdup (tmp);
 }
