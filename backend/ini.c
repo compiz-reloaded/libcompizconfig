@@ -27,8 +27,10 @@
 #include <malloc.h>
 #include <string.h>
 
+#include <sys/inotify.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 #include <dirent.h>
 #include <unistd.h>
 #include <errno.h>
@@ -43,9 +45,48 @@
 #define DEFAULTPROF "Default"
 #define SETTINGPATH ".bsettings/"
 
-static char * currentProfile = NULL;
-static char * lastProfile = NULL;
-static dictionary * iniFile = NULL;
+typedef struct _IniPrivData
+{
+	BSContext *context;
+	char * lastProfile;
+	dictionary * iniFile;
+	int iniWatchDesc;
+	Bool ignoreEvent;
+} IniPrivData;
+
+static IniPrivData *privData = NULL;
+static int privDataSize = 0;
+static int iniNotifyFd = 0;
+
+static void updateNotify(IniPrivData *data, char *filePath)
+{
+	if (!iniNotifyFd)
+	{
+		iniNotifyFd = inotify_init ();
+		fcntl (iniNotifyFd, F_SETFL, O_NONBLOCK);
+	}
+
+	if (data->iniWatchDesc)
+		inotify_rm_watch (iniNotifyFd, data->iniWatchDesc);
+
+	data->iniWatchDesc = inotify_add_watch (iniNotifyFd, filePath, 
+											IN_MODIFY | IN_MOVE | IN_CREATE | IN_DELETE);
+
+}
+static IniPrivData *findPrivFromContext (BSContext *context)
+{
+	int i;
+	IniPrivData *data;
+
+	for (i = 0, data = privData; i < privDataSize; i++, data++)
+		if (data->context == context)
+			break;
+
+	if (i == privDataSize)
+		return NULL;
+
+	return data;
+}
 
 static char* getIniFileName(char *profile)
 {
@@ -62,15 +103,15 @@ static char* getIniFileName(char *profile)
 	return fileName;
 }
 
-static void setProfile(char *profile)
+static void setProfile(IniPrivData *data, char *profile)
 {
 	char *fileName;
 	struct stat fileStat;
 
-	if (iniFile)
-		iniparser_freedict (iniFile);
+	if (data->iniFile)
+		iniparser_freedict (data->iniFile);
 
-	iniFile = NULL;
+	data->iniFile = NULL;
 
 	/* first we need to find the file name */
 	fileName = getIniFileName (profile);
@@ -93,8 +134,10 @@ static void setProfile(char *profile)
 			return;
 	}
 
+	updateNotify (data, fileName);
+
 	/* load the data from the file */
-	iniFile = iniparser_load (fileName);
+	data->iniFile = iniparser_load (fileName);
 
 	free (fileName);
 }
@@ -174,14 +217,14 @@ static char * writeActionValue (BSSettingActionValue * action)
 	return actionString;
 }
 
-static Bool readListValue (BSSetting * setting, char * keyName)
+static Bool readListValue (IniPrivData *data, BSSetting * setting, char * keyName)
 {
 	BSSettingValueList list = NULL;
 	char *value, *valueStart, *valString;
 	char *token;
 	int nItems = 0, i = 0;
 
-	valString = iniparser_getstring (iniFile, keyName, NULL);
+	valString = iniparser_getstring (data->iniFile, keyName, NULL);
 	if (!valString)
 		return FALSE;
 
@@ -297,7 +340,7 @@ static Bool readListValue (BSSetting * setting, char * keyName)
 	return FALSE;
 }
 
-static void writeListValue (BSSetting * setting, char * keyName)
+static void writeListValue (IniPrivData *data, BSSetting * setting, char * keyName)
 {
 #define STRINGBUFSIZE 2048
 	char stringBuffer[STRINGBUFSIZE]; //FIXME: we should allocate that dynamically
@@ -373,47 +416,120 @@ static void writeListValue (BSSetting * setting, char * keyName)
 		list = list->next;
 	}
 
-	iniparser_setstr (iniFile, keyName, stringBuffer);
+	iniparser_setstr (data->iniFile, keyName, stringBuffer);
 }
 
 static void processEvents(void)
 {
+    char	buf[256 * (sizeof (struct inotify_event) + 16)];
+	struct  inotify_event *event;
+	IniPrivData *data;
+	int		len, i = 0, j;
+
+	if (!iniNotifyFd)
+		return;
+
+    len = read (iniNotifyFd, buf, sizeof (buf));
+	len = -1;
+
+	if (len < 0)
+		return;
+
+	while (i < len)
+	{
+	    event = (struct inotify_event *) &buf[i];
+		data = privData;
+
+		for (j = 0, data = privData; j < privDataSize; j++, data++)
+			if (!data->ignoreEvent && (data->iniWatchDesc == event->wd))
+				break;
+
+		if (j < privDataSize)
+		{
+			/* our ini file has been modified, reload it */
+			char *currentProfile;
+			currentProfile = bsGetProfile (data->context);
+			if (!currentProfile)
+				currentProfile = DEFAULTPROF;
+
+			setProfile (data, currentProfile);
+			bsReadSettings (data->context);
+		}
+
+	    i += sizeof (*event) + event->len;
+    }
 }
 
 static Bool initBackend(BSContext * context)
 {
-	return FALSE;
+	IniPrivData *newData;
+	privData = realloc (privData, (privDataSize + 1) * sizeof(IniPrivData));
+
+	newData = privData + privDataSize;
+
+	/* initialize the newly allocated part */
+	memset(newData, 0, sizeof(IniPrivData));
+	newData->context = context;
+
+	return TRUE;
 }
 
 static Bool finiBackend(BSContext * context)
 {
-	if (iniFile)
-		iniparser_freedict (iniFile);
-	iniFile = NULL;
+	IniPrivData *data;
 
-	if (lastProfile)
-		free (lastProfile);
-	lastProfile = NULL;
+	data = findPrivFromContext (context);
+
+	if (!data)
+		return FALSE;
+
+	if (data->iniFile)
+		iniparser_freedict (data->iniFile);
+
+	if (data->iniWatchDesc)
+		inotify_rm_watch (iniNotifyFd, data->iniWatchDesc);
+
+	if (data->lastProfile)
+		free (data->lastProfile);
+
+	privDataSize--;
+
+	if (privDataSize)
+		privData = realloc (privData, privDataSize * sizeof(IniPrivData));
+	else
+	{
+		free (privData);
+		if (iniNotifyFd)
+			close (iniNotifyFd);
+	}
 
 	return TRUE;
 }
 
 static Bool readInit(BSContext * context)
 {
+	char *currentProfile;
+	IniPrivData *data;
+
+	data = findPrivFromContext (context);
+	if (!data)
+		return FALSE;
+
 	currentProfile = bsGetProfile(context);
 	if (!currentProfile)
 		currentProfile = DEFAULTPROF;
 
-	if (!lastProfile || (strcmp(lastProfile, currentProfile) != 0))
-		setProfile (currentProfile);
+	if (!data->lastProfile || (strcmp(data->lastProfile, currentProfile) != 0))
+		setProfile (data, currentProfile);
 
-	if (lastProfile)
-		free (lastProfile);
+	if (data->lastProfile)
+		free (data->lastProfile);
+	data->lastProfile = NULL;
 
-	if (!iniFile)
+	if (!data->iniFile)
 		return FALSE;
 
-	lastProfile = strdup (currentProfile);
+	data->lastProfile = strdup (currentProfile);
 	
 	return TRUE;
 }
@@ -422,6 +538,11 @@ static void readSetting(BSContext * context, BSSetting * setting)
 {
 	Bool status = FALSE;
 	char *keyName;
+	IniPrivData *data;
+
+	data = findPrivFromContext (context);
+	if (!data)
+		return;
 
 	if (setting->isScreen)
 		asprintf (&keyName, "%s:s%d_%s", setting->parent->name, 
@@ -434,7 +555,7 @@ static void readSetting(BSContext * context, BSSetting * setting)
 	    case TypeString:
 			{
 				char *value;
-				value = iniparser_getstring (iniFile, keyName, NULL);
+				value = iniparser_getstring (data->iniFile, keyName, NULL);
 
 				if (value)
 				{
@@ -446,7 +567,7 @@ static void readSetting(BSContext * context, BSSetting * setting)
 		case TypeMatch:
 			{
 				char *value;
-				value = iniparser_getstring (iniFile, keyName, NULL);
+				value = iniparser_getstring (data->iniFile, keyName, NULL);
 
 				if (value)
 				{
@@ -458,7 +579,7 @@ static void readSetting(BSContext * context, BSSetting * setting)
 		case TypeInt:
 			{
 				int value;
-				value = iniparser_getint (iniFile, keyName, 0x7fffffff);
+				value = iniparser_getint (data->iniFile, keyName, 0x7fffffff);
 
 				if (value != 0x7fffffff)
 				{
@@ -470,7 +591,7 @@ static void readSetting(BSContext * context, BSSetting * setting)
 		case TypeBool:
 			{
 				int value;
-				value = iniparser_getboolean (iniFile, keyName, 0x7fffffff);
+				value = iniparser_getboolean (data->iniFile, keyName, 0x7fffffff);
 
 				if (value != 0x7fffffff)
 				{
@@ -482,7 +603,7 @@ static void readSetting(BSContext * context, BSSetting * setting)
 		case TypeFloat:
 			{
 				float value;
-				value = (float) iniparser_getdouble (iniFile, keyName, 0x7ffffffff);
+				value = (float) iniparser_getdouble (data->iniFile, keyName, 0x7ffffffff);
 
 				if (value != 0x7ffffffff)
 				{
@@ -495,7 +616,7 @@ static void readSetting(BSContext * context, BSSetting * setting)
 			{
 				char *value;
 				BSSettingColorValue color;
-				value = iniparser_getstring (iniFile, keyName, NULL);
+				value = iniparser_getstring (data->iniFile, keyName, NULL);
 
 				if (value && stringToColor (value, &color.array))
 				{
@@ -509,7 +630,7 @@ static void readSetting(BSContext * context, BSSetting * setting)
 				BSSettingActionValue action;
 				char *value;
 
-				value = iniparser_getstring (iniFile, keyName, NULL);
+				value = iniparser_getstring (data->iniFile, keyName, NULL);
 				if (!value)
 					break;
 				
@@ -521,7 +642,7 @@ static void readSetting(BSContext * context, BSSetting * setting)
 			}
 			break;
 		case TypeList:
-			status = readListValue (setting, keyName);
+			status = readListValue (data, setting, keyName);
 			break;
 		default:
 			break;
@@ -544,27 +665,40 @@ static void readDone(BSContext * context)
 
 static Bool writeInit(BSContext * context)
 {
-	currentProfile = bsGetProfile(context);
+	char *currentProfile;
+	IniPrivData *data;
+
+	data = findPrivFromContext (context);
+	if (!data)
+		return FALSE;
+
+	currentProfile = bsGetProfile (context);
 	if (!currentProfile)
 		currentProfile = DEFAULTPROF;
 
-	if (!lastProfile || (strcmp(lastProfile, currentProfile) != 0))
-		setProfile (currentProfile);
+	if (!data->lastProfile || (strcmp(data->lastProfile, currentProfile) != 0))
+		setProfile (data, currentProfile);
 
-	if (lastProfile)
-		free (lastProfile);
+	if (data->lastProfile)
+		free (data->lastProfile);
+	data->lastProfile = NULL;
 
-	if (!iniFile)
+	if (!data->iniFile)
 		return FALSE;
 
-	lastProfile = strdup (currentProfile);
-	
+	data->lastProfile = strdup (currentProfile);
+
 	return TRUE;
 }
 
 static void writeSetting(BSContext * context, BSSetting * setting)
 {
 	char *keyName;
+	IniPrivData *data;
+
+	data = findPrivFromContext (context);
+	if (!data)
+		return;
 
 	if (setting->isScreen)
 		asprintf (&keyName, "%s:s%d_%s", setting->parent->name, 
@@ -574,7 +708,7 @@ static void writeSetting(BSContext * context, BSSetting * setting)
 
 	if (setting->isDefault)
 	{
-		iniparser_unset (iniFile, keyName);
+		iniparser_unset (data->iniFile, keyName);
 		free (keyName);
 		return;
 	}
@@ -585,14 +719,14 @@ static void writeSetting(BSContext * context, BSSetting * setting)
 			{
 				char *value;
 				if (bsGetString (setting, &value))
-					iniparser_setstr (iniFile, keyName, value);
+					iniparser_setstr (data->iniFile, keyName, value);
 			}
 			break;
 		case TypeMatch:
 			{
 				char *value;
 				if (bsGetMatch (setting, &value))
-					iniparser_setstr (iniFile, keyName, value);
+					iniparser_setstr (data->iniFile, keyName, value);
 			}
 			break;
 		case TypeInt:
@@ -605,7 +739,7 @@ static void writeSetting(BSContext * context, BSSetting * setting)
 					if (!string)
 						break;
 
-					iniparser_setstr (iniFile, keyName, string);
+					iniparser_setstr (data->iniFile, keyName, string);
 					free (string);
 				}
 			}
@@ -616,11 +750,11 @@ static void writeSetting(BSContext * context, BSSetting * setting)
 				if (bsGetFloat (setting, &value))
 				{
 					char *string = NULL;
-					asprintf (string, "%f", value);
+					asprintf (&string, "%f", value);
 					if (!string)
 						break;
 						
-					iniparser_setstr (iniFile, keyName, string);
+					iniparser_setstr (data->iniFile, keyName, string);
 					free (string);
 				}
 			}
@@ -629,7 +763,7 @@ static void writeSetting(BSContext * context, BSSetting * setting)
 			{
 				Bool value;
 				if (bsGetBool (setting, &value))
-					iniparser_setstr (iniFile, keyName, value ? "true" : "false");
+					iniparser_setstr (data->iniFile, keyName, value ? "true" : "false");
 			}
 			break;
 		case TypeColor:
@@ -642,7 +776,7 @@ static void writeSetting(BSContext * context, BSSetting * setting)
 					if (!colString)
 						break;
 
-					iniparser_setstr (iniFile, keyName, colString);
+					iniparser_setstr (data->iniFile, keyName, colString);
 					free (colString);
 				}
 			}
@@ -657,13 +791,13 @@ static void writeSetting(BSContext * context, BSSetting * setting)
 					if (!actionString)
 						break;
 						
-					iniparser_setstr (iniFile, keyName, actionString);
+					iniparser_setstr (data->iniFile, keyName, actionString);
 					free (actionString);
 				}
 			}
 			break;
 		case TypeList:
-			writeListValue (setting, keyName);
+			writeListValue (data, setting, keyName);
 			break;
 		default:
 			break;
@@ -678,11 +812,25 @@ static void writeDone(BSContext * context)
 	/* export the data to ensure the changes are on disk */
 	FILE *file;
 	char *fileName;
+	char *currentProfile;
+	IniPrivData *data;
 
+	data = findPrivFromContext (context);
+	if (!data)
+		return;
+
+	currentProfile = bsGetProfile (context);
 	fileName = getIniFileName (currentProfile);
 
 	file = fopen (fileName, "w");
-	iniparser_dump_ini (iniFile, file);
+
+	iniparser_dump_ini (data->iniFile, file);
+
+	/* empty file watch */
+	data->ignoreEvent = TRUE;
+	processEvents ();
+	data->ignoreEvent = FALSE;
+
 	fclose (file);
 	free (fileName);
 }
