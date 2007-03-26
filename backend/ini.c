@@ -148,12 +148,12 @@ invalidaction:
 	return FALSE;
 }
 
-static void writeActionValue (BSSettingActionValue * action, char * keyName)
+static char * writeActionValue (BSSettingActionValue * action)
 {
 	char *keyBinding;
 	char *buttonBinding;
 	char *edge;
-	char *actionString;
+	char *actionString = NULL;
 
 	keyBinding = keyBindingToString(action);
 	if (!keyBinding)
@@ -171,7 +171,7 @@ static void writeActionValue (BSSettingActionValue * action, char * keyName)
 			  buttonBinding, edge, action->edgeButton,
 			  action->onBell ? "true" : "false");
 
-	iniparser_setstr (iniFile, keyName, actionString);
+	return actionString;
 }
 
 static Bool readListValue (BSSetting * setting, char * keyName)
@@ -188,6 +188,7 @@ static Bool readListValue (BSSetting * setting, char * keyName)
 	value = strdup (valString);
 	valueStart = value;
 
+	token = strsep (&value, ";");
 	while (token)
 	{
 		token = strsep (&value, ";");
@@ -298,7 +299,81 @@ static Bool readListValue (BSSetting * setting, char * keyName)
 
 static void writeListValue (BSSetting * setting, char * keyName)
 {
+#define STRINGBUFSIZE 2048
+	char stringBuffer[STRINGBUFSIZE]; //FIXME: we should allocate that dynamically
+	BSSettingValueList list;
 
+	if (!bsGetList (setting, &list))
+		return;
+
+	memset (stringBuffer, 0, sizeof(stringBuffer));
+
+	while (list)
+	{
+		switch (setting->info.forList.listType)
+		{
+			case TypeString:
+				strncat (stringBuffer, list->data->value.asString, STRINGBUFSIZE);
+				break;
+			case TypeMatch:
+				strncat (stringBuffer, list->data->value.asMatch, STRINGBUFSIZE);
+				break;
+			case TypeInt:
+				{
+					char *value = NULL;
+					asprintf (&value, "%d", list->data->value.asInt);
+					if (!value)
+						break;
+
+					strncat (stringBuffer, value, STRINGBUFSIZE);
+					free (value);
+				}
+				break;
+			case TypeBool:
+				strncat (stringBuffer, (list->data->value.asBool) ? "true" : "false", 
+						 STRINGBUFSIZE);
+				break;
+			case TypeFloat:
+				{
+					char *value = NULL;
+					asprintf (&value, "%f", list->data->value.asFloat);
+					if (!value)
+						break;
+
+					strncat (stringBuffer, value, STRINGBUFSIZE);
+					free (value);
+				}
+				break;
+			case TypeColor:
+				{
+					char *color = NULL;
+					color = colorToString(&list->data->value.asColor.array);
+					if (!color)
+						break;
+
+					strncat (stringBuffer, color, STRINGBUFSIZE);
+					free (color);
+				}
+				break;
+			case TypeAction:
+				{
+					char *action;
+					action = writeActionValue (&list->data->value.asAction);
+					if (!action)
+						break;
+						
+					strncat (stringBuffer, action, STRINGBUFSIZE);
+					free (action);
+				}
+			default:
+				break;
+		}
+
+		strncat (stringBuffer, ";", STRINGBUFSIZE);;
+		list = list->next;
+	}
+
+	iniparser_setstr (iniFile, keyName, stringBuffer);
 }
 
 static void processEvents(void)
@@ -525,9 +600,13 @@ static void writeSetting(BSContext * context, BSSetting * setting)
 				int value;
 				if (bsGetInt (setting, &value))
 				{
-					char string[64]; // should be enough for an int
-					snprintf (string, 64, "%i", value);
+					char *string = NULL;
+					asprintf (&string, "%i", value);
+					if (!string)
+						break;
+
 					iniparser_setstr (iniFile, keyName, string);
+					free (string);
 				}
 			}
 			break;
@@ -536,9 +615,13 @@ static void writeSetting(BSContext * context, BSSetting * setting)
 				float value;
 				if (bsGetFloat (setting, &value))
 				{
-					char string[64];
-					snprintf (string, 64, "%f", value);
+					char *string = NULL;
+					asprintf (string, "%f", value);
+					if (!string)
+						break;
+						
 					iniparser_setstr (iniFile, keyName, string);
+					free (string);
 				}
 			}
 			break;
@@ -554,7 +637,7 @@ static void writeSetting(BSContext * context, BSSetting * setting)
 				BSSettingColorValue value;
 				if (bsGetColor (setting, &value))
 				{
-					char *colString;
+					char *colString = NULL;
 					colString = colorToString (&value.array);
 					if (!colString)
 						break;
@@ -568,7 +651,15 @@ static void writeSetting(BSContext * context, BSSetting * setting)
 			{
 				BSSettingActionValue value;
 				if (bsGetAction (setting, &value))
-					writeActionValue (&value, keyName);
+				{
+					char *actionString = NULL;
+					actionString = writeActionValue (&value);
+					if (!actionString)
+						break;
+						
+					iniparser_setstr (iniFile, keyName, actionString);
+					free (actionString);
+				}
 			}
 			break;
 		case TypeList:
