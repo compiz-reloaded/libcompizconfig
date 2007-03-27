@@ -34,7 +34,6 @@
 #include <errno.h>
 
 #include <bsettings.h>
-#include "iniparser.h"
 
 #include <X11/X.h>
 #include <X11/Xlib.h>
