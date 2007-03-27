@@ -18,8 +18,6 @@
  *
  **/
 
-
-
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,7 +46,7 @@ typedef struct _IniPrivData
 {
 	BSContext *context;
 	char * lastProfile;
-	dictionary * iniFile;
+	IniDictionary * iniFile;
 	int iniWatchDesc;
 	Bool ignoreEvent;
 } IniPrivData;
@@ -108,7 +106,7 @@ static void setProfile(IniPrivData *data, char *profile)
 	struct stat fileStat;
 
 	if (data->iniFile)
-		iniparser_freedict (data->iniFile);
+		bsIniClose (data->iniFile);
 
 	data->iniFile = NULL;
 
@@ -136,286 +134,9 @@ static void setProfile(IniPrivData *data, char *profile)
 	updateNotify (data, fileName);
 
 	/* load the data from the file */
-	data->iniFile = iniparser_load (fileName);
+	data->iniFile = bsIniOpen (fileName);
 
 	free (fileName);
-}
-
-static Bool readActionValue (BSSettingActionValue * action, char * valueString)
-{
-	char *value, *valueStart;
-	char *token;
-
-	memset (action, 0, sizeof(BSSettingActionValue));
-	value = strdup (valueString);
-	valueStart = value;
-
-	token = strsep (&value, ",");
-	if (!token)
-		goto invalidaction;
-
-	/* key binding */
-	bsStringToKeyBinding (token, action);
-
-	token = strsep (&value, ",");
-	if (!token)
-		goto invalidaction;
-
-	/* button binding */
-	bsStringToButtonBinding (token, action);
-
-	token = strsep (&value, ",");
-	if (!token)
-		goto invalidaction;
-
-	/* edge binding */
-	bsStringToEdge (token, action);
-
-	token = strsep (&value, ",");
-	if (!token)
-		goto invalidaction;
-
-	/* edge button */
-	action->edgeButton = strtoul (token, NULL, 10);
-
-	/* bell */
-	action->onBell = (strcmp (value, "true") == 0);
-
-	free (valueStart);
-
-	return TRUE;
-
-invalidaction:
-	free (valueStart);
-	return FALSE;
-}
-
-static char * writeActionValue (BSSettingActionValue * action)
-{
-	char *keyBinding;
-	char *buttonBinding;
-	char *edge;
-	char *actionString = NULL;
-
-	keyBinding = bsKeyBindingToString (action);
-	if (!keyBinding)
-		keyBinding = strdup("");
-
-	buttonBinding = bsButtonBindingToString (action);
-	if (!buttonBinding)
-		buttonBinding = strdup("");
-
-	edge = bsEdgeToString (action);
-	if (!edge)
-		edge = strdup("");
-
-	asprintf (&actionString, "%s,%s,%s,%d,%s\n", keyBinding,
-			  buttonBinding, edge, action->edgeButton,
-			  action->onBell ? "true" : "false");
-
-	return actionString;
-}
-
-static Bool readListValue (IniPrivData *data, BSSetting * setting, char * keyName)
-{
-	BSSettingValueList list = NULL;
-	char *value, *valueStart, *valString;
-	char *token;
-	int nItems = 0, i = 0;
-
-	valString = iniparser_getstring (data->iniFile, keyName, NULL);
-	if (!valString)
-		return FALSE;
-
-	value = strdup (valString);
-	valueStart = value;
-
-	token = strsep (&value, ";");
-	while (token)
-	{
-		token = strsep (&value, ";");
-		nItems++;
-	}
-	value = valueStart;
-
-	token = strsep (&value, ";");
-
-	switch (setting->info.forList.listType)
-	{
-		case TypeString:
-		case TypeMatch:
-			{
-				char **array = malloc (nItems * sizeof(char*));
-				while (token)
-				{
-					array[i++] = strdup (token);
-					token = strsep (&value, ";");
-				}
-				list = bsGetValueListFromStringArray (array, nItems, setting);
-				for (i = 0; i < nItems; i++)
-					free (array[i]);
-				free (array);
-			}
-			break;
-		case TypeColor:
-			{
-				BSSettingColorValue *array = malloc (nItems * sizeof(BSSettingColorValue));
-				while (token)
-				{
-                    memset(&array[i], 0, sizeof(BSSettingColorValue));
-                   	bsStringToColor(token, &array[i]);
-					token = strsep (&value, ";");
-					i++;
-				}
-				list = bsGetValueListFromColorArray (array, nItems, setting);
-				free (array);
-			}
-			break;
-		case TypeBool:
-			{
-				Bool *array = malloc (nItems * sizeof(Bool));
-				Bool isTrue;
-				while (token)
-				{
-					isTrue = (token[0] == 'y' || token[0] == 'Y' || token[0] == '1' ||
-							  token[0] == 't' || token[0] == 'T');
-					array[i++] = isTrue;
-					token = strsep (&value, ";");
-				}
-				list = bsGetValueListFromBoolArray (array, nItems, setting);
-				free (array);
-			}
-			break;
-		case TypeInt:
-			{
-				int *array = malloc (nItems * sizeof(int));
-				while (token)
-				{
-					array[i++] = strtoul (token, NULL, 10);
-					token = strsep (&value, ";");
-				}
-				list = bsGetValueListFromIntArray (array, nItems, setting);
-				free (array);
-			}
-			break;
-		case TypeFloat:
-			{
-				float *array = malloc (nItems * sizeof(float));
-				while (token)
-				{
-					array[i++] = strtod (token, NULL);
-					token = strsep (&value, ";");
-				}
-				list = bsGetValueListFromFloatArray (array, nItems, setting);
-				free (array);
-			}
-			break;
-		case TypeAction:
-			{
-				BSSettingActionValue *array = malloc (nItems * sizeof(BSSettingActionValue));
-				while (token)
-				{
-					readActionValue (&array[i++], token);
-					token = strsep (&value, ";");
-				}
-				list = bsGetValueListFromActionArray (array, nItems, setting);
-				free (array);
-			}
-			break;
-		default:
-			break;
-	}
-
-	if (list)
-	{
-		bsSetList (setting, list);
-		bsSettingValueListFree (list, TRUE);
-		free (valueStart);
-		return TRUE;
-	}
-
-	free (valueStart);
-
-	return FALSE;
-}
-
-static void writeListValue (IniPrivData *data, BSSetting * setting, char * keyName)
-{
-#define STRINGBUFSIZE 2048
-	char stringBuffer[STRINGBUFSIZE]; //FIXME: we should allocate that dynamically
-	BSSettingValueList list;
-
-	if (!bsGetList (setting, &list))
-		return;
-
-	memset (stringBuffer, 0, sizeof(stringBuffer));
-
-	while (list)
-	{
-		switch (setting->info.forList.listType)
-		{
-			case TypeString:
-				strncat (stringBuffer, list->data->value.asString, STRINGBUFSIZE);
-				break;
-			case TypeMatch:
-				strncat (stringBuffer, list->data->value.asMatch, STRINGBUFSIZE);
-				break;
-			case TypeInt:
-				{
-					char *value = NULL;
-					asprintf (&value, "%d", list->data->value.asInt);
-					if (!value)
-						break;
-
-					strncat (stringBuffer, value, STRINGBUFSIZE);
-					free (value);
-				}
-				break;
-			case TypeBool:
-				strncat (stringBuffer, (list->data->value.asBool) ? "true" : "false", 
-						 STRINGBUFSIZE);
-				break;
-			case TypeFloat:
-				{
-					char *value = NULL;
-					asprintf (&value, "%f", list->data->value.asFloat);
-					if (!value)
-						break;
-
-					strncat (stringBuffer, value, STRINGBUFSIZE);
-					free (value);
-				}
-				break;
-			case TypeColor:
-				{
-					char *color = NULL;
-					color = bsColorToString(&list->data->value.asColor);
-					if (!color)
-						break;
-
-					strncat (stringBuffer, color, STRINGBUFSIZE);
-					free (color);
-				}
-				break;
-			case TypeAction:
-				{
-					char *action;
-					action = writeActionValue (&list->data->value.asAction);
-					if (!action)
-						break;
-						
-					strncat (stringBuffer, action, STRINGBUFSIZE);
-					free (action);
-				}
-			default:
-				break;
-		}
-
-		strncat (stringBuffer, ";", STRINGBUFSIZE);;
-		list = list->next;
-	}
-
-	iniparser_setstr (data->iniFile, keyName, stringBuffer);
 }
 
 static void processEvents(void)
@@ -483,7 +204,7 @@ static Bool finiBackend(BSContext * context)
 		return FALSE;
 
 	if (data->iniFile)
-		iniparser_freedict (data->iniFile);
+		bsIniClose (data->iniFile);
 
 	if (data->iniWatchDesc)
 		inotify_rm_watch (iniNotifyFd, data->iniWatchDesc);
@@ -544,19 +265,17 @@ static void readSetting(BSContext * context, BSSetting * setting)
 		return;
 
 	if (setting->isScreen)
-		asprintf (&keyName, "%s:s%d_%s", setting->parent->name, 
-				  setting->screenNum, setting->name);
+		asprintf (&keyName, "s%d_%s", setting->screenNum, setting->name);
 	else
-		asprintf (&keyName, "%s:as_%s", setting->parent->name, setting->name);
+		asprintf (&keyName, "as_%s", setting->name);
 
 	switch (setting->type)
 	{
 	    case TypeString:
 			{
 				char *value;
-				value = iniparser_getstring (data->iniFile, keyName, NULL);
-
-				if (value)
+				if (bsIniGetString (data->iniFile, setting->parent->name,
+									keyName, &value))
 				{
 					bsSetString (setting, value);
 					status = TRUE;
@@ -566,9 +285,8 @@ static void readSetting(BSContext * context, BSSetting * setting)
 		case TypeMatch:
 			{
 				char *value;
-				value = iniparser_getstring (data->iniFile, keyName, NULL);
-
-				if (value)
+				if (bsIniGetString (data->iniFile, setting->parent->name,
+									keyName, &value))
 				{
 					bsSetMatch (setting, value);
 					status = TRUE;
@@ -578,9 +296,8 @@ static void readSetting(BSContext * context, BSSetting * setting)
 		case TypeInt:
 			{
 				int value;
-				value = iniparser_getint (data->iniFile, keyName, 0x7fffffff);
-
-				if (value != 0x7fffffff)
+				if (bsIniGetInt (data->iniFile, setting->parent->name,
+								 keyName, &value))
 				{
 					bsSetInt (setting, value);
 					status = TRUE;
@@ -589,10 +306,10 @@ static void readSetting(BSContext * context, BSSetting * setting)
 			break;
 		case TypeBool:
 			{
-				int value;
-				value = iniparser_getboolean (data->iniFile, keyName, 0x7fffffff);
+				Bool value;
 
-				if (value != 0x7fffffff)
+				if (bsIniGetBool (data->iniFile, setting->parent->name,
+								  keyName, &value))
 				{
 					bsSetBool (setting, (value != 0));
 					status = TRUE;
@@ -602,9 +319,8 @@ static void readSetting(BSContext * context, BSSetting * setting)
 		case TypeFloat:
 			{
 				float value;
-				value = (float) iniparser_getdouble (data->iniFile, keyName, 0x7ffffffff);
-
-				if (value != 0x7ffffffff)
+				if (bsIniGetFloat (data->iniFile, setting->parent->name,
+								   keyName, &value))
 				{
 					bsSetFloat (setting, value);
 					status = TRUE;
@@ -613,11 +329,9 @@ static void readSetting(BSContext * context, BSSetting * setting)
 			break;
 		case TypeColor:
 			{
-				char *value;
 				BSSettingColorValue color;
-				value = iniparser_getstring (data->iniFile, keyName, NULL);
-
-				if (value && bsStringToColor (value, &color))
+				if (bsIniGetColor (data->iniFile, setting->parent->name,
+								   keyName, &color))
 				{
 					bsSetColor (setting, color);
 					status = TRUE;
@@ -627,13 +341,8 @@ static void readSetting(BSContext * context, BSSetting * setting)
 		case TypeAction:
 			{
 				BSSettingActionValue action;
-				char *value;
-
-				value = iniparser_getstring (data->iniFile, keyName, NULL);
-				if (!value)
-					break;
-				
-				if (readActionValue (&action, value))
+				if (bsIniGetAction (data->iniFile, setting->parent->name,
+									keyName, &action))
 				{
 					bsSetAction (setting, action);
 					status = TRUE;
@@ -641,7 +350,16 @@ static void readSetting(BSContext * context, BSSetting * setting)
 			}
 			break;
 		case TypeList:
-			status = readListValue (data, setting, keyName);
+			{
+				BSSettingValueList value;
+				if (bsIniGetList (data->iniFile, setting->parent->name,
+								  keyName, &value, setting))
+				{
+					bsSetList (setting, value);
+					bsSettingValueListFree (value, TRUE);
+					status = TRUE;
+				}
+			}
 			break;
 		default:
 			break;
@@ -700,14 +418,13 @@ static void writeSetting(BSContext * context, BSSetting * setting)
 		return;
 
 	if (setting->isScreen)
-		asprintf (&keyName, "%s:s%d_%s", setting->parent->name, 
-				  setting->screenNum, setting->name);
+		asprintf (&keyName, "s%d_%s", setting->screenNum, setting->name);
 	else
-		asprintf (&keyName, "%s:as_%s", setting->parent->name, setting->name);
+		asprintf (&keyName, "as_%s", setting->name);
 
 	if (setting->isDefault)
 	{
-		iniparser_unset (data->iniFile, keyName);
+		bsIniRemoveEntry (data->iniFile, setting->parent->name, keyName);
 		free (keyName);
 		return;
 	}
@@ -718,85 +435,65 @@ static void writeSetting(BSContext * context, BSSetting * setting)
 			{
 				char *value;
 				if (bsGetString (setting, &value))
-					iniparser_setstr (data->iniFile, keyName, value);
+					bsIniSetString (data->iniFile, setting->parent->name,
+									keyName, value);
 			}
 			break;
 		case TypeMatch:
 			{
 				char *value;
 				if (bsGetMatch (setting, &value))
-					iniparser_setstr (data->iniFile, keyName, value);
+					bsIniSetString (data->iniFile, setting->parent->name,
+									keyName, value);
 			}
 			break;
 		case TypeInt:
 			{
 				int value;
 				if (bsGetInt (setting, &value))
-				{
-					char *string = NULL;
-					asprintf (&string, "%i", value);
-					if (!string)
-						break;
-
-					iniparser_setstr (data->iniFile, keyName, string);
-					free (string);
-				}
+					bsIniSetInt (data->iniFile, setting->parent->name,
+								 keyName, value);
 			}
 			break;
 		case TypeFloat:
 			{
 				float value;
 				if (bsGetFloat (setting, &value))
-				{
-					char *string = NULL;
-					asprintf (&string, "%f", value);
-					if (!string)
-						break;
-						
-					iniparser_setstr (data->iniFile, keyName, string);
-					free (string);
-				}
+					bsIniSetFloat (data->iniFile, setting->parent->name,
+								   keyName, value);
 			}
 			break;
 		case TypeBool:
 			{
 				Bool value;
 				if (bsGetBool (setting, &value))
-					iniparser_setstr (data->iniFile, keyName, value ? "true" : "false");
+					bsIniSetBool (data->iniFile, setting->parent->name,
+								  keyName, value);
 			}
 			break;
 		case TypeColor:
 			{
 				BSSettingColorValue value;
 				if (bsGetColor (setting, &value))
-				{
-					char *colString = NULL;
-					colString = bsColorToString (&value);
-					if (!colString)
-						break;
-
-					iniparser_setstr (data->iniFile, keyName, colString);
-					free (colString);
-				}
+					bsIniSetColor (data->iniFile, setting->parent->name,
+								   keyName, value);
 			}
 			break;
 		case TypeAction:
 			{
 				BSSettingActionValue value;
 				if (bsGetAction (setting, &value))
-				{
-					char *actionString = NULL;
-					actionString = writeActionValue (&value);
-					if (!actionString)
-						break;
-						
-					iniparser_setstr (data->iniFile, keyName, actionString);
-					free (actionString);
-				}
+					bsIniSetAction (data->iniFile, setting->parent->name,
+									keyName, value);
 			}
 			break;
 		case TypeList:
-			writeListValue (data, setting, keyName);
+			{
+				BSSettingValueList value;
+				if (bsGetList (setting, &value))
+					bsIniSetList (data->iniFile, setting->parent->name,
+								  keyName, value, setting->info.forList.listType);
+			}
 			break;
 		default:
 			break;
@@ -809,7 +506,6 @@ static void writeSetting(BSContext * context, BSSetting * setting)
 static void writeDone(BSContext * context)
 {
 	/* export the data to ensure the changes are on disk */
-	FILE *file;
 	char *fileName;
 	char *currentProfile;
 	IniPrivData *data;
@@ -821,16 +517,13 @@ static void writeDone(BSContext * context)
 	currentProfile = bsGetProfile (context);
 	fileName = getIniFileName (currentProfile);
 
-	file = fopen (fileName, "w");
-
-	iniparser_dump_ini (data->iniFile, file);
+	bsIniSave (data->iniFile, fileName);
 
 	/* empty file watch */
 	data->ignoreEvent = TRUE;
 	processEvents ();
 	data->ignoreEvent = FALSE;
 
-	fclose (file);
 	free (fileName);
 }
 
