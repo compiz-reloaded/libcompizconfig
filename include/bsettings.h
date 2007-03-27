@@ -408,4 +408,54 @@ void bsReadSettings(BSContext *context);
 void bsWriteSettings(BSContext *context);
 void bsWriteChangedSettings(BSContext *context);
 
+/* INI file stuff */
+
+typedef struct _dictionary_ {
+	/** Number of entries in dictionary */
+	int n;
+	/** Storage size */
+	int size;
+	/** List of string values */
+	char **val;
+	/** List of string keys */
+	char **key ;
+	/** List of hash values for keys */
+	unsigned *hash;
+} IniDictionary;
+
+IniDictionary * bsIniOpen (const char * fileName);
+void bsIniClose (IniDictionary * dictionary);
+void bsIniSave (IniDictionary * dictionary, const char * fileName);
+Bool bsIniGetString (IniDictionary * dictionary, const char * section,
+		     const char * entry, char ** value);
+Bool bsIniGetInt (IniDictionary * dictionary, const char * section,
+		  const char * entry, int * value);
+Bool bsIniGetFloat (IniDictionary * dictionary, const char * section,
+		    const char * entry, float * value);
+Bool bsIniGetBool (IniDictionary * dictionary, const char * section,
+		   const char * entry, Bool * value);
+Bool bsIniGetColor (IniDictionary * dictionary, const char * section,
+		    const char * entry, BSSettingColorValue * value);
+Bool bsIniGetAction (IniDictionary * dictionary, const char * section,
+		     const char * entry, BSSettingActionValue * value);
+Bool bsIniGetList (IniDictionary * dictionary, const char * section,
+		   const char * entry, BSSettingValueList * value, BSSetting *parent);
+void bsIniSetString (IniDictionary * dictionary, const char * section,
+		     const char * entry, char * value);
+void bsIniSetInt (IniDictionary * dictionary, const char * section,
+		  const char * entry, int value);
+void bsIniSetFloat (IniDictionary * dictionary, const char * section,
+    		    const char * entry, float value);
+void bsIniSetBool (IniDictionary * dictionary, const char * section,
+		   const char * entry, Bool value);
+void bsIniSetColor (IniDictionary * dictionary, const char * section,
+		    const char * entry, BSSettingColorValue value);
+void bsIniSetAction (IniDictionary * dictionary, const char * section,
+		     const char * entry, BSSettingActionValue value);
+void bsIniSetList (IniDictionary * dictionary, const char * section,
+		   const char * entry, BSSettingValueList value, BSSettingType listType);
+
+void bsIniRemoveEntry (IniDictionary * dictionary, const char * section,
+					   const char * entry);
+
 #endif
