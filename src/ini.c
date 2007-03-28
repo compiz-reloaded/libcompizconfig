@@ -1,5 +1,8 @@
 #define _GNU_SOURCE
 #include <stdio.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <errno.h>
 
 #include <bsettings.h>
 #include "iniparser.h"
@@ -17,6 +20,19 @@ void bsIniClose (IniDictionary * dictionary)
 void bsIniSave (IniDictionary * dictionary, const char * fileName)
 {
 	FILE *file;
+	char *path, *delim;
+
+	path = strdup (fileName);
+	delim = strrchr (path, '/');
+	if (delim)
+		*delim = 0;
+
+	if (!mkdir (path, 0777) && (errno != EEXIST))
+	{
+		free (path);
+		return;
+	}
+	free (path);
 
 	file = fopen (fileName, "w");
 	iniparser_dump_ini (dictionary, file);
