@@ -3,172 +3,120 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <errno.h>
 
 #include "bsettings-private.h"
 
-static BSStringList readFile(void)
+static char *getConfigFileName(void)
 {
-	char * home = getenv("HOME");
+	char *home;
+	char *fileName = NULL;
+	
+	home = getenv("HOME");
 
-	if (!home && strlen(home))
+	if (!home || !strlen(home))
 		return NULL;
 
-	char *filename = NULL;
-	asprintf(&filename, "%s/.bsettings/config",home);
-	
-	FILE *f = fopen(filename,"r");
+	asprintf(&fileName, "%s/.bsettings/config",home);
 
-	free(filename);
-	
-	if (!f)
-		return NULL;
-
-	BSStringList rv = NULL;
-	char line[1024];
-	while (fscanf(f, "%s\n", line) != EOF)
-	{
-		if (line && strlen(line))
-		{
-			rv = bsStringListAppend(rv, strdup(line));
-		}
-	}
-	
-	fclose(f);
-	return rv;
+	return fileName;
 }
 
-static Bool writeFile(BSStringList list)
+static IniDictionary *getConfigFile(void)
 {
-	char * home = getenv("HOME");
+	char *fileName;
+	IniDictionary *iniFile;
 
-	if (!home && strlen(home))
-		return FALSE;
+	fileName = getConfigFileName();
+	if (!fileName)
+		return NULL;
 
-	char *filename = NULL;
-	asprintf(&filename, "%s/.bsettings/config",home);
+	iniFile = bsIniOpen (fileName);
 
-	char *dir = NULL;
-	asprintf(&dir, "%s/.bsettings",home);
-
-	
-	if (!mkdir(dir,0777) && errno != EEXIST)
-	{
-		free(filename);
-		free(dir);
-		return FALSE;
-	}
-	free (dir);
-	
-	FILE *f = fopen(filename,"w");
-
-	free(filename);
-	
-	if (!f)
-		return FALSE;
-
-	while (list)
-	{
-		fprintf(f, "%s\n",list->data);
-		list = list->next;
-	}
-	fclose(f);
-	return TRUE;
+	free (fileName);
+	return iniFile;
 }
 
 Bool bsReadConfig(ConfigOption option, char** value)
 {
-	BSStringList list = readFile();
-	BSStringList l = list;
+	IniDictionary *iniFile;
+	char *entry = NULL;
+	Bool ret;
 
-	char *search = "no_key_defined";
+	iniFile = getConfigFile();
+	if (!iniFile)
+		return FALSE;
+
 	switch (option)
 	{
 		case OptionProfile:
-			search = "profile";
+			entry = "profile";
 			break;
 		case OptionBackend:
-			search = "backend";
+			entry = "backend";
 			break;
 		case OptionIntegration:
-			search = "integration";
+			entry = "integration";
 			break;
 		default:
 			break;
 	}
 
-	*value = NULL;
-	
-	if (!list)
-		return FALSE;
-	while (l)
+	if (!option)
 	{
-		char *line = strdup(l->data);
-		char *key = strtok(line,"=");
-		char *svalue = strtok(NULL,"=");
-		if (key && !strcmp(key,search))
-		{
-			*value = (svalue)? strdup(svalue) : NULL;
-			l = NULL;
-			continue;
-		}
-		free(line);
-		l = l->next;
+		bsIniClose (iniFile);
+		return FALSE;
 	}
-	bsStringListFree(list, TRUE);
-	if (*value)
-		return TRUE;
-	return FALSE;
+
+	*value = NULL;
+
+	ret = bsIniGetString (iniFile, "general", entry, value);
+
+	bsIniClose (iniFile);
+	return ret;
 }
 
 Bool bsWriteConfig(ConfigOption option, char* value)
 {
-	BSStringList list = readFile();
-	BSStringList l = list;
+	IniDictionary *iniFile;
+	char *entry = NULL;
+	char *fileName;
 
-	
+	iniFile = getConfigFile();
+	if (!iniFile)
+		return FALSE;
 
-	char *search = "no_key_defined";
 	switch (option)
 	{
 		case OptionProfile:
-			search = "profile";
+			entry = "profile";
 			break;
 		case OptionBackend:
-			search = "backend";
+			entry = "backend";
 			break;
 		case OptionIntegration:
-			search = "integration";
+			entry = "integration";
 			break;
 		default:
 			break;
 	}
-	
-	while (l)
+
+	if (!entry)
 	{
-		char *line = strdup(l->data);
-		char *key = strtok(line,"=");
-		if (key && !strcmp(key,search))
-		{
-			list = bsStringListRemove(list, l->data, TRUE);
-			l = list;
-		}
-		free(line);
-		l = l->next;
+		bsIniClose (iniFile);
+		return FALSE;
 	}
 
-	if (value && strlen(value))
+	bsIniSetString (iniFile, "general", entry, value);
+
+	fileName = getConfigFileName();
+	if (!fileName)
 	{
-		char *newKey = NULL;
-		asprintf(&newKey, "%s=%s", search, value);
-		list = bsStringListAppend(list, newKey);
+		bsIniClose (iniFile);
+		return FALSE;
 	}
+	bsIniSave (iniFile, fileName);
 
-	Bool rv = writeFile(list);
-
-	bsStringListFree(list, TRUE);
-	return rv;
+	bsIniClose (iniFile);
+	return TRUE;
 }
 
