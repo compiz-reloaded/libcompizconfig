@@ -85,6 +85,9 @@ if test "$PKG_CONFIG" != "no" ; then
 	AC_SUBST(PLUGINDIR)
 fi
 
+PKG_CHECK_MODULES(LIBXML2, "libxml-2.0")
+AC_SUBST(LIBXML2_REQUIRES)
+
 AC_CONFIG_FILES([
 bsettings.pc
 Makefile
