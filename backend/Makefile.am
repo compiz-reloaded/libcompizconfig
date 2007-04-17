@@ -1,3 +1,5 @@
+## Process this file with automake to produce Makefile.in
+
 INCLUDES =			     \
 	@COMPIZ_CFLAGS@ \
 	-I$(top_srcdir)/include	     \
@@ -5,8 +7,12 @@ INCLUDES =			     \
 	-DPLUGINDIR=\"$(PLUGINDIR)\" \
 	-DLIBDIR=\"$(libdir)\"
 
+libini_la_LDFLAGS = -module -avoid-version -no-undefined $(all_libraries)
+libini_la_LIBADD  = $(top_srcdir)/src/libbsettings.la
+libini_la_SOURCES = ini.c
+backenddir = $(libdir)/bsettings/backends
 
-libini_la_SOURCES=ini.c
+METASOURCES = AUTO
 
-lib_LTLIBRARIES=libini.la
+backend_LTLIBRARIES = libini.la
 
