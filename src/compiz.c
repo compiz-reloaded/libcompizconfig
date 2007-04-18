@@ -98,12 +98,19 @@ getNodesFromPath (xmlDoc * doc, xmlNode * base, char *path, int *num)
 		xpathCtx->node = base;
 	xpathObj = xmlXPathEvalExpression (BAD_CAST path, xpathCtx);
 	if (!xpathObj)
+	{
+		xmlXPathFreeContext (xpathCtx);
 		return NULL;
+	}
 
 	size = (xpathObj->nodesetval) ? xpathObj->nodesetval->nodeNr : 0;
 
 	if (!size)
+	{
+		xmlXPathFreeObject (xpathObj);
+		xmlXPathFreeContext (xpathCtx);
 		return NULL;
+	}
 	*num = size;
 
 	rv = malloc (size * sizeof (xmlNode *));
@@ -697,6 +704,7 @@ initListInfo (BSSettingInfo * i, xmlNode * node)
 static void
 printSetting (BSSetting * s)
 {
+	char *val;
 	printf ("Name        : %s\n", s->name);
 	printf ("Short       : %s\n", s->shortDesc);
 	printf ("Long        : %s\n", s->longDesc);
@@ -755,14 +763,26 @@ printSetting (BSSetting * s)
 	case TypeAction:
 		printf ("Type        : action\n");
 		if (s->info.forAction.key)
-			printf ("    Key     : %s\n",
-					bsKeyBindingToString (&s->value->value.asAction));
+		{
+			val = bsKeyBindingToString (&s->value->value.asAction);
+			printf ("    Key     : %s\n", val);
+			if (val)
+				free (val);
+		}
 		if (s->info.forAction.button)
-			printf ("    Button  : %s\n",
-					bsButtonBindingToString (&s->value->value.asAction));
+		{
+			val = bsButtonBindingToString (&s->value->value.asAction);
+			printf ("    Button  : %s\n", val);
+			if (val)
+				free (val);
+		}
 		if (s->info.forAction.edge)
-			printf ("    Edge    : %s\n",
-					bsEdgeToString (&s->value->value.asAction));
+		{
+			val = bsEdgeToString (&s->value->value.asAction);
+			printf ("    Edge    : %s\n", val);
+			if (val)
+				free (val);
+		}
 		if (s->info.forAction.bell)
 			printf ("    Bell    : %s\n",
 					(s->value->value.asAction.onBell) ? "true" : "false");
@@ -842,7 +862,12 @@ printSetting (BSSetting * s)
 				printf ("%s,", val->value.asString);
 				break;
 			case TypeColor:
-				printf ("%s,", bsColorToString (&val->value.asColor));
+			{
+				char *str = bsColorToString (&val->value.asColor);
+				printf ("%s,", str);
+				if (str)
+					free (str);
+			}
 				break;
 			case TypeMatch:
 				printf ("%s,", val->value.asMatch);
@@ -1099,6 +1124,7 @@ loadPluginsFromXML (BSContext * context, xmlDoc * doc)
 	if (num)
 	{
 		addCoreSettingsFromXMLNode (context, nodes[0]);
+		free (nodes);
 	}
 	nodes = getNodesFromPath (doc, NULL, "/compiz/plugin", &num);
 	if (num)
@@ -1167,6 +1193,7 @@ loadPluginsFromXMLFiles (BSContext * context, char *path)
 			doc = xmlReadFile (name, NULL, 0);
 			if (doc)
 				loadPluginsFromXML (context, doc);
+			xmlFreeDoc (doc);
 		}
 		free (name);
 	}
@@ -1271,4 +1298,3 @@ bsLoadPlugins (BSContext * context)
 	loadPluginsFromName (context, PLUGINDIR);
 
 }
-
