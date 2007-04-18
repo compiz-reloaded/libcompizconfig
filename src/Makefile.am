@@ -7,7 +7,7 @@ INCLUDES =			     \
 	-DLIBDIR=\"$(libdir)\"
 
 
-libbsettings_la_SOURCES=main.c lists.c compiz.c config.c iniparser.c ini.c
+libbsettings_la_SOURCES=main.c lists.c compiz.c config.c iniparser.c ini.c bindings.c
 libbsettings_la_LIBADD = @LIBXML2_LIBS@
 
 lib_LTLIBRARIES=libbsettings.la
