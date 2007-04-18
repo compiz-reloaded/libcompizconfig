@@ -117,6 +117,7 @@ Bool bsWriteConfig(ConfigOption option, char* value)
 	bsIniSave (iniFile, fileName);
 
 	bsIniClose (iniFile);
+	free (fileName);
 	return TRUE;
 }
 
