@@ -83,6 +83,8 @@ fi
 if test "$PKG_CONFIG" != "no" ; then
 	PLUGINDIR=`$PKG_CONFIG --variable=libdir compiz`/compiz
 	AC_SUBST(PLUGINDIR)
+	METADATADIR=`$PKG_CONFIG --variable=prefix compiz`/share/compiz
+	AC_SUBST(METADATADIR)
 fi
 
 PKG_CHECK_MODULES(LIBXML2, "libxml-2.0")
