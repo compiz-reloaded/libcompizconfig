@@ -195,7 +195,7 @@ initFloatValue (BSSettingValue * v, BSSettingInfo * i, xmlNode * node)
 
 	v->value.asFloat = (i->forFloat.min + i->forFloat.max) / 2;
 
-	setlocale(LC_CTYPE, "C");
+	setlocale(LC_NUMERIC, "C");
 	value = getStringFromPath (node->doc, node, "child::text()");
 	if (value)
 	{
@@ -204,7 +204,7 @@ initFloatValue (BSSettingValue * v, BSSettingInfo * i, xmlNode * node)
 			v->value.asFloat = val;
 		free (value);
 	}
-	setlocale(LC_CTYPE, "");
+	setlocale(LC_NUMERIC, "");
 }
 
 static void
@@ -554,7 +554,7 @@ initFloatInfo (BSSettingInfo * i, xmlNode * node)
 	i->forFloat.min = MINSHORT;
 	i->forFloat.max = MAXSHORT;
 	i->forFloat.precision = 0.1f;
-        setlocale(LC_CTYPE, "C");
+        setlocale(LC_NUMERIC, "C");
 	value = getStringFromPath (node->doc, node, "min/child::text()");
 	if (value)
 	{
@@ -576,7 +576,7 @@ initFloatInfo (BSSettingInfo * i, xmlNode * node)
 		i->forFloat.precision = val;
 		free (value);
 	}
-	setlocale(LC_CTYPE, "");
+	setlocale(LC_NUMERIC, "");
 }
 
 static void
