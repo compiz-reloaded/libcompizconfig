@@ -642,7 +642,9 @@ bsTimeout (void *closure)
 
 	if (bsSettingListLength(bd->context->changedSettings))
 	{
-		BSSettingList l = bd->context->changedSettings;
+	        BSSettingList list = bd->context->changedSettings;
+		BSSettingList l = list;
+		bd->context->changedSettings = NULL;
 		BSSetting *s;
 		while (l)
 		{
@@ -652,6 +654,7 @@ bsTimeout (void *closure)
 			printf("Setting Update \"%s\"\n",s->name);
 			l = l->next;
 		}
+		bsSettingListFree(list, FALSE);
 		bd->context->changedSettings =
 			bsSettingListFree(bd->context->changedSettings, FALSE);
 	}
