@@ -410,7 +410,7 @@ static void dictionary_unset(dictionary * d, char * key)
 #define INI_INVALID_KEY     ((char*)-1)
 
 /* Private: add an entry to the dictionary */
-static void iniparser_add_entry(
+void iniparser_add_entry(
     dictionary * d,
     char * sec,
     char * key,
@@ -540,20 +540,20 @@ void iniparser_dump_ini(dictionary * d, FILE * f)
     for (i=0 ; i<nsec ; i++) {
         secname = iniparser_getsecname(d, i) ;
         seclen  = (int)strlen(secname);
-        fprintf(f, "\n[%s]\n", secname);
+        fprintf(f, "[%s]\n", secname);
         sprintf(keym, "%s:", secname);
         for (j=0 ; j<d->size ; j++) {
             if (d->key[j]==NULL)
                 continue ;
             if (!strncmp(d->key[j], keym, seclen+1)) {
                 fprintf(f,
-                        "%-30s = %s\n",
+                        "%s = %s\n",
                         d->key[j]+seclen+1,
                         d->val[j] ? d->val[j] : "");
             }
         }
+	fprintf(f, "\n");
     }
-    fprintf(f, "\n");
     return ;
 }
 

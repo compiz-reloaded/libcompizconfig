@@ -6,6 +6,8 @@
 void bsLoadPlugins(BSContext * context);
 void collateGroups(BSPlugin * plugin);
 
+void bsCheckFileWatches(void);
+
 typedef enum {
 	OptionProfile,
 	OptionBackend,
