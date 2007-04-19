@@ -126,7 +126,10 @@ void bsRemoveFileWatch (unsigned int watchId)
     if (fwDataSize > 0)
     	fwData = realloc (fwData, fwDataSize * sizeof(FilewatchData));
     else
+    {
 	free (fwData);
+	fwData = NULL;
+    }
     
     if (!fwDataSize)
     {
