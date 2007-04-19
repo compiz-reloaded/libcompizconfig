@@ -85,6 +85,7 @@ unsigned int bsAddFileWatch (const char *fileName,
     if (enable)
 	fwData[fwDataSize].watchDesc = inotify_add_watch (inotifyFd, fileName,
 							  IN_MODIFY | IN_MOVE |
+							  IN_MOVE_SELF | IN_DELETE_SELF |
 							  IN_CREATE | IN_DELETE);
     else
 	fwData[fwDataSize].watchDesc = 0;
@@ -167,6 +168,7 @@ void bsEnableFileWatch (unsigned int watchId)
 	fwData[index].watchDesc = inotify_add_watch (inotifyFd, 
 						     fwData[index].fileName,
 	   					     IN_MODIFY | IN_MOVE |
+						     IN_MOVE_SELF | IN_DELETE_SELF |
    						     IN_CREATE | IN_DELETE);
 }
 
