@@ -804,6 +804,7 @@ CompPluginVTable bsVTable = {
     "BSettings",
     "Beryl configuration system plugin",
     bsGetVersion,
+    0,
     bsInit,
     bsFini,
     bsInitDisplay,
