@@ -1176,6 +1176,7 @@ bsWriteChangedSettings (BSContext * context)
 			BSSetting *s =
 				bsFindSetting (pl->data, "____plugin_enabled", FALSE, 0);
 			(*context->backend->vTable->writeSetting) (context, s);
+			pl = pl->next;
 		}
 	}
 	if (bsSettingListLength (context->changedSettings))
