@@ -197,13 +197,10 @@ static Bool readInit(BSContext * context)
 		return FALSE;
 	
 	currentProfile = bsGetProfile(context);
-	if (!currentProfile)
+	if (!currentProfile || !strlen(currentProfile))
 		currentProfile = strdup (DEFAULTPROF);
-	else if (!strlen(currentProfile))
-	{
-		free (currentProfile);
-		currentProfile = strdup (DEFAULTPROF);
-	}
+	else
+		currentProfile = strdup (currentProfile);
 
 	if (!data->lastProfile || (strcmp(data->lastProfile, currentProfile) != 0))
 		setProfile (data, currentProfile);
@@ -352,13 +349,10 @@ static Bool writeInit(BSContext * context)
 		return FALSE;
 
 	currentProfile = bsGetProfile (context);
-	if (!currentProfile)
+	if (!currentProfile || !strlen(currentProfile))
 		currentProfile = strdup (DEFAULTPROF);
-	else if (!strlen(currentProfile))
-	{
-		free (currentProfile);
+	else
 		currentProfile = strdup (currentProfile);
-	}
 
 	if (!data->lastProfile || (strcmp(data->lastProfile, currentProfile) != 0))
 		setProfile (data, currentProfile);
@@ -480,13 +474,10 @@ static void writeDone(BSContext * context)
 		return;
 
 	currentProfile = bsGetProfile (context);
-	if (!currentProfile)
+	if (!currentProfile || !strlen(currentProfile))
 		currentProfile = strdup (DEFAULTPROF);
-	else if (!strlen(currentProfile))
-	{
-		free (currentProfile);
-		currentProfile = strdup (DEFAULTPROF);
-	}
+	else
+		currentProfile = strdup (currentProfile);
 
 	fileName = getIniFileName (currentProfile);
 
