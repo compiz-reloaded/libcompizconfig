@@ -3,7 +3,7 @@
 
 #include <bsettings.h>
 
-void bsLoadPlugin(BSContext * context, char * filename);
+void bsLoadPlugins(BSContext * context);
 void collateGroups(BSPlugin * plugin);
 
 void bsCheckFileWatches(void);
