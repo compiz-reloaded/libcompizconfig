@@ -16,7 +16,6 @@ typedef struct _FilewatchData
     char *fileName;
     int watchDesc;
     unsigned int watchId;
-    Bool enabled;
     FileWatchCallbackProc callback;
     void *closure;
 } FilewatchData;
@@ -58,10 +57,8 @@ void bsCheckFileWatches(void)
 	event = (struct inotify_event *) &buf[i];
 
 	for (j = 0; j < fwDataSize; j++)
-	    if ((fwData[j].watchDesc == event->wd) && (fwData[j].enabled))
-	    {
-		(*fwData[j].callback) (fwData[j].watchId, fwData[j].closure);
-	    }
+	    if ((fwData[j].watchDesc == event->wd) && fwData[j].callback)
+			(*fwData[j].callback) (fwData[j].watchId, fwData[j].closure);
 
 	    i += sizeof (*event) + event->len;
     }
@@ -84,12 +81,16 @@ unsigned int bsAddFileWatch (const char *fileName,
     fwData = realloc (fwData, (fwDataSize + 1) * sizeof(FilewatchData));
 
     fwData[fwDataSize].fileName  = strdup (fileName);
-    fwData[fwDataSize].watchDesc = inotify_add_watch (inotifyFd, fileName,
-						      IN_MODIFY | IN_MOVE |
-						      IN_CREATE | IN_DELETE);
+
+    if (enable)
+	fwData[fwDataSize].watchDesc = inotify_add_watch (inotifyFd, fileName,
+							  IN_MODIFY | IN_MOVE |
+							  IN_CREATE | IN_DELETE);
+    else
+	fwData[fwDataSize].watchDesc = 0;
+
     fwData[fwDataSize].callback  = callback;
     fwData[fwDataSize].closure   = closure;
-    fwData[fwDataSize].enabled   = enable;
     /* determine current highest ID */
     for (i = 0; i < fwDataSize; i++)
 	if (fwData[i].watchId > maxWatchId)
@@ -104,7 +105,6 @@ unsigned int bsAddFileWatch (const char *fileName,
 
 void bsRemoveFileWatch (unsigned int watchId)
 {
-    FilewatchData *tempData = NULL;
     int selectedIndex, i;
 
     selectedIndex = findDataIndexById (watchId);
@@ -114,7 +114,8 @@ void bsRemoveFileWatch (unsigned int watchId)
 
     /* clear entry */
     free (fwData[selectedIndex].fileName);
-    inotify_rm_watch (inotifyFd, fwData[selectedIndex].watchDesc);
+    if (fwData[selectedIndex].watchDesc)
+    	inotify_rm_watch (inotifyFd, fwData[selectedIndex].watchDesc);
 
     /* shrink array */
     for (i = selectedIndex; i < (fwDataSize - 1); i++)
@@ -143,7 +144,11 @@ void bsDisableFileWatch (unsigned int watchId)
     if (index < 0)
 	return;
 
-    fwData[index].enabled = FALSE;
+    if (fwData[index].watchDesc)
+    {
+    	inotify_rm_watch (inotifyFd, fwData[index].watchDesc);
+	fwData[index].watchDesc = 0;
+    }
 }
 
 void bsEnableFileWatch (unsigned int watchId)
@@ -155,6 +160,10 @@ void bsEnableFileWatch (unsigned int watchId)
     if (index < 0)
 	return;
 
-    fwData[index].enabled = TRUE;
+    if (!fwData[index].watchDesc)
+	fwData[index].watchDesc = inotify_add_watch (inotifyFd, 
+						     fwData[index].fileName,
+	   					     IN_MODIFY | IN_MOVE |
+   						     IN_CREATE | IN_DELETE);
 }
 
