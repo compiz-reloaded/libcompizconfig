@@ -88,8 +88,19 @@ static char* getIniFileName(char *profile)
 static void processFileEvent(unsigned int watchId, void *closure)
 {
 	IniPrivData *data = (IniPrivData *)closure;
+	char *fileName;
 
 	/* our ini file has been modified, reload it */
+
+	if (data->iniFile)
+		bsIniClose(data->iniFile);
+
+	fileName = getIniFileName (data->lastProfile);
+	if (!fileName)
+		return;
+
+	data->iniFile = bsIniOpen(fileName);
+
 	bsReadSettings (data->context);
 }
 
