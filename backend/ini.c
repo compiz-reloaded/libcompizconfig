@@ -146,6 +146,8 @@ static Bool initBackend(BSContext * context)
 	memset(newData, 0, sizeof(IniPrivData));
 	newData->context = context;
 
+	privDataSize++;
+
 	return TRUE;
 }
 
@@ -182,7 +184,7 @@ static Bool readInit(BSContext * context)
 	data = findPrivFromContext (context);
 	if (!data)
 		return FALSE;
-
+	
 	currentProfile = bsGetProfile(context);
 	if (!currentProfile)
 		currentProfile = DEFAULTPROF;
