@@ -407,6 +407,7 @@ void bsProcessEvents(BSContext *context);
 void bsReadSettings(BSContext *context);
 void bsWriteSettings(BSContext *context);
 void bsWriteChangedSettings(BSContext *context);
+void bsResetToDefault (BSSetting * setting);
 
 /* File watch stuff */
 
