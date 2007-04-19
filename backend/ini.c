@@ -90,14 +90,6 @@ static void processFileEvent(unsigned int watchId, void *closure)
 	IniPrivData *data = (IniPrivData *)closure;
 
 	/* our ini file has been modified, reload it */
-	char *currentProfile;
-	currentProfile = bsGetProfile (data->context);
-	if (!currentProfile)
-		currentProfile = DEFAULTPROF;
-	
-	if (!data->lastProfile || (strcmp(data->lastProfile, currentProfile) != 0))
-		setProfile (data, currentProfile);
-
 	bsReadSettings (data->context);
 }
 
@@ -359,6 +351,8 @@ static Bool writeInit(BSContext * context)
 	if (!data->iniFile)
 		return FALSE;
 
+	bsDisableFileWatch (data->iniWatchId);
+
 	data->lastProfile = strdup (currentProfile);
 
 	return TRUE;
@@ -475,7 +469,7 @@ static void writeDone(BSContext * context)
 
 	bsIniSave (data->iniFile, fileName);
 
-	/* TODO - empty file watch */
+	bsEnableFileWatch (data->iniWatchId);
 
 	free (fileName);
 }
