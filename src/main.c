@@ -1105,12 +1105,14 @@ bsReadSettings (BSContext * context)
 {
 	if (!context || !context->backend)
 		return;
+	
 	if (!context->backend->vTable->readSetting)
 		return;
 
 	if (context->backend->vTable->readInit)
 		if (!(*context->backend->vTable->readInit) (context))
 			return;
+
 	BSPluginList pl = context->plugins;
 	while (pl)
 	{
