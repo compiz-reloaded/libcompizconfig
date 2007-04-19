@@ -46,29 +46,15 @@ typedef struct _IniPrivData
 	BSContext *context;
 	char * lastProfile;
 	IniDictionary * iniFile;
-	int iniWatchDesc;
-	Bool ignoreEvent;
+	unsigned int iniWatchId;
 } IniPrivData;
 
 static IniPrivData *privData = NULL;
 static int privDataSize = 0;
-static int iniNotifyFd = 0;
 
-static void updateNotify(IniPrivData *data, char *filePath)
-{
-	if (!iniNotifyFd)
-	{
-		iniNotifyFd = inotify_init ();
-		fcntl (iniNotifyFd, F_SETFL, O_NONBLOCK);
-	}
+/* forward declaration */
+static void setProfile(IniPrivData *data, char *profile);
 
-	if (data->iniWatchDesc)
-		inotify_rm_watch (iniNotifyFd, data->iniWatchDesc);
-
-	data->iniWatchDesc = inotify_add_watch (iniNotifyFd, filePath, 
-											IN_MODIFY | IN_MOVE | IN_CREATE | IN_DELETE);
-
-}
 static IniPrivData *findPrivFromContext (BSContext *context)
 {
 	int i;
@@ -99,6 +85,14 @@ static char* getIniFileName(char *profile)
 	return fileName;
 }
 
+static void processFileEvent(unsigned int watchId, void *closure)
+{
+	IniPrivData *data = (IniPrivData *)closure;
+
+	/* our ini file has been modified, reload it */
+	bsReadSettings (data->context);
+}
+
 static void setProfile(IniPrivData *data, char *profile)
 {
 	char *fileName;
@@ -106,8 +100,11 @@ static void setProfile(IniPrivData *data, char *profile)
 
 	if (data->iniFile)
 		bsIniClose (data->iniFile);
+	if (data->iniWatchId)
+		bsRemoveFileWatch (data->iniWatchId);
 
 	data->iniFile = NULL;
+	data->iniWatchId = 0;
 
 	/* first we need to find the file name */
 	fileName = getIniFileName (profile);
@@ -130,53 +127,12 @@ static void setProfile(IniPrivData *data, char *profile)
 			return;
 	}
 
-	updateNotify (data, fileName);
+	data->iniWatchId = bsAddFileWatch (fileName, TRUE, processFileEvent, data);
 
 	/* load the data from the file */
 	data->iniFile = bsIniOpen (fileName);
 
 	free (fileName);
-}
-
-static void processEvents(void)
-{
-    char	buf[256 * (sizeof (struct inotify_event) + 16)];
-	struct  inotify_event *event;
-	IniPrivData *data;
-	int		len, i = 0, j;
-
-	if (!iniNotifyFd)
-		return;
-
-    len = read (iniNotifyFd, buf, sizeof (buf));
-	len = -1;
-
-	if (len < 0)
-		return;
-
-	while (i < len)
-	{
-	    event = (struct inotify_event *) &buf[i];
-		data = privData;
-
-		for (j = 0, data = privData; j < privDataSize; j++, data++)
-			if (!data->ignoreEvent && (data->iniWatchDesc == event->wd))
-				break;
-
-		if (j < privDataSize)
-		{
-			/* our ini file has been modified, reload it */
-			char *currentProfile;
-			currentProfile = bsGetProfile (data->context);
-			if (!currentProfile)
-				currentProfile = DEFAULTPROF;
-
-			setProfile (data, currentProfile);
-			bsReadSettings (data->context);
-		}
-
-	    i += sizeof (*event) + event->len;
-    }
 }
 
 static Bool initBackend(BSContext * context)
@@ -189,6 +145,8 @@ static Bool initBackend(BSContext * context)
 	/* initialize the newly allocated part */
 	memset(newData, 0, sizeof(IniPrivData));
 	newData->context = context;
+
+	privDataSize++;
 
 	return TRUE;
 }
@@ -205,9 +163,6 @@ static Bool finiBackend(BSContext * context)
 	if (data->iniFile)
 		bsIniClose (data->iniFile);
 
-	if (data->iniWatchDesc)
-		inotify_rm_watch (iniNotifyFd, data->iniWatchDesc);
-
 	if (data->lastProfile)
 		free (data->lastProfile);
 
@@ -216,11 +171,7 @@ static Bool finiBackend(BSContext * context)
 	if (privDataSize)
 		privData = realloc (privData, privDataSize * sizeof(IniPrivData));
 	else
-	{
 		free (privData);
-		if (iniNotifyFd)
-			close (iniNotifyFd);
-	}
 
 	return TRUE;
 }
@@ -233,7 +184,7 @@ static Bool readInit(BSContext * context)
 	data = findPrivFromContext (context);
 	if (!data)
 		return FALSE;
-
+	
 	currentProfile = bsGetProfile(context);
 	if (!currentProfile)
 		currentProfile = DEFAULTPROF;
@@ -402,6 +353,8 @@ static Bool writeInit(BSContext * context)
 	if (!data->iniFile)
 		return FALSE;
 
+	bsDisableFileWatch (data->iniWatchId);
+
 	data->lastProfile = strdup (currentProfile);
 
 	return TRUE;
@@ -518,10 +471,7 @@ static void writeDone(BSContext * context)
 
 	bsIniSave (data->iniFile, fileName);
 
-	/* empty file watch */
-	data->ignoreEvent = TRUE;
-	processEvents ();
-	data->ignoreEvent = FALSE;
+	bsEnableFileWatch (data->iniWatchId);
 
 	free (fileName);
 }
@@ -602,7 +552,7 @@ static BSBackendVTable iniVTable = {
     "INI Configuration Backend for bsettings",
     FALSE,
     TRUE,
-    processEvents,
+	NULL,
     initBackend,
     finiBackend,
 	readInit,

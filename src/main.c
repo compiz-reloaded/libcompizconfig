@@ -1093,6 +1093,9 @@ bsProcessEvents (BSContext * context)
 {
 	if (!context)
 		return;
+
+	bsCheckFileWatches();
+
 	if (context->backend && context->backend->vTable->executeEvents)
 		(*context->backend->vTable->executeEvents) ();
 }
@@ -1102,12 +1105,14 @@ bsReadSettings (BSContext * context)
 {
 	if (!context || !context->backend)
 		return;
+	
 	if (!context->backend->vTable->readSetting)
 		return;
 
 	if (context->backend->vTable->readInit)
 		if (!(*context->backend->vTable->readInit) (context))
 			return;
+
 	BSPluginList pl = context->plugins;
 	while (pl)
 	{
