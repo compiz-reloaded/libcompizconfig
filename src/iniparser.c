@@ -410,7 +410,7 @@ static void dictionary_unset(dictionary * d, char * key)
 #define INI_INVALID_KEY     ((char*)-1)
 
 /* Private: add an entry to the dictionary */
-static void iniparser_add_entry(
+void iniparser_add_entry(
     dictionary * d,
     char * sec,
     char * key,

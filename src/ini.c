@@ -81,6 +81,10 @@ static void setIniString (IniDictionary * dictionary,
 	char *sectionName;
 
 	asprintf (&sectionName, "%s:%s", section, entry);
+
+	if (!iniparser_find_entry (dictionary, section))
+	    iniparser_add_entry (dictionary, section, NULL, NULL);
+
 	iniparser_setstr (dictionary, sectionName, (char*) value);
 	free (sectionName);
 }
