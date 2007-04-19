@@ -396,8 +396,8 @@ copyFromDefault (BSSetting * setting)
 	setting->isDefault = FALSE;
 }
 
-static void
-resetToDefault (BSSetting * setting)
+void
+bsResetToDefault (BSSetting * setting)
 {
 	if (setting->value != &setting->defaultValue)
 		bsFreeSettingValue (setting->value);
@@ -416,7 +416,7 @@ bsSetInt (BSSetting * setting, int data)
 
 	if (!setting->isDefault && (setting->defaultValue.value.asInt == data))
 	{
-		resetToDefault (setting);
+		bsResetToDefault (setting);
 		setting->parent->context->changedSettings =
 			bsSettingListAppend (setting->parent->context->changedSettings,
 								 setting);
@@ -448,7 +448,7 @@ bsSetFloat (BSSetting * setting, float data)
 
 	if (!setting->isDefault && (setting->defaultValue.value.asFloat == data))
 	{
-		resetToDefault (setting);
+		bsResetToDefault (setting);
 		setting->parent->context->changedSettings =
 			bsSettingListAppend (setting->parent->context->changedSettings,
 								 setting);
@@ -480,7 +480,7 @@ bsSetBool (BSSetting * setting, Bool data)
 
 	if (!setting->isDefault && (setting->defaultValue.value.asBool == data))
 	{
-		resetToDefault (setting);
+		bsResetToDefault (setting);
 		if (!strcmp (setting->name, "____plugin_enabled"))
 			setting->parent->context->pluginsChanged = TRUE;
 		else
@@ -520,7 +520,7 @@ bsSetString (BSSetting * setting, const char *data)
 
 	if (!setting->isDefault && isDefault)
 	{
-		resetToDefault (setting);
+		bsResetToDefault (setting);
 		setting->parent->context->changedSettings =
 			bsSettingListAppend (setting->parent->context->changedSettings,
 								 setting);
@@ -565,7 +565,7 @@ bsSetColor (BSSetting * setting, BSSettingColorValue data)
 
 	if (!setting->isDefault && isDefault)
 	{
-		resetToDefault (setting);
+		bsResetToDefault (setting);
 		setting->parent->context->changedSettings =
 			bsSettingListAppend (setting->parent->context->changedSettings,
 								 setting);
@@ -598,7 +598,7 @@ bsSetMatch (BSSetting * setting, const char *data)
 
 	if (!setting->isDefault && isDefault)
 	{
-		resetToDefault (setting);
+		bsResetToDefault (setting);
 		setting->parent->context->changedSettings =
 			bsSettingListAppend (setting->parent->context->changedSettings,
 								 setting);
@@ -630,7 +630,7 @@ bsSetAction (BSSetting * setting, BSSettingActionValue data)
 
 	if (!setting->isDefault && isDefault)
 	{
-		resetToDefault (setting);
+		bsResetToDefault (setting);
 		setting->parent->context->changedSettings =
 			bsSettingListAppend (setting->parent->context->changedSettings,
 								 setting);
@@ -774,7 +774,7 @@ bsSetList (BSSetting * setting, BSSettingValueList data)
 
 	if (!setting->isDefault && isDefault)
 	{
-		resetToDefault (setting);
+		bsResetToDefault (setting);
 		setting->parent->context->changedSettings =
 			bsSettingListAppend (setting->parent->context->changedSettings,
 								 setting);
