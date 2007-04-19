@@ -9,6 +9,25 @@
 
 IniDictionary * bsIniOpen (const char * fileName)
 {
+	char *path, *delim;
+	FILE *file;
+
+    path = strdup (fileName);
+    delim = strrchr (path, '/');
+    if (delim)
+	*delim = 0;
+
+    if (!mkdir (path, 0777) && (errno != EEXIST))
+    {
+		free (path);
+		return NULL;
+    }
+    free (path);
+
+	/* create file if it doesn't exist */
+	file = fopen (fileName, "a+");
+	fclose (file);
+
 	return iniparser_new ((char*) fileName);
 }
 
