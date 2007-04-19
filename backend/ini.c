@@ -211,9 +211,6 @@ static Bool readInit(BSContext * context)
 	if (data->lastProfile)
 		free (data->lastProfile);
 
-	if (!data->iniFile)
-		return FALSE;
-
 	data->lastProfile = currentProfile;
 	
 	return (data->iniFile);
