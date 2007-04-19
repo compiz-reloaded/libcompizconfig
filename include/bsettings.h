@@ -408,6 +408,14 @@ void bsReadSettings(BSContext *context);
 void bsWriteSettings(BSContext *context);
 void bsWriteChangedSettings(BSContext *context);
 
+/* File watch stuff */
+
+typedef void (*FileWatchCallbackProc) (unsigned int watchId, void *closure);
+unsigned int bsAddFileWatch (const char *fileName, Bool enable, FileWatchCallbackProc callback, void *closure);
+void bsRemoveFileWatch (unsigned int watchId);
+void bsDisableFileWatch (unsigned int watchId);
+void bsEnableFileWatch (unsigned int watchId);
+
 /* INI file stuff */
 
 typedef struct _dictionary_ {

@@ -1089,6 +1089,9 @@ void bsProcessEvents(BSContext *context)
 {
 	if (!context)
 		return;
+
+	bsCheckFileWatches();
+
 	if (context->backend && context->backend->vTable->executeEvents)
 		(*context->backend->vTable->executeEvents)();
 }
