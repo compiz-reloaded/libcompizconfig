@@ -187,21 +187,25 @@ static Bool readInit(BSContext * context)
 	
 	currentProfile = bsGetProfile(context);
 	if (!currentProfile)
-		currentProfile = DEFAULTPROF;
+		currentProfile = strdup (DEFAULTPROF);
+	else if (!strlen(currentProfile))
+	{
+		free (currentProfile);
+		currentProfile = strdup (DEFAULTPROF);
+	}
 
 	if (!data->lastProfile || (strcmp(data->lastProfile, currentProfile) != 0))
 		setProfile (data, currentProfile);
 
 	if (data->lastProfile)
 		free (data->lastProfile);
-	data->lastProfile = NULL;
 
 	if (!data->iniFile)
 		return FALSE;
 
-	data->lastProfile = strdup (currentProfile);
+	data->lastProfile = currentProfile;
 	
-	return TRUE;
+	return (data->iniFile);
 }
 
 static void readSetting(BSContext * context, BSSetting * setting)
@@ -341,23 +345,24 @@ static Bool writeInit(BSContext * context)
 
 	currentProfile = bsGetProfile (context);
 	if (!currentProfile)
-		currentProfile = DEFAULTPROF;
+		currentProfile = strdup (DEFAULTPROF);
+	else if (!strlen(currentProfile))
+	{
+		free (currentProfile);
+		currentProfile = strdup (currentProfile);
+	}
 
 	if (!data->lastProfile || (strcmp(data->lastProfile, currentProfile) != 0))
 		setProfile (data, currentProfile);
 
 	if (data->lastProfile)
 		free (data->lastProfile);
-	data->lastProfile = NULL;
-
-	if (!data->iniFile)
-		return FALSE;
 
 	bsDisableFileWatch (data->iniWatchId);
 
-	data->lastProfile = strdup (currentProfile);
+	data->lastProfile = currentProfile;
 
-	return TRUE;
+	return (data->iniFile);
 }
 
 static void writeSetting(BSContext * context, BSSetting * setting)
@@ -467,7 +472,17 @@ static void writeDone(BSContext * context)
 		return;
 
 	currentProfile = bsGetProfile (context);
+	if (!currentProfile)
+		currentProfile = strdup (DEFAULTPROF);
+	else if (!strlen(currentProfile))
+	{
+		free (currentProfile);
+		currentProfile = strdup (DEFAULTPROF);
+	}
+
 	fileName = getIniFileName (currentProfile);
+
+	free (currentProfile);
 
 	bsIniSave (data->iniFile, fileName);
 
