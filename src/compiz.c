@@ -155,6 +155,41 @@ stringFromNodeDef (xmlNode * node, char *path, char *def)
 	return rv;
 }
 
+static char *
+stringFromNodeDefTrans (xmlNode * node, char *path, char *def)
+{
+	char *lang;
+	char newPath[1024];
+	char *rv = NULL;
+
+	lang = getenv ("LANG");
+	if (!lang || !strlen(lang))
+		lang = getenv ("LC_ALL");
+	if (!lang || !strlen(lang))
+		lang = getenv ("LC_MESSAGES");
+	if (!lang || !strlen(lang))
+		return stringFromNodeDef (node, path, def);
+
+	sprintf(newPath,"%s[lang('%s')]",path,lang);
+	rv = stringFromNodeDef (node, newPath, NULL);
+	if (rv)
+	    return rv;
+	sprintf(newPath,"%s[lang(substring-before('%s','.'))]",path,lang);
+	rv = stringFromNodeDef (node, newPath, NULL);
+	if (rv)
+	    return rv;
+	sprintf(newPath,"%s[lang(substring-before('%s','_'))]",path,lang);
+	rv = stringFromNodeDef (node, newPath, NULL);    
+	if (rv)
+	    return rv;
+	sprintf(newPath,"%s[lang('C')]",path);
+	rv = stringFromNodeDef (node, newPath, NULL);    
+	if (rv)
+	    return rv;
+	return stringFromNodeDef (node, path, def);
+}
+
+
 static void
 initBoolValue (BSSettingValue * v, xmlNode * node)
 {
@@ -930,13 +965,14 @@ addOptionFromXMLNode (BSPlugin * plugin, xmlNode * node)
 	setting->isDefault = TRUE;
 	setting->name = strdup (name);
 	setting->shortDesc =
-		stringFromNodeDef (node, "short/child::text()", name);
-	setting->longDesc = stringFromNodeDef (node, "long/child::text()", "");
+		stringFromNodeDefTrans (node, "short/child::text()", name);
+	setting->longDesc = 
+		stringFromNodeDefTrans (node, "long/child::text()", "");
 	setting->hints = stringFromNodeDef (node, "hints/child::text()", "");
 	setting->group =
-		stringFromNodeDef (node, "ancestor::group/short/child::text()", "");
+		stringFromNodeDefTrans (node, "ancestor::group/short/child::text()", "");
 	setting->subGroup =
-		stringFromNodeDef (node, "ancestor::subgroup/short/child::text()",
+		stringFromNodeDefTrans (node, "ancestor::subgroup/short/child::text()",
 						   "");
 	setting->type = getOptionType (type);
 	setting->value = &setting->defaultValue;
@@ -1045,8 +1081,8 @@ addPluginFromXMLNode (BSContext * context, xmlNode * node)
 	plugin->context = context;
 	plugin->name = strdup (name);
 
-	plugin->shortDesc = stringFromNodeDef (node, "short/child::text()", name);
-	plugin->longDesc = stringFromNodeDef (node, "long/child::text()", name);
+	plugin->shortDesc = stringFromNodeDefTrans (node, "short/child::text()", name);
+	plugin->longDesc = stringFromNodeDefTrans (node, "long/child::text()", name);
 
 
 	plugin->category = stringFromNodeDef (node, "category/child::text()", "");
@@ -1105,9 +1141,9 @@ addCoreSettingsFromXMLNode (BSContext * context, xmlNode * node)
 
 
 	plugin->shortDesc =
-		stringFromNodeDef (node, "short/child::text()", "General Options");
+		stringFromNodeDefTrans (node, "short/child::text()", "General Options");
 	plugin->longDesc =
-		stringFromNodeDef (node, "long/child::text()",
+		stringFromNodeDefTrans (node, "long/child::text()",
 						   "General Compiz Options");
 
 	printf ("Adding core settings (%s)\n", plugin->shortDesc);
