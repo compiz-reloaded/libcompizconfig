@@ -475,8 +475,8 @@ void bsIniSetList (IniDictionary * dictionary, const char * section,
 void bsIniRemoveEntry (IniDictionary * dictionary, const char * section,
 					   const char * entry);
 
-// plugin conflict handling
+/* plugin conflict handling */
 BSPluginConflictList bsCanEnablePlugin (BSContext * context, BSPlugin * plugin);
-// BSPluginConflictList bsCanDisablePlugin (BSPlugin *plugin);
+BSPluginConflictList bsCanDisablePlugin (BSContext * context, BSPlugin * plugin);
 
 #endif

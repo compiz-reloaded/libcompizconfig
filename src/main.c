@@ -1356,6 +1356,87 @@ BSPluginConflictList bsCanEnablePlugin (BSContext * context, BSPlugin * plugin)
 	return list;
 }
 
-// BSPluginConflictList bsCanDisablePlugin (BSPlugin *plugin);
+BSPluginConflictList bsCanDisablePlugin (BSContext * context, BSPlugin * plugin)
+{
+	BSPluginConflictList list = NULL;
+	BSPluginConflict *conflict = NULL;
+	BSPluginList pl;
+	BSStringList sl;
 
+	/* look if the plugin to be unloaded is required by another plugin */
+	pl = context->plugins;
+	for (; pl; pl = pl->next)
+	{
+		BSStringList pluginList;
+
+		if (pl->data == plugin)
+			continue;
+
+		pluginList = pl->data->requiresPlugin;
+		while (pluginList)
+		{
+			if (strcmp (plugin->name, pluginList->data) == 0)
+			{
+				if (!conflict)
+				{
+					conflict = calloc (1, sizeof (BSPluginConflict));
+					conflict->value = strdup (plugin->name);
+					conflict->type = ConflictPluginNeeded;
+				}
+				conflict->plugins = bsPluginListAppend (conflict->plugins, pl->data);
+
+				break;
+			}
+
+			pluginList = pluginList->next;
+		}
+	}
+
+	if (conflict)
+	{
+		list = bsPluginConflictListAppend (list, conflict);
+		conflict = NULL;
+	}
+
+	/* look if a feature provided is required by another plugin */
+	sl = plugin->providesFeature;
+	while (sl)
+	{
+		pl = context->plugins;
+
+		for (; pl; pl = pl->next)
+		{
+			BSStringList pluginList;
+
+			if (pl->data == plugin)
+				continue;
+
+			pluginList = pl->data->requiresPlugin;
+			while (pluginList)
+			{
+				if (strcmp (sl->data, pluginList->data) == 0)
+				{
+					if (!conflict)
+					{
+						conflict = calloc (1, sizeof (BSPluginConflict));
+
+						conflict->value = strdup (sl->data);
+						conflict->type = ConflictPluginNeeded;
+					}
+
+					conflict->plugins = bsPluginListAppend (conflict->plugins, pl->data);
+				}
+
+				pluginList = pluginList->next;
+			}
+
+			if (conflict)
+				list = bsPluginConflictListAppend (list, conflict);
+		}
+
+		sl = sl->next;
+	}
+
+	return list;
+}
 
