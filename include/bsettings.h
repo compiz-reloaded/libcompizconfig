@@ -137,8 +137,9 @@ struct _BSPlugin
 	
 	BSStringList		loadAfter;
 	BSStringList		loadBefore;
-	BSStringList		provides;
-	BSStringList		requires;
+	BSStringList		requiresPlugin;
+        BSStringList		providesFeature;
+	BSStringList		requiresFeature;
 	BSSettingList		settings;
 	BSGroupList			groups;
 	void *				privatePtr;
