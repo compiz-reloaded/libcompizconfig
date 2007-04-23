@@ -1286,7 +1286,8 @@ BSPluginConflictList bsCanEnablePlugin (BSContext * context, BSPlugin * plugin)
 		pl = context->plugins;
 		while (pl)
 		{
-			if (strcmp (pl->data->name, sl->data) == 0)
+			if (bsPluginIsActive (context, pl->data->name) &&
+				(strcmp (pl->data->name, sl->data) == 0))
 				break;
 			pl = pl->next;
 		}
@@ -1309,19 +1310,22 @@ BSPluginConflictList bsCanEnablePlugin (BSContext * context, BSPlugin * plugin)
 		pl = context->plugins;
 		while (pl)
 		{
-			BSStringList featureList = pl->data->providesFeature;
-			valueSeen = FALSE;
-			while (featureList)
+			if (bsPluginIsActive (context, pl->data->name))
 			{
-				if (strcmp (sl->data, featureList->data) == 0)
+				BSStringList featureList = pl->data->providesFeature;
+				valueSeen = FALSE;
+				while (featureList)
 				{
-					valueSeen = TRUE;
-					break;
+					if (strcmp (sl->data, featureList->data) == 0)
+					{
+						valueSeen = TRUE;
+						break;
+					}
+					featureList = featureList->next;
 				}
-				featureList = featureList->next;
+				if (valueSeen)
+					break;
 			}
-			if (valueSeen)
-				break;
 
 			pl = pl->next;
 		}
@@ -1349,21 +1353,24 @@ BSPluginConflictList bsCanEnablePlugin (BSContext * context, BSPlugin * plugin)
 		BSPluginConflict *conflict = NULL;
 		while (pl)
 		{
-			BSStringList featureList = pl->data->providesFeature;
-			while (featureList)
+			if (bsPluginIsActive (context, pl->data->name))
 			{
-				if (strcmp (sl->data, featureList->data) == 0)
+				BSStringList featureList = pl->data->providesFeature;
+				while (featureList)
 				{
-					if (!conflict)
+					if (strcmp (sl->data, featureList->data) == 0)
 					{
-						conflict = calloc (1, sizeof (BSPluginConflict));
-						conflict->value = strdup (sl->data);
-						conflict->type = ConflictSameFeature;
-					}
+						if (!conflict)
+						{
+							conflict = calloc (1, sizeof (BSPluginConflict));
+							conflict->value = strdup (sl->data);
+							conflict->type = ConflictSameFeature;
+						}
 
-					conflict->plugins = bsPluginListAppend (conflict->plugins, pl->data);
+						conflict->plugins = bsPluginListAppend (conflict->plugins, pl->data);
+					}
+					featureList = featureList->next;
 				}
-				featureList = featureList->next;
 			}
 			pl = pl->next;
 		}
@@ -1391,6 +1398,9 @@ BSPluginConflictList bsCanDisablePlugin (BSContext * context, BSPlugin * plugin)
 		BSStringList pluginList;
 
 		if (pl->data == plugin)
+			continue;
+
+		if (!bsPluginIsActive (context, pl->data->name))
 			continue;
 
 		pluginList = pl->data->requiresPlugin;
@@ -1430,6 +1440,9 @@ BSPluginConflictList bsCanDisablePlugin (BSContext * context, BSPlugin * plugin)
 			BSStringList pluginList;
 
 			if (pl->data == plugin)
+				continue;
+
+			if (!bsPluginIsActive (context, pl->data->name))
 				continue;
 
 			pluginList = pl->data->requiresPlugin;
