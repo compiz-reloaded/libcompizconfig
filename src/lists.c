@@ -142,6 +142,7 @@ BSLIST(String,char)
 BSLIST(Group,BSGroup)
 BSLIST(SubGroup,BSSubGroup)
 BSLIST(SettingValue,BSSettingValue)
+BSLIST(PluginConflict,BSPluginConflict)
 
 BSSettingValueList bsGetValueListFromStringList(BSStringList list,
 												BSSetting *parent)

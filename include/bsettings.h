@@ -42,6 +42,7 @@ typedef struct _BSBackend			BSBackend;
 typedef struct _BSBackendVTable 	BSBackendVTable;
 typedef struct _BSPluginCategory	BSPluginCategory;
 typedef struct _BSSettingValue		BSSettingValue;
+typedef struct _BSPluginConflict	BSPluginConflict;
 
 BSLIST_HDR(Plugin,BSPlugin)
 BSLIST_HDR(Setting,BSSetting)
@@ -49,6 +50,7 @@ BSLIST_HDR(String,char)
 BSLIST_HDR(Group,BSGroup)
 BSLIST_HDR(SubGroup,BSSubGroup)
 BSLIST_HDR(SettingValue,BSSettingValue)
+BSLIST_HDR(PluginConflict,BSPluginConflict)
 
 
 struct _BSContext
@@ -171,20 +173,24 @@ struct _BSGroup
 	BSSubGroupList	subGroups;	//list of BerylSettingsSubGroup
 };
 
-typedef enum _BSConflictType
+typedef enum _BSPluginConflictType
 {
-	ConflictKey,
-	ConflictButton,
-	ConflictEdge,
-	ConflctAny,
-} BSConflictType;
+    // produced on plugin activation
+    ConflictRequiresPlugin,
+    ConflictRequiresFeature,
+    ConflictSameFeature,
+    // produced on plugin deactivation
+    ConflictFeatureNeeded,
+    ConflictPluginNeeded,
+} BSPluginConflictType;
 
-typedef struct _BSSettingConflict
+struct _BSPluginConflict
 {
-	BSSettingList		settings;	// settings that conflict over the binding
-	BSConflictType		type;		// type of the conflict, note that a setting may show up again in another
-									// list for a different type
-} BSConflict;
+    char *                  value;
+    BSPluginConflictType    type;
+    BSPluginList            plugins;
+};
+
 
 union _BSSettingInfo;
 
@@ -331,6 +337,7 @@ void bsFreeSetting(BSSetting *setting);
 void bsFreeGroup(BSGroup *group);
 void bsFreeSubGroup(BSSubGroup *subGroup);
 void bsFreeSettingValue(BSSettingValue *value);
+void bsFreePluginConflict(BSPluginConflict *value);
 #define bsFreeString(val) free(val)
 
 Bool bsSetInt(BSSetting * setting, int data);
@@ -467,5 +474,9 @@ void bsIniSetList (IniDictionary * dictionary, const char * section,
 
 void bsIniRemoveEntry (IniDictionary * dictionary, const char * section,
 					   const char * entry);
+
+// plugin conflict handling
+// BSPluginConflictList bsCanEnablePlugin (BSPlugin *plugin);
+// BSPluginConflictList bsCanDisablePlugin (BSPlugin *plugin);
 
 #endif
