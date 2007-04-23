@@ -1247,5 +1247,115 @@ bsPluginSetActive (BSPlugin * plugin, Bool value)
 	if (!s)
 		return FALSE;
 	bsSetBool (s, value);
+
 	return TRUE;
 }
+
+BSPluginConflictList bsCanEnablePlugin (BSContext * context, BSPlugin * plugin)
+{
+	BSPluginConflictList list = NULL;
+	BSPluginList pl;
+	BSStringList sl;
+	Bool valueSeen;
+
+	/* look if the plugin to be loaded requires a plugin not present */
+	sl = plugin->requiresPlugin;
+	while (sl)
+	{
+		pl = context->plugins;
+		while (pl)
+		{
+			if (strcmp (pl->data->name, sl->data) == 0)
+				break;
+			pl = pl->next;
+		}
+		if (!pl)
+		{
+			/* we've not seen a matching plugin */
+			NEW (BSPluginConflict, conflict);
+			conflict->value = strdup(sl->data);
+			conflict->type = ConflictRequiresPlugin;
+			conflict->plugins = NULL; /* FIXME */
+			list = bsPluginConflictListAppend (list, conflict);
+		}
+		sl = sl->next;
+	}
+
+	/* look if the new plugin wants a non-present feature */
+	sl = plugin->requiresFeature;
+	while (sl)
+	{
+		pl = context->plugins;
+		while (pl)
+		{
+			BSStringList featureList = pl->data->providesFeature;
+			valueSeen = FALSE;
+			while (featureList)
+			{
+				if (strcmp (sl->data, featureList->data) == 0)
+				{
+					valueSeen = TRUE;
+					break;
+				}
+				featureList = featureList->next;
+			}
+			if (valueSeen)
+				break;
+
+			pl = pl->next;
+		}
+
+		if (!pl)
+		{
+			/* no plugin provides that feature */
+			NEW (BSPluginConflict, conflict);
+
+			conflict->value = strdup (sl->data);
+			conflict->type = ConflictRequiresFeature;
+			conflict->plugins = NULL; /* FIXME */
+
+			list = bsPluginConflictListAppend (list, conflict);
+		}
+
+		sl = sl->next;
+	}
+	
+	/* look if another plugin provides the same feature */
+	sl = plugin->providesFeature;
+	while (sl)
+	{
+		pl = context->plugins;
+		BSPluginConflict *conflict = NULL;
+		while (pl)
+		{
+			BSStringList featureList = pl->data->providesFeature;
+			while (featureList)
+			{
+				if (strcmp (sl->data, featureList->data) == 0)
+				{
+					if (!conflict)
+					{
+						conflict = calloc (1, sizeof (BSPluginConflict));
+						conflict->value = strdup (sl->data);
+						conflict->type = ConflictSameFeature;
+					}
+
+					conflict->plugins = bsPluginListAppend (conflict->plugins, pl->data);
+				}
+				featureList = featureList->next;
+			}
+			pl = pl->next;
+		}
+
+		if (conflict)
+			list = bsPluginConflictListAppend (list, conflict);
+
+		sl = sl->next;
+	}
+
+	return list;
+}
+
+// BSPluginConflictList bsCanDisablePlugin (BSPlugin *plugin);
+
+
