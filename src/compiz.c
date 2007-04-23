@@ -1143,6 +1143,10 @@ addPluginFromXMLNode (BSContext * context, xmlNode * node)
 	if (bsFindPlugin (context, name))
 		return;
 
+	if (!strcmp(name,"ini") || !strcmp(name,"gconf") || !strcmp(name,"bset"))
+	    return;
+
+	
 	NEW (BSPlugin, plugin);
 
 	plugin->context = context;
@@ -1317,6 +1321,8 @@ addPluginNamed (BSContext * context, char *name)
 
 	if (bsFindPlugin (context, name))
 		return;
+	if (!strcmp(name,"ini") || !strcmp(name,"gconf") || !strcmp(name,"bset"))
+	    return;
 
 	NEW (BSPlugin, plugin);
 
