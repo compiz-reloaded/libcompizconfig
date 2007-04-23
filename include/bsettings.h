@@ -182,6 +182,7 @@ typedef enum _BSPluginConflictType
     // produced on plugin deactivation
     ConflictFeatureNeeded,
     ConflictPluginNeeded,
+    ConflictPluginError,
 } BSPluginConflictType;
 
 struct _BSPluginConflict

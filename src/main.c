@@ -1275,29 +1275,28 @@ bsPluginSetActive (BSPlugin * plugin, Bool value)
 BSPluginConflictList bsCanEnablePlugin (BSContext * context, BSPlugin * plugin)
 {
 	BSPluginConflictList list = NULL;
-	BSPluginList pl;
+	BSPluginList pl,pl2;
 	BSStringList sl;
-	Bool valueSeen;
 
 	/* look if the plugin to be loaded requires a plugin not present */
 	sl = plugin->requiresPlugin;
 	while (sl)
 	{
-		pl = context->plugins;
-		while (pl)
+	        if (!bsFindPlugin (context, sl->data))
 		{
-			if (bsPluginIsActive (context, pl->data->name) &&
-				(strcmp (pl->data->name, sl->data) == 0))
-				break;
-			pl = pl->next;
+		        NEW (BSPluginConflict, conflict);
+			conflict->value = strdup(sl->data);
+			conflict->type = ConflictPluginError;
+			conflict->plugins = NULL;
+			list = bsPluginConflictListAppend (list, conflict);
 		}
-		if (!pl)
+	        else if (!bsPluginIsActive (context, sl->data))
 		{
 			/* we've not seen a matching plugin */
 			NEW (BSPluginConflict, conflict);
 			conflict->value = strdup(sl->data);
 			conflict->type = ConflictRequiresPlugin;
-			conflict->plugins = NULL; /* FIXME */
+			conflict->plugins = bsPluginListAppend(conflict->plugins, bsFindPlugin (context, sl->data));
 			list = bsPluginConflictListAppend (list, conflict);
 		}
 		sl = sl->next;
@@ -1308,28 +1307,36 @@ BSPluginConflictList bsCanEnablePlugin (BSContext * context, BSPlugin * plugin)
 	while (sl)
 	{
 		pl = context->plugins;
+		pl2 = NULL;
 		while (pl)
 		{
-			if (bsPluginIsActive (context, pl->data->name))
+                    	BSStringList featureList = pl->data->providesFeature;
+				
+			while (featureList)
 			{
-				BSStringList featureList = pl->data->providesFeature;
-				valueSeen = FALSE;
-				while (featureList)
+				if (strcmp (sl->data, featureList->data) == 0)
 				{
-					if (strcmp (sl->data, featureList->data) == 0)
-					{
-						valueSeen = TRUE;
-						break;
-					}
-					featureList = featureList->next;
-				}
-				if (valueSeen)
+				        pl2 = bsPluginListAppend(pl2, pl->data);
 					break;
+				}
+				featureList = featureList->next;
 			}
 
 			pl = pl->next;
 		}
 
+		pl = pl2;
+
+		while (pl)
+		{
+                        if (bsPluginIsActive (context, pl->data->name))
+			{
+			    bsPluginListFree(pl2, FALSE);
+			    break;
+			}
+			pl = pl->next;
+		}
+		
 		if (!pl)
 		{
 			/* no plugin provides that feature */
@@ -1337,7 +1344,7 @@ BSPluginConflictList bsCanEnablePlugin (BSContext * context, BSPlugin * plugin)
 
 			conflict->value = strdup (sl->data);
 			conflict->type = ConflictRequiresFeature;
-			conflict->plugins = NULL; /* FIXME */
+			conflict->plugins = pl2;
 
 			list = bsPluginConflictListAppend (list, conflict);
 		}
