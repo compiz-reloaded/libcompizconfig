@@ -163,29 +163,29 @@ stringFromNodeDefTrans (xmlNode * node, char *path, char *def)
 	char *rv = NULL;
 
 	lang = getenv ("LANG");
-	if (!lang || !strlen(lang))
+	if (!lang || !strlen (lang))
 		lang = getenv ("LC_ALL");
-	if (!lang || !strlen(lang))
+	if (!lang || !strlen (lang))
 		lang = getenv ("LC_MESSAGES");
-	if (!lang || !strlen(lang))
+	if (!lang || !strlen (lang))
 		return stringFromNodeDef (node, path, def);
 
-	sprintf(newPath,"%s[lang('%s')]",path,lang);
+	sprintf (newPath, "%s[lang('%s')]", path, lang);
 	rv = stringFromNodeDef (node, newPath, NULL);
 	if (rv)
-	    return rv;
-	sprintf(newPath,"%s[lang(substring-before('%s','.'))]",path,lang);
+		return rv;
+	sprintf (newPath, "%s[lang(substring-before('%s','.'))]", path, lang);
 	rv = stringFromNodeDef (node, newPath, NULL);
 	if (rv)
-	    return rv;
-	sprintf(newPath,"%s[lang(substring-before('%s','_'))]",path,lang);
-	rv = stringFromNodeDef (node, newPath, NULL);    
+		return rv;
+	sprintf (newPath, "%s[lang(substring-before('%s','_'))]", path, lang);
+	rv = stringFromNodeDef (node, newPath, NULL);
 	if (rv)
-	    return rv;
-	sprintf(newPath,"%s[lang('C')]",path);
-	rv = stringFromNodeDef (node, newPath, NULL);    
+		return rv;
+	sprintf (newPath, "%s[lang('C')]", path);
+	rv = stringFromNodeDef (node, newPath, NULL);
 	if (rv)
-	    return rv;
+		return rv;
 	return stringFromNodeDef (node, path, def);
 }
 
@@ -230,7 +230,7 @@ initFloatValue (BSSettingValue * v, BSSettingInfo * i, xmlNode * node)
 
 	v->value.asFloat = (i->forFloat.min + i->forFloat.max) / 2;
 
-	setlocale(LC_NUMERIC, "C");
+	setlocale (LC_NUMERIC, "C");
 	value = getStringFromPath (node->doc, node, "child::text()");
 	if (value)
 	{
@@ -239,7 +239,7 @@ initFloatValue (BSSettingValue * v, BSSettingInfo * i, xmlNode * node)
 			v->value.asFloat = val;
 		free (value);
 	}
-	setlocale(LC_NUMERIC, "");
+	setlocale (LC_NUMERIC, "");
 }
 
 static void
@@ -589,7 +589,7 @@ initFloatInfo (BSSettingInfo * i, xmlNode * node)
 	i->forFloat.min = MINSHORT;
 	i->forFloat.max = MAXSHORT;
 	i->forFloat.precision = 0.1f;
-        setlocale(LC_NUMERIC, "C");
+	setlocale (LC_NUMERIC, "C");
 	value = getStringFromPath (node->doc, node, "min/child::text()");
 	if (value)
 	{
@@ -611,7 +611,7 @@ initFloatInfo (BSSettingInfo * i, xmlNode * node)
 		i->forFloat.precision = val;
 		free (value);
 	}
-	setlocale(LC_NUMERIC, "");
+	setlocale (LC_NUMERIC, "");
 }
 
 static void
@@ -966,14 +966,15 @@ addOptionFromXMLNode (BSPlugin * plugin, xmlNode * node)
 	setting->name = strdup (name);
 	setting->shortDesc =
 		stringFromNodeDefTrans (node, "short/child::text()", name);
-	setting->longDesc = 
+	setting->longDesc =
 		stringFromNodeDefTrans (node, "long/child::text()", "");
 	setting->hints = stringFromNodeDef (node, "hints/child::text()", "");
 	setting->group =
-		stringFromNodeDefTrans (node, "ancestor::group/short/child::text()", "");
+		stringFromNodeDefTrans (node, "ancestor::group/short/child::text()",
+								"");
 	setting->subGroup =
-		stringFromNodeDefTrans (node, "ancestor::subgroup/short/child::text()",
-						   "");
+		stringFromNodeDefTrans (node,
+								"ancestor::subgroup/short/child::text()", "");
 	setting->type = getOptionType (type);
 	setting->value = &setting->defaultValue;
 	setting->defaultValue.parent = setting;
@@ -1058,6 +1059,72 @@ initOptionsFromRootNode (BSPlugin * plugin, xmlNode * node)
 }
 
 static void
+initRuleFromNode (BSPlugin * plugin, xmlNode * node)
+{
+	char *type = stringFromNodeDef (node, "@type", "");
+	char *rule = stringFromNodeDef (node, "child::text()", NULL);
+	if (!rule || !strlen (rule))
+	{
+		if (rule)
+			free (rule);
+		free (type);
+		return;
+	}
+	if (!strcmp (type, "before"))
+	{
+		plugin->loadBefore = bsStringListAppend (plugin->loadBefore, rule);
+	}
+	else if (!strcmp (type, "after"))
+	{
+		plugin->loadAfter = bsStringListAppend (plugin->loadAfter, rule);
+	}
+	else if (!strcmp (type, "require"))
+	{
+		plugin->requiresPlugin =
+			bsStringListAppend (plugin->requiresPlugin, rule);
+	}
+	else if (!strcmp (type, "require_feature"))
+	{
+		plugin->requiresFeature =
+			bsStringListAppend (plugin->requiresFeature, rule);
+	}
+	free (type);
+}
+
+static void
+initFeatureFromNode (BSPlugin * plugin, xmlNode * node)
+{
+	char *feature = stringFromNodeDef (node, "child::text()", NULL);
+	if (feature && strlen (feature))
+		plugin->providesFeature = bsStringListAppend (plugin->providesFeature,
+													  feature);
+	if (feature && !strlen (feature))
+		free (feature);
+}
+
+
+static void
+initRulesFromRootNode (BSPlugin * plugin, xmlNode * node)
+{
+	xmlNode **nodes;
+	int num, i;
+	nodes = getNodesFromPath (node->doc, node, "rule", &num);
+	if (num)
+	{
+		for (i = 0; i < num; i++)
+			initRuleFromNode (plugin, nodes[i]);
+		free (nodes);
+	}
+	nodes = getNodesFromPath (node->doc, node, "feature", &num);
+	if (num)
+	{
+		for (i = 0; i < num; i++)
+			initFeatureFromNode (plugin, nodes[i]);
+		free (nodes);
+	}
+}
+
+static void
 addPluginFromXMLNode (BSContext * context, xmlNode * node)
 {
 	char *name;
@@ -1081,9 +1148,12 @@ addPluginFromXMLNode (BSContext * context, xmlNode * node)
 	plugin->context = context;
 	plugin->name = strdup (name);
 
-	plugin->shortDesc = stringFromNodeDefTrans (node, "short/child::text()", name);
-	plugin->longDesc = stringFromNodeDefTrans (node, "long/child::text()", name);
+	plugin->shortDesc =
+		stringFromNodeDefTrans (node, "short/child::text()", name);
+	plugin->longDesc =
+		stringFromNodeDefTrans (node, "long/child::text()", name);
 
+	initRulesFromRootNode (plugin, node);
 
 	plugin->category = stringFromNodeDef (node, "category/child::text()", "");
 
@@ -1141,10 +1211,11 @@ addCoreSettingsFromXMLNode (BSContext * context, xmlNode * node)
 
 
 	plugin->shortDesc =
-		stringFromNodeDefTrans (node, "short/child::text()", "General Options");
+		stringFromNodeDefTrans (node, "short/child::text()",
+								"General Options");
 	plugin->longDesc =
 		stringFromNodeDefTrans (node, "long/child::text()",
-						   "General Compiz Options");
+								"General Compiz Options");
 
 	printf ("Adding core settings (%s)\n", plugin->shortDesc);
 

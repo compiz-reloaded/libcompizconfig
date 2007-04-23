@@ -166,8 +166,9 @@ bsFreePlugin (BSPlugin * p)
 	free (p->filename);
 	bsStringListFree (p->loadAfter, TRUE);
 	bsStringListFree (p->loadBefore, TRUE);
-	bsStringListFree (p->provides, TRUE);
-	bsStringListFree (p->requires, TRUE);
+	bsStringListFree (p->requiresPlugin, TRUE);
+	bsStringListFree (p->providesFeature, TRUE);
+	bsStringListFree (p->requiresFeature, TRUE);
 	bsSettingListFree (p->settings, TRUE);
 	bsGroupListFree (p->groups, TRUE);
 	free (p);
