@@ -330,6 +330,11 @@ static void readSetting(BSContext * context, BSSetting * setting)
 			context->pluginsChanged = TRUE;
 		context->changedSettings = bsSettingListAppend(context->changedSettings, setting);
 	}
+	else
+	{
+		/* reset setting to default if it could not be read */
+		bsResetToDefault (setting);
+	}
 
 	if (keyName)
 		free (keyName);
