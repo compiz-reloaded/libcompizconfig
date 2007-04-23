@@ -87,6 +87,27 @@ bsFindSetting (BSPlugin * plugin, char *name,
 	return NULL;
 }
 
+Bool 
+bsPluginIsActive (BSContext * context, char * name)
+{
+	BSPlugin *plugin;
+	BSSetting *setting;
+	Bool ret;
+
+	plugin = bsFindPlugin (context, name);
+	if (!plugin)
+		return FALSE;
+
+	setting = bsFindSetting (plugin, "____plugin_enabled", FALSE, 0);
+	if (!setting)
+		return FALSE;
+
+	bsGetBool (setting, &ret);
+
+	return ret;
+}
+
+
 static void
 subGroupAdd (BSSetting * setting, BSGroup * group)
 {

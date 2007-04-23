@@ -331,6 +331,8 @@ BSPlugin * bsFindPlugin(BSContext *context, char * name);
 BSSetting * bsFindSetting(BSPlugin *plugin, char * name,
 						  Bool isScreen, unsigned int screenNum);
 
+Bool bsPluginIsActive(BSContext * context, char * name);
+
 void bsFreeContext(BSContext *context);
 void bsFreePlugin(BSPlugin *plugin);
 void bsFreeSetting(BSSetting *setting);
