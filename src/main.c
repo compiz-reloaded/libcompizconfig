@@ -261,6 +261,16 @@ bsFreeSettingValue (BSSettingValue * v)
 		free (v);
 }
 
+void
+bsFreePluginConflict (BSPluginConflict * c)
+{
+	if (!c)
+		return;
+	free (c->value);
+	if (c->plugins)
+	    c->plugins = bsPluginListFree (c->plugins, FALSE);
+}
+
 static void *
 openBackend (char *backend)
 {
