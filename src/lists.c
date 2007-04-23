@@ -100,14 +100,23 @@ BS##type##List bs##type##ListRemove (BS##type##List list, dtype *data, Bool free
 { \
 	BS##type##List l = list; \
 	BS##type##List prev = NULL; \
+	Bool           found = FALSE; \
+	if (!data) \
+	        return list; \
 	while (l) \
 	{ \
-		if (!data && !l->data) break; \
-		if (memcmp(l->data, data, sizeof(dtype)) == 0) break; \
+		if (!l->data) continue; \
+		if (memcmp(l->data, data, sizeof(dtype)) == 0) \
+                { \
+	                found = TRUE; \
+	                break; \
+                } \
 		prev = l; \
 		l = l->next; \
 	} \
-	if (l) \
+	if (!found) \
+	        return list; \
+ 	if (l) \
 	{ \
 		if (prev) prev->next = l->next; \
 		else list = l->next; \
