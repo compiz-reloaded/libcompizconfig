@@ -384,7 +384,7 @@ bsSetOptionFromContext( CompDisplay *d,
 	if (!o)
 		return;
 
-	bsp = bsFindPlugin(bd->context, plugin);
+	bsp = bsFindPlugin(bd->context, (plugin)?plugin:"core");
 
 	if (!bsp)
 		return;
@@ -490,7 +490,7 @@ bsSetContextFromOption( CompDisplay *d,
 		return;
 	}
 
-	bsp = bsFindPlugin(bd->context, plugin);
+	bsp = bsFindPlugin(bd->context, (plugin)?plugin:"core");
 
 	if (!bsp)
 		return;
