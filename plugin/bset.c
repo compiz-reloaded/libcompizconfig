@@ -81,7 +81,8 @@ bsSetValueToValue(CompDisplay *d, BSSettingValue *sv, CompOptionValue *v, BSSett
 				else
 					v->action.type &= ~CompBindingTypeButton;
 
-				v->action.key.keycode = XKeysymToKeycode(d->display, sv->value.asAction.keysym);
+				v->action.key.keycode = (sv->value.asAction.keysym != NoSymbol)?
+					XKeysymToKeycode(d->display, sv->value.asAction.keysym): 0;
 				v->action.key.modifiers = sv->value.asAction.keyModMask;
 				if ((v->action.key.keycode || v->action.key.modifiers)
 				   && sv->parent->info.forAction.key)
