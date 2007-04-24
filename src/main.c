@@ -87,8 +87,8 @@ bsFindSetting (BSPlugin * plugin, char *name,
 	return NULL;
 }
 
-Bool 
-bsPluginIsActive (BSContext * context, char * name)
+Bool
+bsPluginIsActive (BSContext * context, char *name)
 {
 	BSPlugin *plugin;
 	BSSetting *setting;
@@ -289,7 +289,7 @@ bsFreePluginConflict (BSPluginConflict * c)
 		return;
 	free (c->value);
 	if (c->plugins)
-	    c->plugins = bsPluginListFree (c->plugins, FALSE);
+		c->plugins = bsPluginListFree (c->plugins, FALSE);
 }
 
 static void *
@@ -435,6 +435,12 @@ bsResetToDefault (BSSetting * setting)
 		bsFreeSettingValue (setting->value);
 	setting->value = &setting->defaultValue;
 	setting->isDefault = TRUE;
+	if (!strcmp (setting->name, "____plugin_enabled"))
+		setting->parent->context->pluginsChanged = TRUE;
+	else
+		setting->parent->context->changedSettings =
+			bsSettingListAppend (setting->parent->context->
+								 changedSettings, setting);
 }
 
 Bool
@@ -449,9 +455,6 @@ bsSetInt (BSSetting * setting, int data)
 	if (!setting->isDefault && (setting->defaultValue.value.asInt == data))
 	{
 		bsResetToDefault (setting);
-		setting->parent->context->changedSettings =
-			bsSettingListAppend (setting->parent->context->changedSettings,
-								 setting);
 		return TRUE;
 	}
 
@@ -481,9 +484,6 @@ bsSetFloat (BSSetting * setting, float data)
 	if (!setting->isDefault && (setting->defaultValue.value.asFloat == data))
 	{
 		bsResetToDefault (setting);
-		setting->parent->context->changedSettings =
-			bsSettingListAppend (setting->parent->context->changedSettings,
-								 setting);
 		return TRUE;
 	}
 
@@ -513,12 +513,6 @@ bsSetBool (BSSetting * setting, Bool data)
 	if (!setting->isDefault && (setting->defaultValue.value.asBool == data))
 	{
 		bsResetToDefault (setting);
-		if (!strcmp (setting->name, "____plugin_enabled"))
-			setting->parent->context->pluginsChanged = TRUE;
-		else
-			setting->parent->context->changedSettings =
-				bsSettingListAppend (setting->parent->context->
-									 changedSettings, setting);
 		return TRUE;
 	}
 
@@ -553,9 +547,6 @@ bsSetString (BSSetting * setting, const char *data)
 	if (!setting->isDefault && isDefault)
 	{
 		bsResetToDefault (setting);
-		setting->parent->context->changedSettings =
-			bsSettingListAppend (setting->parent->context->changedSettings,
-								 setting);
 		return TRUE;
 	}
 
@@ -601,9 +592,6 @@ bsSetColor (BSSetting * setting, BSSettingColorValue data)
 	if (!setting->isDefault && isDefault)
 	{
 		bsResetToDefault (setting);
-		setting->parent->context->changedSettings =
-			bsSettingListAppend (setting->parent->context->changedSettings,
-								 setting);
 		return TRUE;
 	}
 
@@ -634,9 +622,6 @@ bsSetMatch (BSSetting * setting, const char *data)
 	if (!setting->isDefault && isDefault)
 	{
 		bsResetToDefault (setting);
-		setting->parent->context->changedSettings =
-			bsSettingListAppend (setting->parent->context->changedSettings,
-								 setting);
 		return TRUE;
 	}
 
@@ -666,9 +651,6 @@ bsSetAction (BSSetting * setting, BSSettingActionValue data)
 	if (!setting->isDefault && isDefault)
 	{
 		bsResetToDefault (setting);
-		setting->parent->context->changedSettings =
-			bsSettingListAppend (setting->parent->context->changedSettings,
-								 setting);
 		return TRUE;
 	}
 
@@ -810,9 +792,6 @@ bsSetList (BSSetting * setting, BSSettingValueList data)
 	if (!setting->isDefault && isDefault)
 	{
 		bsResetToDefault (setting);
-		setting->parent->context->changedSettings =
-			bsSettingListAppend (setting->parent->context->changedSettings,
-								 setting);
 		return TRUE;
 	}
 
@@ -1129,7 +1108,7 @@ bsProcessEvents (BSContext * context)
 	if (!context)
 		return;
 
-	bsCheckFileWatches();
+	bsCheckFileWatches ();
 
 	if (context->backend && context->backend->vTable->executeEvents)
 		(*context->backend->vTable->executeEvents) ();
@@ -1140,7 +1119,7 @@ bsReadSettings (BSContext * context)
 {
 	if (!context || !context->backend)
 		return;
-	
+
 	if (!context->backend->vTable->readSetting)
 		return;
 
@@ -1211,7 +1190,7 @@ bsWriteChangedSettings (BSContext * context)
 			BSSetting *s =
 				bsFindSetting (pl->data, "____plugin_enabled", FALSE, 0);
 			if (s)
-    				(*context->backend->vTable->writeSetting) (context, s);
+				(*context->backend->vTable->writeSetting) (context, s);
 			pl = pl->next;
 		}
 	}
@@ -1275,31 +1254,34 @@ bsPluginSetActive (BSPlugin * plugin, Bool value)
 	return TRUE;
 }
 
-BSPluginConflictList bsCanEnablePlugin (BSContext * context, BSPlugin * plugin)
+BSPluginConflictList
+bsCanEnablePlugin (BSContext * context, BSPlugin * plugin)
 {
 	BSPluginConflictList list = NULL;
-	BSPluginList pl,pl2;
+	BSPluginList pl, pl2;
 	BSStringList sl;
 
 	/* look if the plugin to be loaded requires a plugin not present */
 	sl = plugin->requiresPlugin;
 	while (sl)
 	{
-	        if (!bsFindPlugin (context, sl->data))
+		if (!bsFindPlugin (context, sl->data))
 		{
-		        NEW (BSPluginConflict, conflict);
-			conflict->value = strdup(sl->data);
+			NEW (BSPluginConflict, conflict);
+			conflict->value = strdup (sl->data);
 			conflict->type = ConflictPluginError;
 			conflict->plugins = NULL;
 			list = bsPluginConflictListAppend (list, conflict);
 		}
-	        else if (!bsPluginIsActive (context, sl->data))
+		else if (!bsPluginIsActive (context, sl->data))
 		{
 			/* we've not seen a matching plugin */
 			NEW (BSPluginConflict, conflict);
-			conflict->value = strdup(sl->data);
+			conflict->value = strdup (sl->data);
 			conflict->type = ConflictRequiresPlugin;
-			conflict->plugins = bsPluginListAppend(conflict->plugins, bsFindPlugin (context, sl->data));
+			conflict->plugins =
+				bsPluginListAppend (conflict->plugins,
+									bsFindPlugin (context, sl->data));
 			list = bsPluginConflictListAppend (list, conflict);
 		}
 		sl = sl->next;
@@ -1313,13 +1295,13 @@ BSPluginConflictList bsCanEnablePlugin (BSContext * context, BSPlugin * plugin)
 		pl2 = NULL;
 		while (pl)
 		{
-                    	BSStringList featureList = pl->data->providesFeature;
-				
+			BSStringList featureList = pl->data->providesFeature;
+
 			while (featureList)
 			{
 				if (strcmp (sl->data, featureList->data) == 0)
 				{
-				        pl2 = bsPluginListAppend(pl2, pl->data);
+					pl2 = bsPluginListAppend (pl2, pl->data);
 					break;
 				}
 				featureList = featureList->next;
@@ -1332,14 +1314,14 @@ BSPluginConflictList bsCanEnablePlugin (BSContext * context, BSPlugin * plugin)
 
 		while (pl)
 		{
-                        if (bsPluginIsActive (context, pl->data->name))
+			if (bsPluginIsActive (context, pl->data->name))
 			{
-			    bsPluginListFree(pl2, FALSE);
-			    break;
+				bsPluginListFree (pl2, FALSE);
+				break;
 			}
 			pl = pl->next;
 		}
-		
+
 		if (!pl)
 		{
 			/* no plugin provides that feature */
@@ -1354,7 +1336,7 @@ BSPluginConflictList bsCanEnablePlugin (BSContext * context, BSPlugin * plugin)
 
 		sl = sl->next;
 	}
-	
+
 	/* look if another plugin provides the same feature */
 	sl = plugin->providesFeature;
 	while (sl)
@@ -1377,7 +1359,8 @@ BSPluginConflictList bsCanEnablePlugin (BSContext * context, BSPlugin * plugin)
 							conflict->type = ConflictSameFeature;
 						}
 
-						conflict->plugins = bsPluginListAppend (conflict->plugins, pl->data);
+						conflict->plugins =
+							bsPluginListAppend (conflict->plugins, pl->data);
 					}
 					featureList = featureList->next;
 				}
@@ -1394,7 +1377,8 @@ BSPluginConflictList bsCanEnablePlugin (BSContext * context, BSPlugin * plugin)
 	return list;
 }
 
-BSPluginConflictList bsCanDisablePlugin (BSContext * context, BSPlugin * plugin)
+BSPluginConflictList
+bsCanDisablePlugin (BSContext * context, BSPlugin * plugin)
 {
 	BSPluginConflictList list = NULL;
 	BSPluginConflict *conflict = NULL;
@@ -1424,7 +1408,8 @@ BSPluginConflictList bsCanDisablePlugin (BSContext * context, BSPlugin * plugin)
 					conflict->value = strdup (plugin->name);
 					conflict->type = ConflictPluginNeeded;
 				}
-				conflict->plugins = bsPluginListAppend (conflict->plugins, pl->data);
+				conflict->plugins =
+					bsPluginListAppend (conflict->plugins, pl->data);
 
 				break;
 			}
@@ -1468,7 +1453,8 @@ BSPluginConflictList bsCanDisablePlugin (BSContext * context, BSPlugin * plugin)
 						conflict->type = ConflictPluginNeeded;
 					}
 
-					conflict->plugins = bsPluginListAppend (conflict->plugins, pl->data);
+					conflict->plugins =
+						bsPluginListAppend (conflict->plugins, pl->data);
 				}
 
 				pluginList = pluginList->next;
@@ -1483,4 +1469,3 @@ BSPluginConflictList bsCanDisablePlugin (BSContext * context, BSPlugin * plugin)
 
 	return list;
 }
-
