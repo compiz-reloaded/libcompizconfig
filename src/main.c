@@ -560,17 +560,20 @@ bsSetString (BSSetting * setting, const char *data)
 	}
 
 	BSStringList allowed = setting->info.forString.allowedValues;
-	while (allowed)
+	if (allowed)
 	{
-		if (strcmp (allowed->data, data) == 0)
-			break;
-		allowed = allowed->next;
-	}
+		while (allowed)
+		{
+			if (strcmp (allowed->data, data) == 0)
+				break;
+			allowed = allowed->next;
+		}
 
-	if (!allowed)
-		/* if allowed is NULL here, it means that none of the
-		   allowed values matched the string to set */
-		return FALSE;
+		if (!allowed)
+			/* if allowed is NULL here, it means that none of the
+			   allowed values matched the string to set */
+			return FALSE;
+	}
 
 	if (setting->isDefault)
 		copyFromDefault (setting);
