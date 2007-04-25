@@ -41,7 +41,7 @@ typedef struct _BSScreen {
     BSScreen *bs = GET_BS_SCREEN (s, GET_BS_DISPLAY (s->display))
 
 #define BS_UPDATE_TIMEOUT 250
-
+#define CORE_VTABLE_NAME  "core"
 
 static void
 bsSetValueToValue(CompDisplay *d, BSSettingValue *sv, CompOptionValue *v, BSSettingType type)
@@ -327,7 +327,7 @@ bsSetOptionFromContext( CompDisplay *d,
 	BSSetting *setting;
 	BS_DISPLAY(d);
 
-	if (plugin && strlen(plugin) && (strcmp(plugin, "core") != 0))
+	if (plugin && strlen(plugin) && (strcmp(plugin, CORE_VTABLE_NAME) != 0))
 	{
 		p = findActivePlugin (plugin);
 		if (!p)
@@ -385,7 +385,7 @@ bsSetOptionFromContext( CompDisplay *d,
 	if (!o)
 		return;
 
-	bsp = bsFindPlugin(bd->context, (plugin)?plugin:"core");
+	bsp = bsFindPlugin(bd->context, (plugin) ? plugin : CORE_VTABLE_NAME);
 
 	if (!bsp)
 		return;
@@ -491,7 +491,7 @@ bsSetContextFromOption( CompDisplay *d,
 		return;
 	}
 
-	bsp = bsFindPlugin(bd->context, (plugin)?plugin:"core");
+	bsp = bsFindPlugin(bd->context, (plugin) ? plugin : CORE_VTABLE_NAME);
 
 	if (!bsp)
 		return;
