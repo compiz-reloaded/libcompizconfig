@@ -36,6 +36,21 @@ static IniDictionary *getConfigFile(void)
 	return iniFile;
 }
 
+unsigned int bsAddConfigWatch(BSContext *context, FileWatchCallbackProc callback)
+{
+    unsigned int ret;
+    char *fileName;
+
+    fileName = getConfigFileName();
+    if (!fileName)
+	return 0;
+
+    ret = bsAddFileWatch (fileName, TRUE, callback, context);
+    free (fileName);
+
+    return ret;
+}
+
 Bool bsReadConfig(ConfigOption option, char** value)
 {
 	IniDictionary *iniFile;

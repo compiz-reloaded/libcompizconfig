@@ -6,6 +6,7 @@
 #include <malloc.h>
 #include <libintl.h>
 #include <dlfcn.h>
+#include <math.h>
 
 #include <bsettings.h>
 
@@ -44,6 +45,15 @@ initGeneralOptions (BSContext * context)
 	}
 }
 
+static void
+configChangeNotify (unsigned int watchId, void *closure)
+{
+    BSContext * context = (BSContext *) closure;
+
+    initGeneralOptions (context);
+    bsReadSettings (context);
+}
+
 BSContext *
 bsContextNew (void)
 {
@@ -53,6 +63,7 @@ bsContextNew (void)
 	bsLoadPlugins (context);
 
 	initGeneralOptions (context);
+	context->configWatchId = bsAddConfigWatch (context, configChangeNotify);
 
 	return context;
 }
@@ -165,11 +176,16 @@ bsFreeContext (BSContext * c)
 {
 	if (!c)
 		return;
+
 	if (c->profile)
 		free (c->profile);
 
+	if (c->configWatchId)
+	    bsRemoveFileWatch (c->configWatchId);
+
 	if (c->changedSettings)
 		bsSettingListFree (c->changedSettings, FALSE);
+
 	bsPluginListFree (c->plugins, TRUE);
 	free (c);
 }
