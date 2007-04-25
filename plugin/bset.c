@@ -327,7 +327,7 @@ bsSetOptionFromContext( CompDisplay *d,
 	BSSetting *setting;
 	BS_DISPLAY(d);
 
-	if (plugin && strlen(plugin))
+	if (plugin && strlen(plugin) && (strcmp(plugin, "core") != 0))
 	{
 		p = findActivePlugin (plugin);
 		if (!p)
