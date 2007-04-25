@@ -410,7 +410,6 @@ void bsSetProfile(BSContext *context, char *name);
 
 char * bsGetProfile(BSContext *context);
 Bool bsGetIntegrationEnabled(BSContext *context);
-char * bsGetProfile(BSContext *context);
 
 Bool bsPluginSetActive(BSPlugin *plugin, Bool value);
 
