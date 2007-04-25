@@ -43,6 +43,7 @@ typedef struct _BSBackendVTable 	BSBackendVTable;
 typedef struct _BSPluginCategory	BSPluginCategory;
 typedef struct _BSSettingValue		BSSettingValue;
 typedef struct _BSPluginConflict	BSPluginConflict;
+typedef struct _BSActionConflict	BSActionConflict;
 
 BSLIST_HDR(Plugin,BSPlugin)
 BSLIST_HDR(Setting,BSSetting)
@@ -51,7 +52,7 @@ BSLIST_HDR(Group,BSGroup)
 BSLIST_HDR(SubGroup,BSSubGroup)
 BSLIST_HDR(SettingValue,BSSettingValue)
 BSLIST_HDR(PluginConflict,BSPluginConflict)
-
+BSLIST_HDR(ActionConflict,BSActionConflict)
 
 struct _BSContext
 {
@@ -192,6 +193,18 @@ struct _BSPluginConflict
     BSPluginList            plugins;
 };
 
+typedef enum _BSActionConflictType
+{
+    ConflictKey,
+    ConflictButton,
+    ConflictEdge
+} BSActionConflictType;
+
+struct _BSActionConflict
+{
+    BSActionConflictType    type;
+    BSSettingList           settings;
+};
 
 union _BSSettingInfo;
 
@@ -341,6 +354,7 @@ void bsFreeGroup(BSGroup *group);
 void bsFreeSubGroup(BSSubGroup *subGroup);
 void bsFreeSettingValue(BSSettingValue *value);
 void bsFreePluginConflict(BSPluginConflict *value);
+void bsFreeActionConflict(BSActionConflict *value);
 #define bsFreeString(val) free(val)
 
 Bool bsSetInt(BSSetting * setting, int data);
@@ -481,5 +495,7 @@ void bsIniRemoveEntry (IniDictionary * dictionary, const char * section,
 /* plugin conflict handling */
 BSPluginConflictList bsCanEnablePlugin (BSContext * context, BSPlugin * plugin);
 BSPluginConflictList bsCanDisablePlugin (BSContext * context, BSPlugin * plugin);
+
+BSActionConflictList bsCanSetAction (BSContext * context, BSSettingActionValue action);
 
 #endif

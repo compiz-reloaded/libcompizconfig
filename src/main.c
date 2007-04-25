@@ -292,6 +292,15 @@ bsFreePluginConflict (BSPluginConflict * c)
 		c->plugins = bsPluginListFree (c->plugins, FALSE);
 }
 
+void
+bsFreeActionConflict (BSActionConflict * c)
+{
+	if (!c)
+		return;
+	if (c->settings)
+		c->settings = bsSettingListFree (c->settings, FALSE);
+}
+
 static void *
 openBackend (char *backend)
 {
@@ -1468,4 +1477,115 @@ bsCanDisablePlugin (BSContext * context, BSPlugin * plugin)
 	}
 
 	return list;
+}
+
+static Bool
+conflictKey (BSSettingActionValue a1, BSSettingActionValue a2)
+{
+	if (a1.keysym == a2.keysym && a1.keyModMask == a2.keyModMask)
+		return TRUE;
+	return FALSE;
+}
+
+static Bool
+conflictButton (BSSettingActionValue a1, BSSettingActionValue a2)
+{
+	if (a1.button == a2.button && a1.buttonModMask == a2.buttonModMask)
+		return TRUE;
+	return FALSE;
+}
+
+static Bool
+conflictEdge (BSSettingActionValue a1, BSSettingActionValue a2)
+{
+	if (a1.edgeMask & a2.edgeMask)
+		return TRUE;
+	return FALSE;
+}
+
+
+BSActionConflictList
+bsCanSetAction (BSContext * context, BSSettingActionValue action)
+{
+	BSActionConflictList rv = NULL;
+	NEW (BSActionConflict, keyC);
+	NEW (BSActionConflict, buttonC);
+	NEW (BSActionConflict, edgeC);
+
+	keyC->type = ConflictKey;
+	buttonC->type = ConflictButton;
+	edgeC->type = ConflictEdge;
+
+	BSPluginList pl = context->plugins;
+	BSSettingList sl = NULL;
+	BSSetting *s;
+
+	while (pl)
+	{
+		sl = pl->data->settings;
+		while (sl)
+		{
+			s = sl->data;
+			if (s->type == TypeAction)
+			{
+				if (conflictKey (action, s->value->value.asAction))
+					keyC->settings = bsSettingListAppend (keyC->settings, s);
+				if (conflictButton (action, s->value->value.asAction))
+					buttonC->settings =
+						bsSettingListAppend (buttonC->settings, s);
+				if (conflictEdge (action, s->value->value.asAction))
+					edgeC->settings =
+						bsSettingListAppend (edgeC->settings, s);
+			}
+			else if (s->type == TypeList
+					 && s->info.forList.listType == TypeAction)
+			{
+				BSSettingValueList vl = s->value->value.asList;
+				while (vl)
+				{
+					if (conflictKey (action, vl->data->value.asAction))
+						keyC->settings =
+							bsSettingListAppend (keyC->settings, s);
+					if (conflictButton (action, vl->data->value.asAction))
+						buttonC->settings =
+							bsSettingListAppend (buttonC->settings, s);
+					if (conflictEdge (action, vl->data->value.asAction))
+						edgeC->settings =
+							bsSettingListAppend (edgeC->settings, s);
+					vl = vl->next;
+				}
+			}
+			sl = sl->next;
+		}
+		pl = pl->next;
+	}
+
+	if (keyC->settings)
+	{
+		rv = bsActionConflictListAppend (rv, keyC);
+	}
+	else
+	{
+		free (keyC);
+	}
+
+	if (buttonC->settings)
+	{
+		rv = bsActionConflictListAppend (rv, buttonC);
+	}
+	else
+	{
+		free (buttonC);
+	}
+
+	if (edgeC->settings)
+	{
+		rv = bsActionConflictListAppend (rv, edgeC);
+	}
+	else
+	{
+		free (edgeC);
+	}
+
+	return rv;
 }
