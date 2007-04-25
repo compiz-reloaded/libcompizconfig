@@ -6,6 +6,7 @@
 #include <malloc.h>
 #include <libintl.h>
 #include <dlfcn.h>
+#include <math.h>
 
 #include <bsettings.h>
 
