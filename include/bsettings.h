@@ -67,6 +67,8 @@ struct _BSContext
 
 	BSSettingList		changedSettings;
 	Bool 				pluginsChanged;
+
+	unsigned int        configWatchId;
 };
 
 struct _BSBackend

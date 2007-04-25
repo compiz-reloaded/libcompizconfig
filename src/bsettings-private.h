@@ -16,5 +16,6 @@ typedef enum {
 
 Bool bsReadConfig(ConfigOption option, char** value);
 Bool bsWriteConfig(ConfigOption option, char* value);
+unsigned int bsAddConfigWatch(BSContext *context, FileWatchCallbackProc callback);
 
 #endif
