@@ -441,15 +441,18 @@ void
 bsResetToDefault (BSSetting * setting)
 {
 	if (setting->value != &setting->defaultValue)
+	{
 		bsFreeSettingValue (setting->value);
+		if (!strcmp (setting->name, "____plugin_enabled"))
+			setting->parent->context->pluginsChanged = TRUE;
+		else
+			setting->parent->context->changedSettings =
+				bsSettingListAppend (setting->parent->context->
+									 changedSettings, setting);
+	}
 	setting->value = &setting->defaultValue;
 	setting->isDefault = TRUE;
-	if (!strcmp (setting->name, "____plugin_enabled"))
-		setting->parent->context->pluginsChanged = TRUE;
-	else
-		setting->parent->context->changedSettings =
-			bsSettingListAppend (setting->parent->context->
-								 changedSettings, setting);
+
 }
 
 Bool
@@ -466,6 +469,9 @@ bsSetInt (BSSetting * setting, int data)
 		bsResetToDefault (setting);
 		return TRUE;
 	}
+
+	if (setting->value->value.asInt == data)
+	    return TRUE;
 
 	if ((data < setting->info.forInt.min) ||
 		(data > setting->info.forInt.max))
@@ -496,6 +502,9 @@ bsSetFloat (BSSetting * setting, float data)
 		return TRUE;
 	}
 
+	if (setting->value->value.asFloat == data)
+	    return TRUE;
+
 	if ((data < setting->info.forFloat.min) ||
 		(data > setting->info.forFloat.max))
 		return FALSE;
@@ -524,6 +533,9 @@ bsSetBool (BSSetting * setting, Bool data)
 		bsResetToDefault (setting);
 		return TRUE;
 	}
+
+	if (setting->value->value.asBool == data)
+	    return TRUE;
 
 	if (setting->isDefault)
 		copyFromDefault (setting);
@@ -558,6 +570,9 @@ bsSetString (BSSetting * setting, const char *data)
 		bsResetToDefault (setting);
 		return TRUE;
 	}
+
+	if (!strcmp(setting->value->value.asString,data))
+	    return TRUE;
 
 	BSStringList allowed = setting->info.forString.allowedValues;
 	if (allowed)
@@ -604,6 +619,9 @@ bsSetColor (BSSetting * setting, BSSettingColorValue data)
 		return TRUE;
 	}
 
+	if (bsIsEqualColor(setting->value->value.asColor,data))
+	    return TRUE;
+
 	if (setting->isDefault)
 		copyFromDefault (setting);
 
@@ -634,6 +652,9 @@ bsSetMatch (BSSetting * setting, const char *data)
 		return TRUE;
 	}
 
+	if (!strcmp(setting->value->value.asMatch,data))
+	    return TRUE;
+
 	if (setting->isDefault)
 		copyFromDefault (setting);
 
@@ -662,6 +683,9 @@ bsSetAction (BSSetting * setting, BSSettingActionValue data)
 		bsResetToDefault (setting);
 		return TRUE;
 	}
+
+	if (bsIsEqualAction(setting->value->value.asAction,data))
+	    return TRUE;
 
 	if (setting->isDefault)
 		copyFromDefault (setting);
@@ -804,6 +828,10 @@ bsSetList (BSSetting * setting, BSSettingValueList data)
 		return TRUE;
 	}
 
+	if (bsCompareLists (setting->value->value.asList, data,
+									 setting->info.forList))
+	    return TRUE;
+	
 	if (setting->isDefault)
 		copyFromDefault (setting);
 
