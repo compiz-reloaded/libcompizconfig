@@ -502,7 +502,9 @@ bsSetFloat (BSSetting * setting, float data)
 		return TRUE;
 	}
 
-	if (setting->value->value.asFloat == data)
+	/* allow the values to differ a tiny bit because of 
+	   possible rounding / precision issues */
+	if (fabs(setting->value->value.asFloat - data) < 1e-5)
 	    return TRUE;
 
 	if ((data < setting->info.forFloat.min) ||
