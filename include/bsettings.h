@@ -499,4 +499,7 @@ BSPluginConflictList bsCanDisablePlugin (BSContext * context, BSPlugin * plugin)
 
 BSActionConflictList bsCanSetAction (BSContext * context, BSSettingActionValue action);
 
+BSStringList bsGetExistingProfiles (BSContext * context);
+void bsDeleteProfile (BSContext * context, char *name);
+
 #endif
