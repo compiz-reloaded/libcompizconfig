@@ -1624,3 +1624,20 @@ bsCanSetAction (BSContext * context, BSSettingActionValue action)
 
 	return rv;
 }
+
+BSStringList bsGetExistingProfiles (BSContext * context)
+{
+    if (!context || !context->backend)
+	return NULL;
+    if (context->backend->getExistingProfiles)
+	return context->backend->getExistingProfiles();
+    return NULL;
+}
+
+void bsDeleteProfile (BSContext * context, char *name)
+{
+    if (!context || !context->backend || !name)
+	return;
+    if (context->backend->deleteProfile)
+	context->backend->deleteProfile(name);
+}
