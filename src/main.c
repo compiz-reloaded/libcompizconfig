@@ -471,7 +471,7 @@ bsSetInt (BSSetting * setting, int data)
 	}
 
 	if (setting->value->value.asInt == data)
-	    return TRUE;
+		return TRUE;
 
 	if ((data < setting->info.forInt.min) ||
 		(data > setting->info.forInt.max))
@@ -527,17 +527,22 @@ bsSetBool (BSSetting * setting, Bool data)
 	if (setting->type != TypeBool)
 		return FALSE;
 
-	if (setting->isDefault && (setting->defaultValue.value.asBool == data))
+	if (setting->isDefault
+		&& ((setting->defaultValue.value.asBool && data)
+			|| (!setting->defaultValue.value.asBool && !data)))
 		return TRUE;
 
-	if (!setting->isDefault && (setting->defaultValue.value.asBool == data))
+	if (!setting->isDefault
+		&& ((setting->defaultValue.value.asBool && data)
+			|| (!setting->defaultValue.value.asBool && !data)))
 	{
 		bsResetToDefault (setting);
 		return TRUE;
 	}
 
-	if (setting->value->value.asBool == data)
-	    return TRUE;
+	if ((setting->value->value.asBool && data)
+		|| (!setting->value->value.asBool && !data))
+		return TRUE;
 
 	if (setting->isDefault)
 		copyFromDefault (setting);
@@ -573,8 +578,8 @@ bsSetString (BSSetting * setting, const char *data)
 		return TRUE;
 	}
 
-	if (!strcmp(setting->value->value.asString,data))
-	    return TRUE;
+	if (!strcmp (setting->value->value.asString, data))
+		return TRUE;
 
 	BSStringList allowed = setting->info.forString.allowedValues;
 	if (allowed)
@@ -621,8 +626,8 @@ bsSetColor (BSSetting * setting, BSSettingColorValue data)
 		return TRUE;
 	}
 
-	if (bsIsEqualColor(setting->value->value.asColor,data))
-	    return TRUE;
+	if (bsIsEqualColor (setting->value->value.asColor, data))
+		return TRUE;
 
 	if (setting->isDefault)
 		copyFromDefault (setting);
@@ -654,8 +659,8 @@ bsSetMatch (BSSetting * setting, const char *data)
 		return TRUE;
 	}
 
-	if (!strcmp(setting->value->value.asMatch,data))
-	    return TRUE;
+	if (!strcmp (setting->value->value.asMatch, data))
+		return TRUE;
 
 	if (setting->isDefault)
 		copyFromDefault (setting);
@@ -686,8 +691,8 @@ bsSetAction (BSSetting * setting, BSSettingActionValue data)
 		return TRUE;
 	}
 
-	if (bsIsEqualAction(setting->value->value.asAction,data))
-	    return TRUE;
+	if (bsIsEqualAction (setting->value->value.asAction, data))
+		return TRUE;
 
 	if (setting->isDefault)
 		copyFromDefault (setting);
@@ -831,9 +836,9 @@ bsSetList (BSSetting * setting, BSSettingValueList data)
 	}
 
 	if (bsCompareLists (setting->value->value.asList, data,
-									 setting->info.forList))
-	    return TRUE;
-	
+						setting->info.forList))
+		return TRUE;
+
 	if (setting->isDefault)
 		copyFromDefault (setting);
 
