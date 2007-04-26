@@ -534,7 +534,7 @@ static BSStringList getExistingProfiles(void)
 		{
 			*pos = 0;
 			if (strcmp(nameList[i]->d_name, DEFAULTPROF) != 0) 
-				ret = bsStringListAppend (ret, nameList[i]->d_name);
+				ret = bsStringListAppend (ret, strdup(nameList[i]->d_name));
 		}
 		free(nameList[i]);
 	}
