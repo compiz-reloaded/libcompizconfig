@@ -1046,7 +1046,7 @@ addOptionFromXMLNode (BSPlugin * plugin, xmlNode * node)
 		free (nodes);
 	}
 
-	printSetting (setting);
+//	printSetting (setting);
 	plugin->settings = bsSettingListAppend (plugin->settings, setting);
 }
 

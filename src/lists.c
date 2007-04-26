@@ -153,6 +153,7 @@ BSLIST(SubGroup,BSSubGroup)
 BSLIST(SettingValue,BSSettingValue)
 BSLIST(PluginConflict,BSPluginConflict)
 BSLIST(ActionConflict,BSActionConflict)
+BSLIST(BackendInfo,BSBackendInfo)
 
 BSSettingValueList bsGetValueListFromStringList(BSStringList list,
 												BSSetting *parent)

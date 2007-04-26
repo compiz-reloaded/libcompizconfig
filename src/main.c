@@ -6,6 +6,7 @@
 #include <malloc.h>
 #include <libintl.h>
 #include <dlfcn.h>
+#include <dirent.h>
 #include <math.h>
 
 #include <bsettings.h>
@@ -48,10 +49,10 @@ initGeneralOptions (BSContext * context)
 static void
 configChangeNotify (unsigned int watchId, void *closure)
 {
-    BSContext * context = (BSContext *) closure;
+	BSContext *context = (BSContext *) closure;
 
-    initGeneralOptions (context);
-    bsReadSettings (context);
+	initGeneralOptions (context);
+	bsReadSettings (context);
 }
 
 BSContext *
@@ -181,7 +182,7 @@ bsFreeContext (BSContext * c)
 		free (c->profile);
 
 	if (c->configWatchId)
-	    bsRemoveFileWatch (c->configWatchId);
+		bsRemoveFileWatch (c->configWatchId);
 
 	if (c->changedSettings)
 		bsSettingListFree (c->changedSettings, FALSE);
@@ -317,6 +318,19 @@ bsFreeActionConflict (BSActionConflict * c)
 		c->settings = bsSettingListFree (c->settings, FALSE);
 }
 
+void
+bsFreeBackendInfo (BSBackendInfo * b)
+{
+	if (!b)
+		return;
+	if (b->name)
+		free (b->name);
+	if (b->shortDesc)
+		free (b->shortDesc);
+	if (b->longDesc)
+		free (b->longDesc);
+}
+
 static void *
 openBackend (char *backend)
 {
@@ -329,10 +343,7 @@ openBackend (char *backend)
 	{
 		asprintf (&dlname, "%s/.bsettings/backends/lib%s.so", home, backend);
 
-		err = dlerror ();
-		if (err)
-			free (err);
-
+		dlerror ();
 		dlhand = dlopen (dlname, RTLD_NOW);
 		err = dlerror ();
 	}
@@ -353,8 +364,6 @@ openBackend (char *backend)
 		return NULL;
 	}
 
-	free (err);
-
 	return dlhand;
 }
 
@@ -364,7 +373,7 @@ bsSetBackend (BSContext * context, char *name)
 	if (context->backend)
 	{
 		/* no action needed if the backend is the same */
-		if (strcmp(context->backend->vTable->name, name) == 0)
+		if (strcmp (context->backend->vTable->name, name) == 0)
 			return TRUE;
 
 		if (context->backend->vTable->backendFini)
@@ -527,8 +536,8 @@ bsSetFloat (BSSetting * setting, float data)
 
 	/* allow the values to differ a tiny bit because of 
 	   possible rounding / precision issues */
-	if (fabs(setting->value->value.asFloat - data) < 1e-5)
-	    return TRUE;
+	if (fabs (setting->value->value.asFloat - data) < 1e-5)
+		return TRUE;
 
 	if ((data < setting->info.forFloat.min) ||
 		(data > setting->info.forFloat.max))
@@ -1654,21 +1663,139 @@ bsCanSetAction (BSContext * context, BSSettingActionValue action)
 	return rv;
 }
 
-BSStringList bsGetExistingProfiles (BSContext * context)
+BSStringList
+bsGetExistingProfiles (BSContext * context)
 {
-    if (!context || !context->backend)
+	if (!context || !context->backend)
+		return NULL;
+	if (context->backend->vTable->getExistingProfiles)
+		return context->backend->vTable->getExistingProfiles ();
 	return NULL;
-    if (context->backend->vTable->getExistingProfiles)
-	return context->backend->vTable->getExistingProfiles();
-    return NULL;
 }
 
-void bsDeleteProfile (BSContext * context, char *name)
+void
+bsDeleteProfile (BSContext * context, char *name)
 {
-    if (!context || !context->backend || !name)
-	return;
-    if (context->backend->vTable->deleteProfile)
-	context->backend->vTable->deleteProfile(name);
+	if (!context || !context->backend || !name)
+		return;
+	if (context->backend->vTable->deleteProfile)
+		context->backend->vTable->deleteProfile (name);
+}
+
+static void
+addBackendInfo (BSBackendInfoList * bl, char *file)
+{
+	void *dlhand = NULL;
+	char *err = NULL;
+	Bool found = FALSE;
+	dlerror ();
+
+	dlhand = dlopen (file, RTLD_LAZY);
+	err = dlerror ();
+
+	if (err || !dlhand)
+		return;
+
+	BackendGetInfoProc getInfo = dlsym (dlhand, "getBackendInfo");
+
+	if (!getInfo)
+	{
+		dlclose (dlhand);
+		return;
+	}
+
+	BSBackendVTable *vt = getInfo ();
+
+	if (!vt)
+	{
+		dlclose (dlhand);
+		return;
+	}
+
+	BSBackendInfoList l = *bl;
+	while (l)
+	{
+		if (!strcmp (l->data->name, vt->name))
+		{
+			found = TRUE;
+			break;
+		}
+		l = l->next;
+	}
+	if (found)
+	{
+		dlclose (dlhand);
+		return;
+	}
+
+	NEW (BSBackendInfo, info);
+	info->name = strdup (vt->name);
+	info->shortDesc = (vt->shortDesc) ? strdup (vt->shortDesc) : strdup ("");
+	info->longDesc = (vt->longDesc) ? strdup (vt->longDesc) : strdup ("");
+	info->integrationSupport = vt->integrationSupport;
+	info->profileSupport = vt->profileSupport;
+
+	*bl = bsBackendInfoListAppend (*bl, info);
+	dlclose (dlhand);
+}
+
+static int
+backendNameFilter (const struct dirent *name)
+{
+	int length = strlen (name->d_name);
+
+	if (length < 7)
+		return 0;
+
+	if (strncmp (name->d_name, "lib", 3) ||
+		strncmp (name->d_name + length - 3, ".so", 3))
+		return 0;
+
+	return 1;
+}
+
+static void
+getBackendInfoFromDir (BSBackendInfoList * bl, char *path)
+{
+	struct dirent **nameList;
+	int nFile, i;
+
+	if (!path)
+		return;
+
+	nFile = scandir (path, &nameList, backendNameFilter, NULL);
+
+	if (nFile <= 0)
+		return;
+
+	for (i = 0; i < nFile; i++)
+	{
+		char file[1024];
+		sprintf (file, "%s/%s", path, nameList[i]->d_name);
+		addBackendInfo (bl, file);
+		free (nameList[i]);
+	}
+	free (nameList);
+
+}
+
+BSBackendInfoList
+bsGetExistingBackends ()
+{
+	BSBackendInfoList rv = NULL;
+	char *home = getenv ("HOME");
+	char *backenddir;
+	if (home && strlen (home))
+	{
+		asprintf (&backenddir, "%s/.bsettings/backends", home);
+		getBackendInfoFromDir (&rv, backenddir);
+		free (backenddir);
+	}
+
+	asprintf (&backenddir, "%s/bsettings/backends", LIBDIR);
+	getBackendInfoFromDir (&rv, backenddir);
+	free (backenddir);
+	return rv;
 }
 
 Bool
