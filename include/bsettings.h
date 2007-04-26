@@ -44,6 +44,7 @@ typedef struct _BSPluginCategory	BSPluginCategory;
 typedef struct _BSSettingValue		BSSettingValue;
 typedef struct _BSPluginConflict	BSPluginConflict;
 typedef struct _BSActionConflict	BSActionConflict;
+typedef struct _BSBackendInfo           BSBackendInfo;
 
 BSLIST_HDR(Plugin,BSPlugin)
 BSLIST_HDR(Setting,BSSetting)
@@ -53,7 +54,8 @@ BSLIST_HDR(SubGroup,BSSubGroup)
 BSLIST_HDR(SettingValue,BSSettingValue)
 BSLIST_HDR(PluginConflict,BSPluginConflict)
 BSLIST_HDR(ActionConflict,BSActionConflict)
-
+BSLIST_HDR(BackendInfo,BSBackendInfo)
+	
 struct _BSContext
 {
 	BSPluginList		plugins;
@@ -129,6 +131,15 @@ struct _BSBackendVTable
 
 	BSGetExistingProfilesFunc	getExistingProfiles;
 	BSDeleteProfileFunc			deleteProfile;
+};
+
+struct _BSBackendInfo
+{
+	char *				name;
+	char *				shortDesc;
+	char *				longDesc;
+	Bool				integrationSupport;
+	Bool				profileSupport;
 };
 
 struct _BSPlugin
@@ -358,6 +369,7 @@ void bsFreeSubGroup(BSSubGroup *subGroup);
 void bsFreeSettingValue(BSSettingValue *value);
 void bsFreePluginConflict(BSPluginConflict *value);
 void bsFreeActionConflict(BSActionConflict *value);
+void bsFreeBackendInfo(BSBackendInfo *value);
 #define bsFreeString(val) free(val)
 
 Bool bsSetInt(BSSetting * setting, int data);
@@ -502,5 +514,7 @@ BSActionConflictList bsCanSetAction (BSContext * context, BSSettingActionValue a
 
 BSStringList bsGetExistingProfiles (BSContext * context);
 void bsDeleteProfile (BSContext * context, char *name);
+
+BSBackendInfoList bsGetExistingBackends (void);
 
 #endif
