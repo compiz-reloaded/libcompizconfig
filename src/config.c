@@ -76,7 +76,7 @@ Bool bsReadConfig(ConfigOption option, char** value)
 			break;
 	}
 
-	if (!option)
+	if (!entry)
 	{
 		bsIniClose (iniFile);
 		return FALSE;
