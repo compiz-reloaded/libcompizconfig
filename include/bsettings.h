@@ -436,6 +436,10 @@ void bsWriteSettings(BSContext *context);
 void bsWriteChangedSettings(BSContext *context);
 void bsResetToDefault (BSSetting * setting);
 
+/* File import / export */
+Bool bsExportToFile (BSContext * context, const char * fileName);
+Bool bsImportFromFile (BSContext * context, const char * fileName, Bool overwrite);
+
 /* File watch stuff */
 
 typedef void (*FileWatchCallbackProc) (unsigned int watchId, void *closure);
@@ -459,6 +463,7 @@ typedef struct _dictionary_ {
 	unsigned *hash;
 } IniDictionary;
 
+IniDictionary * bsIniNew (void);
 IniDictionary * bsIniOpen (const char * fileName);
 void bsIniClose (IniDictionary * dictionary);
 void bsIniSave (IniDictionary * dictionary, const char * fileName);

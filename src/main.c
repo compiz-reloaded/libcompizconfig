@@ -1670,3 +1670,173 @@ void bsDeleteProfile (BSContext * context, char *name)
     if (context->backend->vTable->deleteProfile)
 	context->backend->vTable->deleteProfile(name);
 }
+
+Bool
+bsExportToFile (BSContext * context, const char * fileName)
+{
+    IniDictionary *exportFile;
+    BSPluginList p;
+    BSSettingList s;
+    BSPlugin *plugin;
+    BSSetting *setting;
+    char *keyName;
+
+    exportFile = bsIniNew ();
+    if (!exportFile)
+	return FALSE;
+
+    for (p = context->plugins; p; p = p->next)
+    {
+	plugin = p->data;
+	for (s = plugin->settings; s; s = s->next)
+	{
+	    setting = s->data;
+
+	    if (setting->isDefault)
+		continue;
+
+	    if (setting->isScreen)
+		asprintf (&keyName, "s%d_%s", setting->screenNum, setting->name);
+    	    else
+		asprintf (&keyName, "as_%s", setting->name);
+
+	    switch (setting->type)
+	    {
+		case TypeBool:
+		    bsIniSetBool (exportFile, plugin->name, keyName, 
+				  setting->value->value.asBool);
+		    break;
+		case TypeInt:
+		    bsIniSetInt (exportFile, plugin->name, keyName,
+				 setting->value->value.asInt);
+		    break;
+		case TypeString:
+		    bsIniSetString (exportFile, plugin->name, keyName,
+				    setting->value->value.asString);
+		    break;
+		case TypeAction:
+		    bsIniSetAction (exportFile, plugin->name, keyName,
+				    setting->value->value.asAction);
+		    break;
+		case TypeColor:
+		    bsIniSetColor (exportFile, plugin->name, keyName,
+				   setting->value->value.asColor);
+		    break;
+		case TypeMatch:
+		    bsIniSetString (exportFile, plugin->name, keyName,
+				    setting->value->value.asMatch);
+		    break;
+		case TypeList:
+		    bsIniSetList (exportFile, plugin->name, keyName,
+				  setting->value->value.asList, 
+				  setting->info.forList.listType);
+		    break;
+		default:
+		    break;
+	    }
+
+	    free (keyName);
+	}
+    }
+
+    bsIniSave (exportFile, fileName);
+    bsIniClose (exportFile);
+
+    return TRUE;
+}
+
+Bool
+bsImportFromFile (BSContext * context, const char * fileName, Bool overwrite)
+{
+    IniDictionary *importFile;
+    BSPluginList p;
+    BSSettingList s;
+    BSPlugin *plugin;
+    BSSetting *setting;
+    char *keyName;
+
+    importFile = bsIniOpen (fileName);
+    if (!importFile)
+	return FALSE;
+
+    for (p = context->plugins; p; p = p->next)
+    {
+	plugin = p->data;
+	for (s = plugin->settings; s; s = s->next)
+	{
+	    setting = s->data;
+
+	    if (!setting->isDefault && !overwrite)
+		continue;
+
+	    if (setting->isScreen)
+		asprintf (&keyName, "s%d_%s", setting->screenNum, setting->name);
+    	    else
+		asprintf (&keyName, "as_%s", setting->name);
+
+	    switch (setting->type)
+	    {
+		case TypeBool:
+		    {
+			Bool value;
+			if (bsIniGetBool (importFile, plugin->name, keyName, &value))
+			    bsSetBool (setting, value);
+		    }
+		    break;
+		case TypeInt:
+		    {
+			int value;
+			if (bsIniGetInt (importFile, plugin->name, keyName, &value))
+			    bsSetInt (setting, value);
+		    }
+		    break;
+		case TypeString:
+		    {
+			char *value;
+			if (bsIniGetString (importFile, plugin->name, keyName, &value))
+			    bsSetString (setting, value);
+		    }
+		    break;
+		case TypeAction:
+		    {
+			BSSettingActionValue value;
+			if (bsIniGetAction (importFile, plugin->name, keyName, &value))
+			    bsSetAction (setting, value);
+		    }
+		    break;
+		case TypeColor:
+		    {
+			BSSettingColorValue value;
+			if (bsIniGetColor (importFile, plugin->name, keyName, &value))
+			    bsSetColor (setting, value);
+		    }
+		    break;
+		case TypeMatch:
+		    {
+			char *value;
+			if (bsIniGetString (importFile, plugin->name, keyName, &value))
+			    bsSetMatch (setting, value);
+		    }
+		    break;
+		case TypeList:
+		    {
+			BSSettingValueList value;
+			if (bsIniGetList (importFile, plugin->name, keyName, &value, setting))
+			{
+			    bsSetList (setting, value);
+			    bsSettingValueListFree (value, TRUE);
+			}
+		    }
+		    break;
+		default:
+		    break;
+	    }
+
+	    free (keyName);
+	}
+    }
+
+    bsIniClose (importFile);
+
+    return TRUE;
+}

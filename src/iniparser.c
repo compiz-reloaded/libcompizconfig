@@ -199,7 +199,7 @@ static unsigned dictionary_hash(char * key)
  */
 /*--------------------------------------------------------------------------*/
 
-static dictionary * dictionary_new(int size)
+dictionary * dictionary_new(int size)
 {
     dictionary *d ;
 
