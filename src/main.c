@@ -1645,8 +1645,8 @@ BSStringList bsGetExistingProfiles (BSContext * context)
 {
     if (!context || !context->backend)
 	return NULL;
-    if (context->backend->getExistingProfiles)
-	return context->backend->getExistingProfiles();
+    if (context->backend->vTable->getExistingProfiles)
+	return context->backend->vTable->getExistingProfiles();
     return NULL;
 }
 
@@ -1654,6 +1654,6 @@ void bsDeleteProfile (BSContext * context, char *name)
 {
     if (!context || !context->backend || !name)
 	return;
-    if (context->backend->deleteProfile)
-	context->backend->deleteProfile(name);
+    if (context->backend->vTable->deleteProfile)
+	context->backend->vTable->deleteProfile(name);
 }
