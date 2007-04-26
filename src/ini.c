@@ -560,7 +560,8 @@ void bsIniSetList (IniDictionary * dictionary,
 				break;
 		}
 
-		strncat (stringBuffer, ";", STRINGBUFSIZE);;
+		if (value->next)
+			strncat (stringBuffer, ";", STRINGBUFSIZE);
 		value = value->next;
 	}
 
