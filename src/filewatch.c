@@ -77,7 +77,6 @@ unsigned int bsAddFileWatch (const char *fileName,
 	fcntl (inotifyFd, F_SETFL, O_NONBLOCK);
     }
 
-
     fwData = realloc (fwData, (fwDataSize + 1) * sizeof(FilewatchData));
 
     fwData[fwDataSize].fileName  = strdup (fileName);

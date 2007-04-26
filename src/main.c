@@ -363,6 +363,10 @@ bsSetBackend (BSContext * context, char *name)
 {
 	if (context->backend)
 	{
+		/* no action needed if the backend is the same */
+		if (strcmp(context->backend->vTable->name, name) == 0)
+			return TRUE;
+
 		if (context->backend->vTable->backendFini)
 			context->backend->vTable->backendFini (context);
 		dlclose (context->backend->dlhand);

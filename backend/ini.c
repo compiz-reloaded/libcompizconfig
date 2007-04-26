@@ -149,8 +149,8 @@ static void setProfile(IniPrivData *data, char *profile)
 static Bool initBackend(BSContext * context)
 {
 	IniPrivData *newData;
-	privData = realloc (privData, (privDataSize + 1) * sizeof(IniPrivData));
 
+	privData = realloc (privData, (privDataSize + 1) * sizeof(IniPrivData));
 	newData = privData + privDataSize;
 
 	/* initialize the newly allocated part */
@@ -209,7 +209,7 @@ static Bool readInit(BSContext * context)
 		free (data->lastProfile);
 
 	data->lastProfile = currentProfile;
-	
+
 	return (data->iniFile != NULL);
 }
 
