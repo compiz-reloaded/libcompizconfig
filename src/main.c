@@ -1819,9 +1819,6 @@ bsExportToFile (BSContext * context, const char * fileName)
 	{
 	    setting = s->data;
 
-	    if (setting->isDefault)
-		continue;
-
 	    if (setting->isScreen)
 		asprintf (&keyName, "s%d_%s", setting->screenNum, setting->name);
     	    else
