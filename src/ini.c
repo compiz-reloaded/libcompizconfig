@@ -7,7 +7,7 @@
 #include <bsettings.h>
 #include "iniparser.h"
 
-IniDictionary * bsOpenIni (const char * fileName)
+IniDictionary * bsIniOpen (const char * fileName)
 {
     char *path, *delim;
     FILE *file;
