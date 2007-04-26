@@ -210,7 +210,7 @@ static Bool readInit(BSContext * context)
 
 	data->lastProfile = currentProfile;
 	
-	return (data->iniFile);
+	return (data->iniFile != NULL);
 }
 
 static void readSetting(BSContext * context, BSSetting * setting)
@@ -363,7 +363,7 @@ static Bool writeInit(BSContext * context)
 
 	data->lastProfile = currentProfile;
 
-	return (data->iniFile);
+	return (data->iniFile != NULL);
 }
 
 static void writeSetting(BSContext * context, BSSetting * setting)

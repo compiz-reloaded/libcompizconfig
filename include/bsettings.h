@@ -2,7 +2,7 @@
 #define _BSETTINGS_H
 
 #ifndef Bool
-#define Bool unsigned int
+#define Bool int
 #endif
 
 #ifndef TRUE
@@ -341,6 +341,7 @@ struct _BSPluginCategory
 
 BSContext * bsContextNew(void);
 void bsContextDestroy(BSContext * context);
+BSBackendVTable *getBackendInfo (void);
 
 BSPlugin * bsFindPlugin(BSContext *context, char * name);
 
