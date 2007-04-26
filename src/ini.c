@@ -7,10 +7,10 @@
 #include <bsettings.h>
 #include "iniparser.h"
 
-IniDictionary * bsIniOpen (const char * fileName)
+IniDictionary * bsOpenIni (const char * fileName)
 {
-	char *path, *delim;
-	FILE *file;
+    char *path, *delim;
+    FILE *file;
 
     path = strdup (fileName);
     delim = strrchr (path, '/');
@@ -19,16 +19,21 @@ IniDictionary * bsIniOpen (const char * fileName)
 
     if (!mkdir (path, 0777) && (errno != EEXIST))
     {
-		free (path);
-		return NULL;
+	free (path);
+	return NULL;
     }
     free (path);
 
-	/* create file if it doesn't exist */
-	file = fopen (fileName, "a+");
-	fclose (file);
+    /* create file if it doesn't exist or is desired */
+    file = fopen (fileName, "a+");
+    fclose (file);
 
-	return iniparser_new ((char*) fileName);
+    return iniparser_new ((char*) fileName);
+}
+
+IniDictionary * bsIniNew (void)
+{
+    return dictionary_new (0);
 }
 
 void bsIniClose (IniDictionary * dictionary)
