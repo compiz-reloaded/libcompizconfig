@@ -407,7 +407,10 @@ bsSetBackend (BSContext * context, char *name)
 	if (context->backend->vTable->backendInit)
 		context->backend->vTable->backendInit (context);
 
+	bsDisableFileWatch (context->configWatchId);
 	bsWriteConfig (OptionBackend, name);
+	bsEnableFileWatch (context->configWatchId);
+
 	return TRUE;
 }
 
@@ -1154,7 +1157,10 @@ void
 bsSetIntegrationEnabled (BSContext * context, Bool value)
 {
 	context->deIntegration = value;
+
+	bsDisableFileWatch (context->configWatchId);
 	bsWriteConfig (OptionIntegration, (value) ? "true" : "false");
+	bsEnableFileWatch (context->configWatchId);
 }
 
 void
@@ -1163,7 +1169,10 @@ bsSetProfile (BSContext * context, char *name)
 	if (context->profile)
 		free (context->profile);
 	context->profile = (name) ? strdup (name) : strdup ("");
+
+	bsDisableFileWatch (context->configWatchId);
 	bsWriteConfig (OptionProfile, context->profile);
+	bsEnableFileWatch (context->configWatchId);
 }
 
 void
