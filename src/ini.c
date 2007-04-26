@@ -113,7 +113,7 @@ static char *writeActionString (BSSettingActionValue * action)
 	if (!edge)
 		edge = strdup("");
 
-	asprintf (&actionString, "%s,%s,%s,%d,%s\n", keyBinding,
+	asprintf (&actionString, "%s,%s,%s,%d,%s", keyBinding,
 			  buttonBinding, edge, action->edgeButton,
 			  action->onBell ? "true" : "false");
 
