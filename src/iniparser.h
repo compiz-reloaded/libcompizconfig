@@ -36,7 +36,7 @@
 #include <unistd.h>
 #include <ctype.h>
 
-#include <bsettings.h>
+#include <ccs.h>
 
 typedef IniDictionary dictionary;
 

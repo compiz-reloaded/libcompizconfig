@@ -1,10 +1,31 @@
+/*
+ * Compiz configuration system library
+ * 
+ * Copyright (C) 2007  Dennis Kasprzyk <onestone@beryl-project.org>
+ * Copyright (C) 2007  Danny Baumann <maniac@beryl-project.org>
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+ 
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
 
-#include "bsettings-private.h"
+#include "ccs-private.h"
 
 static char *getConfigFileName(void)
 {
@@ -16,7 +37,7 @@ static char *getConfigFileName(void)
 	if (!home || !strlen(home))
 		return NULL;
 
-	asprintf(&fileName, "%s/.bsettings/config",home);
+	asprintf(&fileName, "%s/.ccs/config",home);
 
 	return fileName;
 }
@@ -30,13 +51,13 @@ static IniDictionary *getConfigFile(void)
 	if (!fileName)
 		return NULL;
 
-	iniFile = bsIniOpen (fileName);
+	iniFile = ccsIniOpen (fileName);
 
 	free (fileName);
 	return iniFile;
 }
 
-unsigned int bsAddConfigWatch(BSContext *context, FileWatchCallbackProc callback)
+unsigned int ccsAddConfigWatch(CCSContext *context, FileWatchCallbackProc callback)
 {
     unsigned int ret;
     char *fileName;
@@ -45,13 +66,13 @@ unsigned int bsAddConfigWatch(BSContext *context, FileWatchCallbackProc callback
     if (!fileName)
 	return 0;
 
-    ret = bsAddFileWatch (fileName, TRUE, callback, context);
+    ret = ccsAddFileWatch (fileName, TRUE, callback, context);
     free (fileName);
 
     return ret;
 }
 
-Bool bsReadConfig(ConfigOption option, char** value)
+Bool ccsReadConfig(ConfigOption option, char** value)
 {
 	IniDictionary *iniFile;
 	char *entry = NULL;
@@ -78,19 +99,19 @@ Bool bsReadConfig(ConfigOption option, char** value)
 
 	if (!entry)
 	{
-		bsIniClose (iniFile);
+		ccsIniClose (iniFile);
 		return FALSE;
 	}
 
 	*value = NULL;
 
-	ret = bsIniGetString (iniFile, "general", entry, value);
+	ret = ccsIniGetString (iniFile, "general", entry, value);
 
-	bsIniClose (iniFile);
+	ccsIniClose (iniFile);
 	return ret;
 }
 
-Bool bsWriteConfig(ConfigOption option, char* value)
+Bool ccsWriteConfig(ConfigOption option, char* value)
 {
 	IniDictionary *iniFile;
 	char *entry = NULL;
@@ -117,21 +138,21 @@ Bool bsWriteConfig(ConfigOption option, char* value)
 
 	if (!entry)
 	{
-		bsIniClose (iniFile);
+		ccsIniClose (iniFile);
 		return FALSE;
 	}
 
-	bsIniSetString (iniFile, "general", entry, value);
+	ccsIniSetString (iniFile, "general", entry, value);
 
 	fileName = getConfigFileName();
 	if (!fileName)
 	{
-		bsIniClose (iniFile);
+		ccsIniClose (iniFile);
 		return FALSE;
 	}
-	bsIniSave (iniFile, fileName);
+	ccsIniSave (iniFile, fileName);
 
-	bsIniClose (iniFile);
+	ccsIniClose (iniFile);
 	free (fileName);
 	return TRUE;
 }

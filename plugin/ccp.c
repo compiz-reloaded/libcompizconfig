@@ -6,45 +6,45 @@
 
 #include <compiz.h>
 
-#include <bsettings.h>
+#include <ccs.h>
 
 static int displayPrivateIndex;
 
-typedef struct _BSDisplay {
+typedef struct _CCPDisplay {
     int screenPrivateIndex;
 
-	BSContext *context;
+	CCSContext *context;
 
     CompTimeoutHandle timeoutHandle;
 
     InitPluginForDisplayProc      initPluginForDisplay;
     SetDisplayOptionProc	  setDisplayOption;
     SetDisplayOptionForPluginProc setDisplayOptionForPlugin;
-} BSDisplay;
+} CCPDisplay;
 
-typedef struct _BSScreen {
+typedef struct _CCPScreen {
     InitPluginForScreenProc      initPluginForScreen;
     SetScreenOptionProc		 setScreenOption;
     SetScreenOptionForPluginProc setScreenOptionForPlugin;
-} BSScreen;
+} CCPScreen;
 
-#define GET_BS_DISPLAY(d)				      \
-    ((BSDisplay *) (d)->privates[displayPrivateIndex].ptr)
+#define GET_CCP_DISPLAY(d)				      \
+    ((CCPDisplay *) (d)->privates[displayPrivateIndex].ptr)
 
-#define BS_DISPLAY(d)		     \
-    BSDisplay *bd = GET_BS_DISPLAY (d)
+#define CCP_DISPLAY(d)		     \
+    CCPDisplay *cd = GET_CCP_DISPLAY (d)
 
-#define GET_BS_SCREEN(s, bd)				         \
-    ((BSScreen *) (s)->privates[(bd)->screenPrivateIndex].ptr)
+#define GET_CCP_SCREEN(s, cd)				         \
+    ((CCPScreen *) (s)->privates[(cd)->screenPrivateIndex].ptr)
 
-#define BS_SCREEN(s)						           \
-    BSScreen *bs = GET_BS_SCREEN (s, GET_BS_DISPLAY (s->display))
+#define CCP_SCREEN(s)						           \
+    CCPScreen *cs = GET_CCP_SCREEN (s, GET_CCP_DISPLAY (s->display))
 
-#define BS_UPDATE_TIMEOUT 250
+#define CCP_UPDATE_TIMEOUT 250
 #define CORE_VTABLE_NAME  "core"
 
 static void
-bsSetValueToValue(CompDisplay *d, BSSettingValue *sv, CompOptionValue *v, BSSettingType type)
+ccpSetValueToValue(CompDisplay *d, CCSSettingValue *sv, CompOptionValue *v, CCSSettingType type)
 {
 	switch(type)
 	{
@@ -105,31 +105,31 @@ bsSetValueToValue(CompDisplay *d, BSSettingValue *sv, CompOptionValue *v, BSSett
 }
 
 static void
-bsSettingToValue (CompDisplay *d, BSSetting *s, CompOptionValue *v)
+ccpSettingToValue (CompDisplay *d, CCSSetting *s, CompOptionValue *v)
 {
 
 	if (s->type != TypeList)
-		bsSetValueToValue(d, s->value, v, s->type);
+		ccpSetValueToValue(d, s->value, v, s->type);
 	else
 	{
-		BSSettingValueList list;
+		CCSSettingValueList list;
 		int i = 0;
 
-		bsGetList(s, &list);
+		ccsGetList(s, &list);
 
-		v->list.nValue = bsSettingValueListLength(list);
+		v->list.nValue = ccsSettingValueListLength(list);
 		v->list.value  = malloc(v->list.nValue * sizeof(CompOptionValue));
 		while (list)
 		{
-			bsSetValueToValue(d, list->data, &v->list.value[i], s->info.forList.listType);
+			ccpSetValueToValue(d, list->data, &v->list.value[i], s->info.forList.listType);
 			list = list->next;
 			i++;
 		}
 	}
 }
 
-static void bsInitValue(CompDisplay *d, BSSettingValue * value, CompOptionValue * from,
-					  BSSettingType type)
+static void ccpInitValue(CompDisplay *d, CCSSettingValue * value, CompOptionValue * from,
+					  CCSSettingType type)
 {
 	switch(type)
 	{
@@ -194,9 +194,9 @@ static void bsInitValue(CompDisplay *d, BSSettingValue * value, CompOptionValue 
 }
 
 static void
-bsValueToSetting (CompDisplay *d, BSSetting *s, CompOptionValue *v)
+ccpValueToSetting (CompDisplay *d, CCSSetting *s, CompOptionValue *v)
 {
-	NEW(BSSettingValue, value);
+	NEW(CCSSettingValue, value);
 	value->parent = s;
 
 	if (s->type == TypeList)
@@ -204,24 +204,24 @@ bsValueToSetting (CompDisplay *d, BSSetting *s, CompOptionValue *v)
 		int i;
 		for (i = 0; i < v->list.nValue; i++)
 		{
-			NEW(BSSettingValue, val);
+			NEW(CCSSettingValue, val);
 			val->parent = s;
 			val->isListChild = TRUE;
-			bsInitValue(d, val, &v->list.value[i],
+			ccpInitValue(d, val, &v->list.value[i],
 					  s->info.forList.listType);
-			value->value.asList = bsSettingValueListAppend(
+			value->value.asList = ccsSettingValueListAppend(
 					value->value.asList, val);
 		}
 	}
 	else
-		bsInitValue(d, value, v, s->type);
+		ccpInitValue(d, value, v, s->type);
 
-	bsSetValue(s, value);
-	bsFreeSettingValue(value);
+	ccsSetValue(s, value);
+	ccsFreeSettingValue(value);
 }
 
 static void
-bsFreeValue(CompOptionValue *v, BSSettingType type)
+ccpFreeValue(CompOptionValue *v, CCSSettingType type)
 {
 	switch(type)
 	{
@@ -237,30 +237,30 @@ bsFreeValue(CompOptionValue *v, BSSettingType type)
 }
 
 static void
-bsFreeCompValue (BSSetting *s, CompOptionValue *v)
+ccpFreeCompValue (CCSSetting *s, CompOptionValue *v)
 {
 
 	if (s->type != TypeList)
-		bsFreeValue(v, s->type);
+		ccpFreeValue(v, s->type);
 	else
 	{
 		int i = 0;
 		for (i = 0; i < v->list.nValue; i++)
-			bsFreeValue(&v->list.value[i], s->info.forList.listType);
+			ccpFreeValue(&v->list.value[i], s->info.forList.listType);
 		free(v->list.value);
 	}
 }
 
 static void
-bsUpdatePluginList(CompDisplay *d)
+ccpUpdatePluginList(CompDisplay *d)
 {
 	CompOption *option;
 	int	       nOption;
 	CompOptionValue value;
 	CompOption *o;
 	int len,i;
-	BSStringList list,l;
-	BS_DISPLAY(d);
+	CCSStringList list,l;
+	CCP_DISPLAY(d);
 
 	option = compGetDisplayOptions (d, &nOption);
 	o = compFindOption (option, nOption, "active_plugins", 0);
@@ -268,13 +268,13 @@ bsUpdatePluginList(CompDisplay *d)
 	if (!o)
 		return;
 
-	list = l = bsGetSortedPluginStringList(bd->context);
+	list = l = ccsGetSortedPluginStringList(cd->context);
 
-	len = bsStringListLength(list) + 1;
+	len = ccsStringListLength(list) + 1;
 	value.list.nValue = len;
 	value.list.value = malloc(len * sizeof(CompOptionValue));
 
-	value.list.value[0].s = "bset";
+	value.list.value[0].s = "ccp";
 
 	i = 1;
 	while (l)
@@ -286,15 +286,15 @@ bsUpdatePluginList(CompDisplay *d)
 	(*d->setDisplayOption) (d, "active_plugins", &value);
 
 	free(value.list.value);
-	bsStringListFree(list, TRUE);
+	ccsStringListFree(list, TRUE);
 }
 
 static void
-bsUpdateActivePlugins(CompDisplay *d, CompOption *o)
+ccpUpdateActivePlugins(CompDisplay *d, CompOption *o)
 {
-	BS_DISPLAY(d);
+	CCP_DISPLAY(d);
 
-	BSPluginList l = bd->context->plugins;
+	CCSPluginList l = cd->context->plugins;
 	while (l)
 	{
 		Bool found = FALSE;
@@ -304,14 +304,14 @@ bsUpdateActivePlugins(CompDisplay *d, CompOption *o)
 			if (!strcmp(l->data->name, o->value.list.value[i].s))
 				found = TRUE;
 
-		bsPluginSetActive(l->data, found);
+		ccsPluginSetActive(l->data, found);
 
 		l = l->next;
 	}
 }
 
 static void
-bsSetOptionFromContext( CompDisplay *d,
+ccpSetOptionFromContext( CompDisplay *d,
 						char *plugin,
 						char *name,
 						Bool screen,
@@ -323,9 +323,9 @@ bsSetOptionFromContext( CompDisplay *d,
 	CompOptionValue value;
 	CompOption *option = NULL;
 	int	       nOption;
-	BSPlugin *bsp;
-	BSSetting *setting;
-	BS_DISPLAY(d);
+	CCSPlugin *bsp;
+	CCSSetting *setting;
+	CCP_DISPLAY(d);
 
 	if (plugin && strlen(plugin) && (strcmp(plugin, CORE_VTABLE_NAME) != 0))
 	{
@@ -339,7 +339,7 @@ bsSetOptionFromContext( CompDisplay *d,
 
 	if (!p && !strcmp(name, "active_plugins"))
 	{
-		bsUpdatePluginList(d);
+		ccpUpdatePluginList(d);
 		return;
 	}
 
@@ -385,19 +385,19 @@ bsSetOptionFromContext( CompDisplay *d,
 	if (!o)
 		return;
 
-	bsp = bsFindPlugin(bd->context, (plugin) ? plugin : CORE_VTABLE_NAME);
+	bsp = ccsFindPlugin(cd->context, (plugin) ? plugin : CORE_VTABLE_NAME);
 
 	if (!bsp)
 		return;
 
-	setting = bsFindSetting(bsp, name, screen, screenNum);
+	setting = ccsFindSetting(bsp, name, screen, screenNum);
 
 	if (!setting)
 		return;
 
 	value = o->value;
 
-	bsSettingToValue(d, setting, &value);
+	ccpSettingToValue(d, setting, &value);
 
 	if (p)
 	{
@@ -414,11 +414,11 @@ bsSetOptionFromContext( CompDisplay *d,
 			(*d->setDisplayOption) (d, name, &value);
 	}
 
-	bsFreeCompValue(setting, &value);
+	ccpFreeCompValue(setting, &value);
 }
 
 static void
-bsSetContextFromOption( CompDisplay *d,
+ccpSetContextFromOption( CompDisplay *d,
 						char *plugin,
 						char *name,
 						Bool screen,
@@ -429,9 +429,9 @@ bsSetContextFromOption( CompDisplay *d,
 	CompOption *o = NULL;
 	CompOption *option = NULL;
 	int	       nOption;
-	BSPlugin *bsp;
-	BSSetting *setting;
-	BS_DISPLAY(d);
+	CCSPlugin *bsp;
+	CCSSetting *setting;
+	CCP_DISPLAY(d);
 
 	if (plugin && strlen(plugin))
 	{
@@ -487,108 +487,108 @@ bsSetContextFromOption( CompDisplay *d,
 
 	if (!p && !strcmp(name, "active_plugins"))
 	{
-		bsUpdateActivePlugins(d, o);
+		ccpUpdateActivePlugins(d, o);
 		return;
 	}
 
-	bsp = bsFindPlugin(bd->context, (plugin) ? plugin : CORE_VTABLE_NAME);
+	bsp = ccsFindPlugin(cd->context, (plugin) ? plugin : CORE_VTABLE_NAME);
 
 	if (!bsp)
 		return;
 
-	setting = bsFindSetting(bsp, name, screen, screenNum);
+	setting = ccsFindSetting(bsp, name, screen, screenNum);
 
 	if (!setting)
 		return;
 
-	bsValueToSetting(d, setting, &o->value);
+	ccpValueToSetting(d, setting, &o->value);
 
-	bsWriteChangedSettings(bd->context);
+	ccsWriteChangedSettings(cd->context);
 
 }
 
 static Bool
-bsSetDisplayOption (CompDisplay     *d,
+ccpSetDisplayOption (CompDisplay     *d,
 		       char	       *name,
 		       CompOptionValue *value)
 {
     Bool status;
 
-    BS_DISPLAY (d);
+    CCP_DISPLAY (d);
 
-    UNWRAP (bd, d, setDisplayOption);
+    UNWRAP (cd, d, setDisplayOption);
     status = (*d->setDisplayOption) (d, name, value);
-    WRAP (bd, d, setDisplayOption, bsSetDisplayOption);
+    WRAP (cd, d, setDisplayOption, ccpSetDisplayOption);
 
     return status;
 }
 
 static Bool
-bsSetDisplayOptionForPlugin (CompDisplay     *d,
+ccpSetDisplayOptionForPlugin (CompDisplay     *d,
 				char	        *plugin,
 				char	        *name,
 				CompOptionValue *value)
 {
     Bool status;
 
-    BS_DISPLAY (d);
+    CCP_DISPLAY (d);
 
-    UNWRAP (bd, d, setDisplayOptionForPlugin);
+    UNWRAP (cd, d, setDisplayOptionForPlugin);
     status = (*d->setDisplayOptionForPlugin) (d, plugin, name, value);
-    WRAP (bd, d, setDisplayOptionForPlugin, bsSetDisplayOptionForPlugin);
+    WRAP (cd, d, setDisplayOptionForPlugin, ccpSetDisplayOptionForPlugin);
 
     return status;
 }
 
 static Bool
-bsSetScreenOption (CompScreen      *s,
+ccpSetScreenOption (CompScreen      *s,
 		      char	      *name,
 		      CompOptionValue *value)
 {
     Bool status;
 
-    BS_SCREEN (s);
+    CCP_SCREEN (s);
 
-    UNWRAP (bs, s, setScreenOption);
+    UNWRAP (cs, s, setScreenOption);
     status = (*s->setScreenOption) (s, name, value);
-    WRAP (bs, s, setScreenOption, bsSetScreenOption);
+    WRAP (cs, s, setScreenOption, ccpSetScreenOption);
 
     return status;
 }
 
 static Bool
-bsSetScreenOptionForPlugin (CompScreen      *s,
+ccpSetScreenOptionForPlugin (CompScreen      *s,
 			       char	       *plugin,
 			       char	       *name,
 			       CompOptionValue *value)
 {
     Bool status;
 
-    BS_SCREEN (s);
+    CCP_SCREEN (s);
 
-    UNWRAP (bs, s, setScreenOptionForPlugin);
+    UNWRAP (cs, s, setScreenOptionForPlugin);
     status = (*s->setScreenOptionForPlugin) (s, plugin, name, value);
-    WRAP (bs, s, setScreenOptionForPlugin, bsSetScreenOptionForPlugin);
+    WRAP (cs, s, setScreenOptionForPlugin, ccpSetScreenOptionForPlugin);
 
 	if (status)
     {
-		bsSetContextFromOption (s->display, plugin,	name, TRUE, s->screenNum);
+		ccpSetContextFromOption (s->display, plugin,	name, TRUE, s->screenNum);
     }
 
     return status;
 }
 
 static Bool
-bsInitPluginForDisplay (CompPlugin  *p,
+ccpInitPluginForDisplay (CompPlugin  *p,
 			   CompDisplay *d)
 {
     Bool status;
 
-    BS_DISPLAY (d);
+    CCP_DISPLAY (d);
 
-    UNWRAP (bd, d, initPluginForDisplay);
+    UNWRAP (cd, d, initPluginForDisplay);
     status = (*d->initPluginForDisplay) (p, d);
-    WRAP (bd, d, initPluginForDisplay, bsInitPluginForDisplay);
+    WRAP (cd, d, initPluginForDisplay, ccpInitPluginForDisplay);
 
     if (status && p->vTable->getDisplayOptions)
     {
@@ -599,23 +599,23 @@ bsInitPluginForDisplay (CompPlugin  *p,
 		option = (*p->vTable->getDisplayOptions) (p, d, &nOption);
 
 		for (i = 0; i < nOption; i++)
-			bsSetOptionFromContext( d, p->vTable->name, option[i].name, FALSE, 0);
+			ccpSetOptionFromContext( d, p->vTable->name, option[i].name, FALSE, 0);
     }
 
     return status;
 }
 
 static Bool
-bsInitPluginForScreen (CompPlugin *p,
+ccpInitPluginForScreen (CompPlugin *p,
 			  CompScreen *s)
 {
     Bool status;
 
-    BS_SCREEN (s);
+    CCP_SCREEN (s);
 
-    UNWRAP (bs, s, initPluginForScreen);
+    UNWRAP (cs, s, initPluginForScreen);
     status = (*s->initPluginForScreen) (p, s);
-    WRAP (bs, s, initPluginForScreen, bsInitPluginForScreen);
+    WRAP (cs, s, initPluginForScreen, ccpInitPluginForScreen);
 
 	if (status && p->vTable->getScreenOptions)
     {
@@ -625,7 +625,7 @@ bsInitPluginForScreen (CompPlugin *p,
 
 		option = (*p->vTable->getScreenOptions) (p, s, &nOption);
 		for (i = 0; i < nOption; i++)
-			bsSetOptionFromContext( s->display, p->vTable->name, option[i].name,
+			ccpSetOptionFromContext( s->display, p->vTable->name, option[i].name,
 									TRUE, s->screenNum);
     }
 
@@ -633,154 +633,154 @@ bsInitPluginForScreen (CompPlugin *p,
 }
 
 static Bool
-bsTimeout (void *closure)
+ccpTimeout (void *closure)
 {
 	CompDisplay *d = (CompDisplay *)closure;
 
-	BS_DISPLAY(d);
+	CCP_DISPLAY(d);
 
-	bsProcessEvents(bd->context);
+	ccsProcessEvents(cd->context);
 
-	if (bsSettingListLength(bd->context->changedSettings))
+	if (ccsSettingListLength(cd->context->changedSettings))
 	{
-	        BSSettingList list = bd->context->changedSettings;
-		BSSettingList l = list;
-		bd->context->changedSettings = NULL;
-		BSSetting *s;
+	        CCSSettingList list = cd->context->changedSettings;
+		CCSSettingList l = list;
+		cd->context->changedSettings = NULL;
+		CCSSetting *s;
 		while (l)
 		{
 			s = l->data;
-			bsSetOptionFromContext( d, s->parent->name, s->name,
+			ccpSetOptionFromContext( d, s->parent->name, s->name,
 									s->isScreen, s->screenNum);
 			printf("Setting Update \"%s\"\n",s->name);
 			l = l->next;
 		}
-		bsSettingListFree(list, FALSE);
-		bd->context->changedSettings =
-			bsSettingListFree(bd->context->changedSettings, FALSE);
+		ccsSettingListFree(list, FALSE);
+		cd->context->changedSettings =
+			ccsSettingListFree(cd->context->changedSettings, FALSE);
 	}
-	if (bd->context->pluginsChanged)
+	if (cd->context->pluginsChanged)
 	{
-		bsUpdatePluginList(d);
+		ccpUpdatePluginList(d);
 		printf("Active Plugin List update\n");
-		bd->context->pluginsChanged = FALSE;
+		cd->context->pluginsChanged = FALSE;
 	}
 
     return TRUE;
 }
 
 static Bool
-bsInitDisplay (CompPlugin  *p,
+ccpInitDisplay (CompPlugin  *p,
 		  CompDisplay *d)
 {
     CompOption   *option;
     int	         nOption;
-    BSDisplay *bd;
+    CCPDisplay *cd;
 	int i;
 
-    bd = malloc (sizeof (BSDisplay));
-    if (!bd)
+    cd = malloc (sizeof (CCPDisplay));
+    if (!cd)
 	return FALSE;
 
-    bd->screenPrivateIndex = allocateScreenPrivateIndex (d);
-    if (bd->screenPrivateIndex < 0)
+    cd->screenPrivateIndex = allocateScreenPrivateIndex (d);
+    if (cd->screenPrivateIndex < 0)
     {
-	free (bd);
+	free (cd);
 	return FALSE;
     }
 
-    WRAP (bd, d, initPluginForDisplay, bsInitPluginForDisplay);
-    WRAP (bd, d, setDisplayOption, bsSetDisplayOption);
-    WRAP (bd, d, setDisplayOptionForPlugin, bsSetDisplayOptionForPlugin);
+    WRAP (cd, d, initPluginForDisplay, ccpInitPluginForDisplay);
+    WRAP (cd, d, setDisplayOption, ccpSetDisplayOption);
+    WRAP (cd, d, setDisplayOptionForPlugin, ccpSetDisplayOptionForPlugin);
 
-    d->privates[displayPrivateIndex].ptr = bd;
+    d->privates[displayPrivateIndex].ptr = cd;
 
-	bd->context = bsContextNew();
-	if (!bd->context)
+	cd->context = ccsContextNew();
+	if (!cd->context)
 	{
-		free(bd);
+		free(cd);
 		return FALSE;
 	}
-	bsReadSettings(bd->context);
-	bd->context->changedSettings =
-			bsSettingListFree(bd->context->changedSettings, FALSE);
+	ccsReadSettings(cd->context);
+	cd->context->changedSettings =
+			ccsSettingListFree(cd->context->changedSettings, FALSE);
 
 
     option = compGetDisplayOptions (d, &nOption);
 
 	for (i = 0; i < nOption; i++)
-		bsSetOptionFromContext( d, NULL, option[i].name, FALSE, 0);
+		ccpSetOptionFromContext( d, NULL, option[i].name, FALSE, 0);
 
-    bd->timeoutHandle = compAddTimeout (BS_UPDATE_TIMEOUT, bsTimeout, (void *)d);
+    cd->timeoutHandle = compAddTimeout (CCP_UPDATE_TIMEOUT, ccpTimeout, (void *)d);
 
     return TRUE;
 }
 
 static void
-bsFiniDisplay (CompPlugin  *p,
+ccpFiniDisplay (CompPlugin  *p,
 		  CompDisplay *d)
 {
-    BS_DISPLAY (d);
+    CCP_DISPLAY (d);
 
-    compRemoveTimeout (bd->timeoutHandle);
+    compRemoveTimeout (cd->timeoutHandle);
 
-    UNWRAP (bd, d, initPluginForDisplay);
-    UNWRAP (bd, d, setDisplayOption);
-    UNWRAP (bd, d, setDisplayOptionForPlugin);
+    UNWRAP (cd, d, initPluginForDisplay);
+    UNWRAP (cd, d, setDisplayOption);
+    UNWRAP (cd, d, setDisplayOptionForPlugin);
 
-    freeScreenPrivateIndex (d, bd->screenPrivateIndex);
+    freeScreenPrivateIndex (d, cd->screenPrivateIndex);
 
-	bsContextDestroy(bd->context);
+	ccsContextDestroy(cd->context);
 
-    free (bd);
+    free (cd);
 }
 
 static Bool
-bsInitScreen (CompPlugin *p,
+ccpInitScreen (CompPlugin *p,
 		 CompScreen *s)
 {
     CompOption  *option;
     int	        nOption;
-    BSScreen *bs;
+    CCPScreen *cs;
 	int i;
 
 
-    BS_DISPLAY (s->display);
+    CCP_DISPLAY (s->display);
 
-    bs = malloc (sizeof (BSScreen));
-    if (!bs)
+    cs = malloc (sizeof (CCPScreen));
+    if (!cs)
 	return FALSE;
 
-    WRAP (bs, s, initPluginForScreen, bsInitPluginForScreen);
-    WRAP (bs, s, setScreenOption, bsSetScreenOption);
-    WRAP (bs, s, setScreenOptionForPlugin, bsSetScreenOptionForPlugin);
+    WRAP (cs, s, initPluginForScreen, ccpInitPluginForScreen);
+    WRAP (cs, s, setScreenOption, ccpSetScreenOption);
+    WRAP (cs, s, setScreenOptionForPlugin, ccpSetScreenOptionForPlugin);
 
-    s->privates[bd->screenPrivateIndex].ptr = bs;
+    s->privates[cd->screenPrivateIndex].ptr = cs;
 
 	option = compGetScreenOptions (s, &nOption);
 
 	for (i = 0; i < nOption; i++)
-		bsSetOptionFromContext( s->display, NULL, option[i].name,
+		ccpSetOptionFromContext( s->display, NULL, option[i].name,
 								TRUE, s->screenNum);
 
     return TRUE;
 }
 
 static void
-bsFiniScreen (CompPlugin *p,
+ccpFiniScreen (CompPlugin *p,
 		 CompScreen *s)
 {
-    BS_SCREEN (s);
+    CCP_SCREEN (s);
 
-    UNWRAP (bs, s, initPluginForScreen);
-    UNWRAP (bs, s, setScreenOption);
-    UNWRAP (bs, s, setScreenOptionForPlugin);
+    UNWRAP (cs, s, initPluginForScreen);
+    UNWRAP (cs, s, setScreenOption);
+    UNWRAP (cs, s, setScreenOptionForPlugin);
 
-    free (bs);
+    free (cs);
 }
 
 static Bool
-bsInit (CompPlugin *p)
+ccpInit (CompPlugin *p)
 {
     displayPrivateIndex = allocateDisplayPrivateIndex ();
     if (displayPrivateIndex < 0)
@@ -790,31 +790,31 @@ bsInit (CompPlugin *p)
 }
 
 static void
-bsFini (CompPlugin *p)
+ccpFini (CompPlugin *p)
 {
     if (displayPrivateIndex >= 0)
 	freeDisplayPrivateIndex (displayPrivateIndex);
 }
 
 static int
-bsGetVersion (CompPlugin *plugin,
+ccpGetVersion (CompPlugin *plugin,
 		 int	    version)
 {
     return ABIVERSION;
 }
 
-CompPluginVTable bsVTable = {
-    "bset",
-    "BSettings",
-    "Beryl configuration system plugin",
-    bsGetVersion,
+CompPluginVTable ccpVTable = {
+    "ccp",
+    "CCPlugin",
+    "Compiz configuration system plugin",
+    ccpGetVersion,
     0,
-    bsInit,
-    bsFini,
-    bsInitDisplay,
-    bsFiniDisplay,
-    bsInitScreen,
-    bsFiniScreen,
+    ccpInit,
+    ccpFini,
+    ccpInitDisplay,
+    ccpFiniDisplay,
+    ccpInitScreen,
+    ccpFiniScreen,
     0, /* InitWindow */
     0, /* FiniWindow */
     0, /* GetDisplayOptions */
@@ -830,5 +830,5 @@ CompPluginVTable bsVTable = {
 CompPluginVTable *
 getCompPluginInfo (void)
 {
-    return &bsVTable;
+    return &ccpVTable;
 }

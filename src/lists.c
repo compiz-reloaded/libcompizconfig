@@ -1,20 +1,41 @@
+/*
+ * Compiz configuration system library
+ * 
+ * Copyright (C) 2007  Dennis Kasprzyk <onestone@beryl-project.org>
+ * Copyright (C) 2007  Danny Baumann <maniac@beryl-project.org>
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+ 
 #define _GNU_SOURCE
 #include <stdlib.h>
 #include <string.h>
 #include <malloc.h>
 
-#include <bsettings.h>
+#include <ccs.h>
 
-#include "bsettings-private.h"
+#include "ccs-private.h"
 
 typedef void (*freeFunc) (void *ptr);
 
-#define BSLIST(type,dtype) \
+#define CCSLIST(type,dtype) \
 \
-BS##type##List bs##type##ListAppend (BS##type##List list, dtype *data) \
+CCS##type##List ccs##type##ListAppend (CCS##type##List list, dtype *data) \
 { \
-	BS##type##List l = list; \
-	BS##type##List ne = malloc(sizeof(struct _BS##type##List)); \
+	CCS##type##List l = list; \
+	CCS##type##List ne = malloc(sizeof(struct _CCS##type##List)); \
 	ne->data = data; \
 	ne->next = NULL; \
 	if (!list) \
@@ -24,18 +45,18 @@ BS##type##List bs##type##ListAppend (BS##type##List list, dtype *data) \
 	return list; \
 } \
 \
-BS##type##List bs##type##ListPrepend (BS##type##List list, dtype *data) \
+CCS##type##List ccs##type##ListPrepend (CCS##type##List list, dtype *data) \
 { \
-	BS##type##List ne = malloc(sizeof(struct _BS##type##List)); \
+	CCS##type##List ne = malloc(sizeof(struct _CCS##type##List)); \
 	ne->data = data; \
 	ne->next = list; \
 	return ne; \
 } \
 \
-BS##type##List bs##type##ListInsert (BS##type##List list, dtype *data, int position) \
+CCS##type##List ccs##type##ListInsert (CCS##type##List list, dtype *data, int position) \
 { \
-	BS##type##List l = list; \
-	BS##type##List ne = malloc(sizeof(struct _BS##type##List)); \
+	CCS##type##List l = list; \
+	CCS##type##List ne = malloc(sizeof(struct _CCS##type##List)); \
 	ne->data = data; \
 	ne->next = list; \
 	if (!list || !position) \
@@ -51,20 +72,20 @@ BS##type##List bs##type##ListInsert (BS##type##List list, dtype *data, int posit
 	return list; \
 } \
 \
-BS##type##List bs##type##ListInsertBefore (BS##type##List list, BS##type##List sibling, dtype *data) \
+CCS##type##List ccs##type##ListInsertBefore (CCS##type##List list, CCS##type##List sibling, dtype *data) \
 { \
-	BS##type##List l = list; \
-	BS##type##List ne = malloc(sizeof(struct _BS##type##List)); \
+	CCS##type##List l = list; \
+	CCS##type##List ne = malloc(sizeof(struct _CCS##type##List)); \
 	while (l && (l != sibling)) l = l->next; \
 	ne->data = data; \
 	ne->next = l; \
 	return ne; \
 } \
 \
-unsigned int bs##type##ListLength (BS##type##List list) \
+unsigned int ccs##type##ListLength (CCS##type##List list) \
 { \
 	unsigned int count = 0; \
-	BS##type##List l = list; \
+	CCS##type##List l = list; \
 	while (l) \
 	{ \
 		l = l->next; \
@@ -73,9 +94,9 @@ unsigned int bs##type##ListLength (BS##type##List list) \
 	return count; \
 } \
 \
-BS##type##List bs##type##ListFind (BS##type##List list, dtype *data) \
+CCS##type##List ccs##type##ListFind (CCS##type##List list, dtype *data) \
 { \
-	BS##type##List l = list; \
+	CCS##type##List l = list; \
 	while (l) \
 	{ \
 		if (!data && !l->data) break; \
@@ -85,9 +106,9 @@ BS##type##List bs##type##ListFind (BS##type##List list, dtype *data) \
 	return l; \
 } \
 \
-BS##type##List bs##type##ListGetItem (BS##type##List list, unsigned int index) \
+CCS##type##List ccs##type##ListGetItem (CCS##type##List list, unsigned int index) \
 { \
-	BS##type##List l = list; \
+	CCS##type##List l = list; \
 	while (l && index) \
 	{ \
 		l = l->next; \
@@ -96,10 +117,10 @@ BS##type##List bs##type##ListGetItem (BS##type##List list, unsigned int index) \
 	return l; \
 } \
 \
-BS##type##List bs##type##ListRemove (BS##type##List list, dtype *data, Bool freeObj) \
+CCS##type##List ccs##type##ListRemove (CCS##type##List list, dtype *data, Bool freeObj) \
 { \
-	BS##type##List l = list; \
-	BS##type##List prev = NULL; \
+	CCS##type##List l = list; \
+	CCS##type##List prev = NULL; \
 	Bool           found = FALSE; \
 	if (!data) \
 	        return list; \
@@ -121,7 +142,7 @@ BS##type##List bs##type##ListRemove (BS##type##List list, dtype *data, Bool free
 		if (prev) prev->next = l->next; \
 		else list = l->next; \
 		if (freeObj) \
-		    bsFree##type (l->data); \
+		    ccsFree##type (l->data); \
 		free (l); \
 	} \
 	if (prev) \
@@ -130,62 +151,62 @@ BS##type##List bs##type##ListRemove (BS##type##List list, dtype *data, Bool free
 	    return list; \
 } \
 \
-BS##type##List bs##type##ListFree (BS##type##List list, Bool freeObj) \
+CCS##type##List ccs##type##ListFree (CCS##type##List list, Bool freeObj) \
 { \
-	BS##type##List l = list; \
-	BS##type##List le = NULL; \
+	CCS##type##List l = list; \
+	CCS##type##List le = NULL; \
 	while (l) \
 	{ \
 		le = l; \
 		l = l->next; \
 		if (freeObj) \
-			bsFree##type (le->data); \
+			ccsFree##type (le->data); \
 		free(le); \
 	} \
 	return NULL; \
 }
 
-BSLIST(Plugin,BSPlugin)
-BSLIST(Setting,BSSetting)
-BSLIST(String,char)
-BSLIST(Group,BSGroup)
-BSLIST(SubGroup,BSSubGroup)
-BSLIST(SettingValue,BSSettingValue)
-BSLIST(PluginConflict,BSPluginConflict)
-BSLIST(ActionConflict,BSActionConflict)
-BSLIST(BackendInfo,BSBackendInfo)
+CCSLIST(Plugin,CCSPlugin)
+CCSLIST(Setting,CCSSetting)
+CCSLIST(String,char)
+CCSLIST(Group,CCSGroup)
+CCSLIST(SubGroup,CCSSubGroup)
+CCSLIST(SettingValue,CCSSettingValue)
+CCSLIST(PluginConflict,CCSPluginConflict)
+CCSLIST(ActionConflict,CCSActionConflict)
+CCSLIST(BackendInfo,CCSBackendInfo)
 
-BSSettingValueList bsGetValueListFromStringList(BSStringList list,
-												BSSetting *parent)
+CCSSettingValueList ccsGetValueListFromStringList(CCSStringList list,
+												CCSSetting *parent)
 {
-	BSSettingValueList rv = NULL;
+	CCSSettingValueList rv = NULL;
 	while (list)
 	{
-		NEW(BSSettingValue, value);
+		NEW(CCSSettingValue, value);
 		value->isListChild = TRUE;
 		value->parent = parent;
 		value->value.asString = strdup(list->data);
-		rv = bsSettingValueListAppend(rv, value);
+		rv = ccsSettingValueListAppend(rv, value);
 		list = list->next;
 	}
 	return rv;
 }
 
-BSStringList bsGetStringListFromValueList(BSSettingValueList list)
+CCSStringList ccsGetStringListFromValueList(CCSSettingValueList list)
 {
-	BSStringList rv = NULL;
+	CCSStringList rv = NULL;
 	while (list)
 	{
-		rv = bsStringListAppend(rv, strdup(list->data->value.asString));
+		rv = ccsStringListAppend(rv, strdup(list->data->value.asString));
 		list = list->next;
 	}
 	return rv;
 }
 
-char ** bsGetStringArrayFromList(BSStringList list, int *num)
+char ** ccsGetStringArrayFromList(CCSStringList list, int *num)
 {
 	char ** rv = NULL;
-	int length = bsStringListLength(list);
+	int length = ccsStringListLength(list);
 	int i;
 	
 	if (length)
@@ -197,19 +218,19 @@ char ** bsGetStringArrayFromList(BSStringList list, int *num)
 	return rv;
 }
 
-BSStringList bsGetListFromStringArray(char ** array, int num)
+CCSStringList ccsGetListFromStringArray(char ** array, int num)
 {
-	BSStringList rv = NULL;
+	CCSStringList rv = NULL;
 	int i;
 	for (i = 0; i < num; i++)
-		rv = bsStringListAppend(rv, strdup(array[i]));
+		rv = ccsStringListAppend(rv, strdup(array[i]));
 	return rv;
 }
 
-char ** bsGetStringArrayFromValueList(BSSettingValueList list, int *num)
+char ** ccsGetStringArrayFromValueList(CCSSettingValueList list, int *num)
 {
 	char ** rv = NULL;
-	int length = bsSettingValueListLength(list);
+	int length = ccsSettingValueListLength(list);
 	int i;
 	
 	if (length)
@@ -221,10 +242,10 @@ char ** bsGetStringArrayFromValueList(BSSettingValueList list, int *num)
 	return rv;
 }
 
-char ** bsGetMatchArrayFromValueList(BSSettingValueList list, int *num)
+char ** ccsGetMatchArrayFromValueList(CCSSettingValueList list, int *num)
 {
 	char ** rv = NULL;
-	int length = bsSettingValueListLength(list);
+	int length = ccsSettingValueListLength(list);
 	int i;
 	
 	if (length)
@@ -236,10 +257,10 @@ char ** bsGetMatchArrayFromValueList(BSSettingValueList list, int *num)
 	return rv;
 }
 
-int * bsGetIntArrayFromValueList(BSSettingValueList list, int *num)
+int * ccsGetIntArrayFromValueList(CCSSettingValueList list, int *num)
 {
 	int * rv = NULL;
-	int length = bsSettingValueListLength(list);
+	int length = ccsSettingValueListLength(list);
 	int i;
 	
 	if (length)
@@ -251,10 +272,10 @@ int * bsGetIntArrayFromValueList(BSSettingValueList list, int *num)
 	return rv;
 }
 
-float * bsGetFloatArrayFromValueList(BSSettingValueList list, int *num)
+float * ccsGetFloatArrayFromValueList(CCSSettingValueList list, int *num)
 {
 	float * rv = NULL;
-	int length = bsSettingValueListLength(list);
+	int length = ccsSettingValueListLength(list);
 	int i;
 	
 	if (length)
@@ -266,10 +287,10 @@ float * bsGetFloatArrayFromValueList(BSSettingValueList list, int *num)
 	return rv;
 }
 
-Bool * bsGetBoolArrayFromValueList(BSSettingValueList list, int *num)
+Bool * ccsGetBoolArrayFromValueList(CCSSettingValueList list, int *num)
 {
 	Bool * rv = NULL;
-	int length = bsSettingValueListLength(list);
+	int length = ccsSettingValueListLength(list);
 	int i;
 	
 	if (length)
@@ -281,147 +302,147 @@ Bool * bsGetBoolArrayFromValueList(BSSettingValueList list, int *num)
 	return rv;
 }
 
-BSSettingColorValue * bsGetColorArrayFromValueList(BSSettingValueList list,
+CCSSettingColorValue * ccsGetColorArrayFromValueList(CCSSettingValueList list,
 												   int *num)
 {
-	BSSettingColorValue * rv = NULL;
-	int length = bsSettingValueListLength(list);
+	CCSSettingColorValue * rv = NULL;
+	int length = ccsSettingValueListLength(list);
 	int i;
 	
 	if (length)
-		rv = malloc(length * sizeof(BSSettingColorValue));
+		rv = malloc(length * sizeof(CCSSettingColorValue));
 
 	for (i = 0; i < length; i++, list = list->next)
-		memcpy(&rv[i], &list->data->value.asColor, sizeof(BSSettingColorValue));
+		memcpy(&rv[i], &list->data->value.asColor, sizeof(CCSSettingColorValue));
 	*num = length;
 	return rv;
 }
 
-BSSettingActionValue * bsGetActionArrayFromValueList(BSSettingValueList list,
+CCSSettingActionValue * ccsGetActionArrayFromValueList(CCSSettingValueList list,
 													 int *num)
 {
-	BSSettingActionValue * rv = NULL;
-	int length = bsSettingValueListLength(list);
+	CCSSettingActionValue * rv = NULL;
+	int length = ccsSettingValueListLength(list);
 	int i;
 	
 	if (length)
-		rv = malloc(length * sizeof(BSSettingActionValue));
+		rv = malloc(length * sizeof(CCSSettingActionValue));
 
 	for (i = 0; i < length; i++, list = list->next)
 		memcpy(&rv[i], &list->data->value.asAction,
-			   sizeof(BSSettingActionValue));
+			   sizeof(CCSSettingActionValue));
 	*num = length;
 	return rv;
 }
 
-BSSettingValueList bsGetValueListFromStringArray(char ** array, int num,
-												 BSSetting *parent)
+CCSSettingValueList ccsGetValueListFromStringArray(char ** array, int num,
+												 CCSSetting *parent)
 {
-	BSSettingValueList l = NULL;
+	CCSSettingValueList l = NULL;
 	int i;
 	for (i = 0; i < num; i++)
 	{
-		NEW(BSSettingValue, value);
+		NEW(CCSSettingValue, value);
 		value->isListChild = TRUE;
 		value->parent = parent;
 		value->value.asString = strdup(array[i]);
-		l = bsSettingValueListAppend(l, value);
+		l = ccsSettingValueListAppend(l, value);
 	}
 	return l;
 }
 
-BSSettingValueList bsGetValueListFromMatchArray(char ** array, int num,
-												BSSetting *parent)
+CCSSettingValueList ccsGetValueListFromMatchArray(char ** array, int num,
+												CCSSetting *parent)
 {
-	BSSettingValueList l = NULL;
+	CCSSettingValueList l = NULL;
 	int i;
 	for (i = 0; i < num; i++)
 	{
-		NEW(BSSettingValue, value);
+		NEW(CCSSettingValue, value);
 		value->isListChild = TRUE;
 		value->parent = parent;
 		value->value.asMatch = strdup(array[i]);
-		l = bsSettingValueListAppend(l, value);
+		l = ccsSettingValueListAppend(l, value);
 	}
 	return l;
 }
 
-BSSettingValueList bsGetValueListFromIntArray(int * array, int num,
-											  BSSetting *parent)
+CCSSettingValueList ccsGetValueListFromIntArray(int * array, int num,
+											  CCSSetting *parent)
 {
-	BSSettingValueList l = NULL;
+	CCSSettingValueList l = NULL;
 	int i;
 	for (i = 0; i < num; i++)
 	{
-		NEW(BSSettingValue, value);
+		NEW(CCSSettingValue, value);
 		value->isListChild = TRUE;
 		value->parent = parent;
 		value->value.asInt = array[i];
-		l = bsSettingValueListAppend(l, value);
+		l = ccsSettingValueListAppend(l, value);
 	}
 	return l;
 }
 
-BSSettingValueList bsGetValueListFromFloatArray(float * array, int num,
-												BSSetting *parent)
+CCSSettingValueList ccsGetValueListFromFloatArray(float * array, int num,
+												CCSSetting *parent)
 {
-	BSSettingValueList l = NULL;
+	CCSSettingValueList l = NULL;
 	int i;
 	for (i = 0; i < num; i++)
 	{
-		NEW(BSSettingValue, value);
+		NEW(CCSSettingValue, value);
 		value->isListChild = TRUE;
 		value->parent = parent;
 		value->value.asFloat = array[i];
-		l = bsSettingValueListAppend(l, value);
+		l = ccsSettingValueListAppend(l, value);
 	}
 	return l;
 }
 	
-BSSettingValueList bsGetValueListFromBoolArray(Bool * array, int num,
-											   BSSetting *parent)
+CCSSettingValueList ccsGetValueListFromBoolArray(Bool * array, int num,
+											   CCSSetting *parent)
 {
-	BSSettingValueList l = NULL;
+	CCSSettingValueList l = NULL;
 	int i;
 	for (i = 0; i < num; i++)
 	{
-		NEW(BSSettingValue, value);
+		NEW(CCSSettingValue, value);
 		value->isListChild = TRUE;
 		value->parent = parent;
 		value->value.asBool = array[i];
-		l = bsSettingValueListAppend(l, value);
+		l = ccsSettingValueListAppend(l, value);
 	}
 	return l;
 }
 
-BSSettingValueList bsGetValueListFromColorArray(BSSettingColorValue * array,
-												  int num, BSSetting *parent)
+CCSSettingValueList ccsGetValueListFromColorArray(CCSSettingColorValue * array,
+												  int num, CCSSetting *parent)
 {
-	BSSettingValueList l = NULL;
+	CCSSettingValueList l = NULL;
 	int i;
 	for (i = 0; i < num; i++)
 	{
-		NEW(BSSettingValue, value);
+		NEW(CCSSettingValue, value);
 		value->isListChild = TRUE;
 		value->parent = parent;
 		value->value.asColor = array[i];
-		l = bsSettingValueListAppend(l, value);
+		l = ccsSettingValueListAppend(l, value);
 	}
 	return l;
 }
 
-BSSettingValueList bsGetValueListFromActionArray(BSSettingActionValue * array,
-												   int num, BSSetting *parent)
+CCSSettingValueList ccsGetValueListFromActionArray(CCSSettingActionValue * array,
+												   int num, CCSSetting *parent)
 {
-	BSSettingValueList l = NULL;
+	CCSSettingValueList l = NULL;
 	int i;
 	for (i = 0; i < num; i++)
 	{
-		NEW(BSSettingValue, value);
+		NEW(CCSSettingValue, value);
 		value->isListChild = TRUE;
 		value->parent = parent;
 		value->value.asAction = array[i];
-		l = bsSettingValueListAppend(l, value);
+		l = ccsSettingValueListAppend(l, value);
 	}
 	return l;
 }

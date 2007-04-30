@@ -1,27 +1,29 @@
 /*
+ * Compiz configuration system library
+ * 
+ * Copyright (C) 2007  Danny Baumann <maniac@beryl-project.org>
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
+/*
+ * Based on Compiz option.c
  * Copyright © 2005 Novell, Inc.
- *
- * Permission to use, copy, modify, distribute, and sell this software
- * and its documentation for any purpose is hereby granted without
- * fee, provided that the above copyright notice appear in all copies
- * and that both that copyright notice and this permission notice
- * appear in supporting documentation, and that the name of
- * Novell, Inc. not be used in advertising or publicity pertaining to
- * distribution of the software without specific, written prior permission.
- * Novell, Inc. makes no representations about the suitability of this
- * software for any purpose. It is provided "as is" without express or
- * implied warranty.
- *
- * NOVELL, INC. DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
- * INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN
- * NO EVENT SHALL NOVELL, INC. BE LIABLE FOR ANY SPECIAL, INDIRECT OR
- * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
- * OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
- * NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
- * WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
  * Author: David Reveman <davidr@novell.com>
  */
+ 
 
 #define _GNU_SOURCE
 
@@ -35,7 +37,7 @@
 #include <X11/X.h>
 #include <X11/Xlib.h>
 
-#include <bsettings.h>
+#include <ccs.h>
 
 #define CompAltMask        (1 << 16)
 #define CompMetaMask       (1 << 17)
@@ -125,7 +127,7 @@ modifiersToString (unsigned int modMask)
 }
 
 char *
-bsKeyBindingToString (BSSettingActionValue *action)
+ccsKeyBindingToString (CCSSettingActionValue *action)
 {
     char *binding;
 
@@ -147,7 +149,7 @@ bsKeyBindingToString (BSSettingActionValue *action)
 }
 
 char *
-bsButtonBindingToString (BSSettingActionValue *action)
+ccsButtonBindingToString (CCSSettingActionValue *action)
 {
     char *binding;
     char buttonStr[256];
@@ -176,8 +178,8 @@ stringToModifiers (const char *binding)
 }
 
 Bool
-bsStringToKeyBinding (const char           *binding,
-		      BSSettingActionValue *action)
+ccsStringToKeyBinding (const char           *binding,
+		      CCSSettingActionValue *action)
 {
     char	  *ptr;
     unsigned int  mods;
@@ -205,8 +207,8 @@ bsStringToKeyBinding (const char           *binding,
 }
 
 Bool
-bsStringToButtonBinding (const char           *binding,
-			 BSSettingActionValue *action)
+ccsStringToButtonBinding (const char           *binding,
+			 CCSSettingActionValue *action)
 {
     char	 *ptr;
     unsigned int mods;
@@ -237,7 +239,7 @@ bsStringToButtonBinding (const char           *binding,
 }
 
 char *
-bsEdgeToString (BSSettingActionValue *action)
+ccsEdgeToString (CCSSettingActionValue *action)
 {
     int i;
 
@@ -249,8 +251,8 @@ bsEdgeToString (BSSettingActionValue *action)
 }
 
 void
-bsStringToEdge (const char           *edge, 
-		BSSettingActionValue *action)
+ccsStringToEdge (const char           *edge, 
+		CCSSettingActionValue *action)
 {
     int i;
 
@@ -264,8 +266,8 @@ bsStringToEdge (const char           *edge,
 }
 
 Bool
-bsStringToColor (const char          *value, 
-		 BSSettingColorValue *color)
+ccsStringToColor (const char          *value, 
+		 CCSSettingColorValue *color)
 {
     int c[4];
 
@@ -283,7 +285,7 @@ bsStringToColor (const char          *value,
 }
 
 char *
-bsColorToString (BSSettingColorValue *color)
+ccsColorToString (CCSSettingColorValue *color)
 {
     char tmp[256];
 

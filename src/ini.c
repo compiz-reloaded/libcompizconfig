@@ -1,13 +1,33 @@
+/*
+ * Compiz configuration system library
+ * 
+ * Copyright (C) 2007  Danny Baumann <maniac@beryl-project.org>
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+ 
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <errno.h>
 
-#include <bsettings.h>
+#include <ccs.h>
 #include "iniparser.h"
 
-IniDictionary * bsIniOpen (const char * fileName)
+IniDictionary * ccsIniOpen (const char * fileName)
 {
     char *path, *delim;
     FILE *file;
@@ -31,17 +51,17 @@ IniDictionary * bsIniOpen (const char * fileName)
     return iniparser_new ((char*) fileName);
 }
 
-IniDictionary * bsIniNew (void)
+IniDictionary * ccsIniNew (void)
 {
     return dictionary_new (0);
 }
 
-void bsIniClose (IniDictionary * dictionary)
+void ccsIniClose (IniDictionary * dictionary)
 {
 	iniparser_free (dictionary);
 }
 
-void bsIniSave (IniDictionary * dictionary, const char * fileName)
+void ccsIniSave (IniDictionary * dictionary, const char * fileName)
 {
 	FILE *file;
 	char *path, *delim;
@@ -94,22 +114,22 @@ static void setIniString (IniDictionary * dictionary,
 	free (sectionName);
 }
 
-static char *writeActionString (BSSettingActionValue * action)
+static char *writeActionString (CCSSettingActionValue * action)
 {
 	char *keyBinding;
 	char *buttonBinding;
 	char *edge;
 	char *actionString = NULL;
 
-	keyBinding = bsKeyBindingToString (action);
+	keyBinding = ccsKeyBindingToString (action);
 	if (!keyBinding)
 		keyBinding = strdup("");
 
-	buttonBinding = bsButtonBindingToString (action);
+	buttonBinding = ccsButtonBindingToString (action);
 	if (!buttonBinding)
 		buttonBinding = strdup("");
 
-	edge = bsEdgeToString (action);
+	edge = ccsEdgeToString (action);
 	if (!edge)
 		edge = strdup("");
 
@@ -125,12 +145,12 @@ static char *writeActionString (BSSettingActionValue * action)
 }
 
 static Bool parseActionString (const char* string, 
-							   BSSettingActionValue *value)
+							   CCSSettingActionValue *value)
 {
 	char *valueString, *valueStart;
 	char *token;
 
-	memset (value, 0, sizeof(BSSettingActionValue));
+	memset (value, 0, sizeof(CCSSettingActionValue));
 	valueString = strdup (string);
 	valueStart = valueString;
 
@@ -142,7 +162,7 @@ static Bool parseActionString (const char* string,
 	}
 
 	/* key binding */
-	bsStringToKeyBinding (token, value);
+	ccsStringToKeyBinding (token, value);
 
 	token = strsep (&valueString, ",");
 	if (!token)
@@ -152,7 +172,7 @@ static Bool parseActionString (const char* string,
 	}
 
 	/* button binding */
-	bsStringToButtonBinding (token, value);
+	ccsStringToButtonBinding (token, value);
 
 	token = strsep (&valueString, ",");
 	if (!token)
@@ -162,7 +182,7 @@ static Bool parseActionString (const char* string,
 	}
 
 	/* edge binding */
-	bsStringToEdge (token, value);
+	ccsStringToEdge (token, value);
 
 	token = strsep (&valueString, ",");
 	if (!token)
@@ -180,7 +200,7 @@ static Bool parseActionString (const char* string,
 	return TRUE;
 }
 
-Bool bsIniGetString (IniDictionary * dictionary, 
+Bool ccsIniGetString (IniDictionary * dictionary, 
 					 const char * section,
 					 const char * entry, 
 					 char ** value)
@@ -198,7 +218,7 @@ Bool bsIniGetString (IniDictionary * dictionary,
 		return FALSE;
 }
 
-Bool bsIniGetInt (IniDictionary * dictionary, 
+Bool ccsIniGetInt (IniDictionary * dictionary, 
 				  const char * section,
 				  const char * entry, 
 				  int * value)
@@ -216,7 +236,7 @@ Bool bsIniGetInt (IniDictionary * dictionary,
 		return FALSE;
 }
 
-Bool bsIniGetFloat (IniDictionary * dictionary, 
+Bool ccsIniGetFloat (IniDictionary * dictionary, 
 					const char * section,
 					const char * entry, 
 					float * value)
@@ -234,7 +254,7 @@ Bool bsIniGetFloat (IniDictionary * dictionary,
 		return FALSE;
 }
 
-Bool bsIniGetBool (IniDictionary * dictionary, 
+Bool ccsIniGetBool (IniDictionary * dictionary, 
 				   const char * section,
 				   const char * entry, 
 				   Bool * value)
@@ -260,25 +280,25 @@ Bool bsIniGetBool (IniDictionary * dictionary,
 		return FALSE;
 }
 
-Bool bsIniGetColor (IniDictionary * dictionary, 
+Bool ccsIniGetColor (IniDictionary * dictionary, 
 					const char * section,
 					const char * entry, 
-					BSSettingColorValue * value)
+					CCSSettingColorValue * value)
 {
 	char *retValue;
 
 	retValue = getIniString (dictionary, section, entry);
 
-	if (retValue && bsStringToColor (retValue, value))
+	if (retValue && ccsStringToColor (retValue, value))
 		return TRUE;
 	else
 		return FALSE;
 }
 
-Bool bsIniGetAction (IniDictionary * dictionary, 
+Bool ccsIniGetAction (IniDictionary * dictionary, 
 					 const char * section,
 					 const char * entry, 
-					 BSSettingActionValue * value)
+					 CCSSettingActionValue * value)
 {
 	char *retValue;
 
@@ -290,13 +310,13 @@ Bool bsIniGetAction (IniDictionary * dictionary,
 		return FALSE;
 }
 
-Bool bsIniGetList (IniDictionary * dictionary, 
+Bool ccsIniGetList (IniDictionary * dictionary, 
 				   const char * section,
 				   const char * entry, 
-				   BSSettingValueList * value,
-				   BSSetting *parent)
+				   CCSSettingValueList * value,
+				   CCSSetting *parent)
 {
-	BSSettingValueList list = NULL;
+	CCSSettingValueList list = NULL;
 	char *valueString, *valueStart, *valString;
 	char *token;
 	int nItems = 0, i = 0;
@@ -329,7 +349,7 @@ Bool bsIniGetList (IniDictionary * dictionary,
 					array[i++] = strdup (token);
 					token = strsep (&valueString, ";");
 				}
-				list = bsGetValueListFromStringArray (array, nItems, parent);
+				list = ccsGetValueListFromStringArray (array, nItems, parent);
 				for (i = 0; i < nItems; i++)
 					free (array[i]);
 				free (array);
@@ -337,15 +357,15 @@ Bool bsIniGetList (IniDictionary * dictionary,
 			break;
 		case TypeColor:
 			{
-				BSSettingColorValue *array = malloc (nItems * sizeof(BSSettingColorValue));
+				CCSSettingColorValue *array = malloc (nItems * sizeof(CCSSettingColorValue));
 				while (token)
 				{
-                    memset(&array[i], 0, sizeof(BSSettingColorValue));
-                   	bsStringToColor(token, &array[i]);
+                    memset(&array[i], 0, sizeof(CCSSettingColorValue));
+                   	ccsStringToColor(token, &array[i]);
 					token = strsep (&valueString, ";");
 					i++;
 				}
-				list = bsGetValueListFromColorArray (array, nItems, parent);
+				list = ccsGetValueListFromColorArray (array, nItems, parent);
 				free (array);
 			}
 			break;
@@ -360,7 +380,7 @@ Bool bsIniGetList (IniDictionary * dictionary,
 					array[i++] = isTrue;
 					token = strsep (&valueString, ";");
 				}
-				list = bsGetValueListFromBoolArray (array, nItems, parent);
+				list = ccsGetValueListFromBoolArray (array, nItems, parent);
 				free (array);
 			}
 			break;
@@ -372,7 +392,7 @@ Bool bsIniGetList (IniDictionary * dictionary,
 					array[i++] = strtoul (token, NULL, 10);
 					token = strsep (&valueString, ";");
 				}
-				list = bsGetValueListFromIntArray (array, nItems, parent);
+				list = ccsGetValueListFromIntArray (array, nItems, parent);
 				free (array);
 			}
 			break;
@@ -384,19 +404,19 @@ Bool bsIniGetList (IniDictionary * dictionary,
 					array[i++] = strtod (token, NULL);
 					token = strsep (&valueString, ";");
 				}
-				list = bsGetValueListFromFloatArray (array, nItems, parent);
+				list = ccsGetValueListFromFloatArray (array, nItems, parent);
 				free (array);
 			}
 			break;
 		case TypeAction:
 			{
-				BSSettingActionValue *array = malloc (nItems * sizeof(BSSettingActionValue));
+				CCSSettingActionValue *array = malloc (nItems * sizeof(CCSSettingActionValue));
 				while (token)
 				{
 					parseActionString (token, &array[i++]);
 					token = strsep (&valueString, ";");
 				}
-				list = bsGetValueListFromActionArray (array, nItems, parent);
+				list = ccsGetValueListFromActionArray (array, nItems, parent);
 				free (array);
 			}
 			break;
@@ -410,7 +430,7 @@ Bool bsIniGetList (IniDictionary * dictionary,
 	return TRUE;
 }
 
-void bsIniSetString (IniDictionary * dictionary, 
+void ccsIniSetString (IniDictionary * dictionary, 
 					 const char * section,
 					 const char * entry, 
 					 char * value)
@@ -418,7 +438,7 @@ void bsIniSetString (IniDictionary * dictionary,
 	setIniString (dictionary, section, entry, value);
 }
 
-void bsIniSetInt (IniDictionary * dictionary, 
+void ccsIniSetInt (IniDictionary * dictionary, 
 				  const char * section,
 				  const char * entry, 
 				  int value)
@@ -433,7 +453,7 @@ void bsIniSetInt (IniDictionary * dictionary,
 	}
 }
 
-void bsIniSetFloat (IniDictionary * dictionary, 
+void ccsIniSetFloat (IniDictionary * dictionary, 
 					const char * section,
 					const char * entry, 
 					float value)
@@ -448,7 +468,7 @@ void bsIniSetFloat (IniDictionary * dictionary,
 	}
 }
 
-void bsIniSetBool (IniDictionary * dictionary, 
+void ccsIniSetBool (IniDictionary * dictionary, 
 				   const char * section,
 				   const char * entry, 
 				   Bool value)
@@ -457,13 +477,13 @@ void bsIniSetBool (IniDictionary * dictionary,
 				  value ? "true" : "false");
 }
 
-void bsIniSetColor (IniDictionary * dictionary, 
+void ccsIniSetColor (IniDictionary * dictionary, 
 					const char * section,
 					const char * entry, 
-					BSSettingColorValue value)
+					CCSSettingColorValue value)
 {
 	char *string;
-	string = bsColorToString (&value);
+	string = ccsColorToString (&value);
 
 	if (string)
 	{
@@ -472,10 +492,10 @@ void bsIniSetColor (IniDictionary * dictionary,
 	}
 }
 
-void bsIniSetAction (IniDictionary * dictionary, 
+void ccsIniSetAction (IniDictionary * dictionary, 
 					 const char * section,
 					 const char * entry, 
-					 BSSettingActionValue value)
+					 CCSSettingActionValue value)
 {
 	char *actionString;
 
@@ -488,11 +508,11 @@ void bsIniSetAction (IniDictionary * dictionary,
 	}
 }
 
-void bsIniSetList (IniDictionary * dictionary, 
+void ccsIniSetList (IniDictionary * dictionary, 
 				   const char * section,
 				   const char * entry, 
-				   BSSettingValueList value,
-				   BSSettingType listType)
+				   CCSSettingValueList value,
+				   CCSSettingType listType)
 {
 #define STRINGBUFSIZE 2048
 	char stringBuffer[STRINGBUFSIZE]; //FIXME: we should allocate that dynamically
@@ -538,7 +558,7 @@ void bsIniSetList (IniDictionary * dictionary,
 			case TypeColor:
 				{
 					char *color = NULL;
-					color = bsColorToString(&value->data->value.asColor);
+					color = ccsColorToString(&value->data->value.asColor);
 					if (!color)
 						break;
 
@@ -568,7 +588,7 @@ void bsIniSetList (IniDictionary * dictionary,
 	setIniString (dictionary, section, entry, stringBuffer);
 }
 
-void bsIniRemoveEntry (IniDictionary * dictionary, 
+void ccsIniRemoveEntry (IniDictionary * dictionary, 
 					   const char * section,
 					   const char * entry)
 {
