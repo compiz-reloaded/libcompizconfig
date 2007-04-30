@@ -1,3 +1,23 @@
+/*
+ * Compiz configuration system library
+ * 
+ * Copyright (C) 2007  Dennis Kasprzyk <onestone@beryl-project.org>
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
 #define _GNU_SOURCE
 #include <stdlib.h>
 #include <stdio.h>
@@ -17,17 +37,17 @@
 
 #include <compiz.h>
 
-#include <bsettings.h>
+#include <ccs.h>
 
-#include "bsettings-private.h"
+#include "ccs-private.h"
 
-static BSSettingType
+static CCSSettingType
 getOptionType (char *name)
 {
 	static struct _TypeMap
 	{
 		char *name;
-		BSSettingType type;
+		CCSSettingType type;
 	} map[] =
 	{
 		{
@@ -191,7 +211,7 @@ stringFromNodeDefTrans (xmlNode * node, char *path, char *def)
 
 
 static void
-initBoolValue (BSSettingValue * v, xmlNode * node)
+initBoolValue (CCSSettingValue * v, xmlNode * node)
 {
 	char *value;
 
@@ -207,7 +227,7 @@ initBoolValue (BSSettingValue * v, xmlNode * node)
 }
 
 static void
-initIntValue (BSSettingValue * v, BSSettingInfo * i, xmlNode * node)
+initIntValue (CCSSettingValue * v, CCSSettingInfo * i, xmlNode * node)
 {
 	char *value;
 
@@ -224,7 +244,7 @@ initIntValue (BSSettingValue * v, BSSettingInfo * i, xmlNode * node)
 }
 
 static void
-initFloatValue (BSSettingValue * v, BSSettingInfo * i, xmlNode * node)
+initFloatValue (CCSSettingValue * v, CCSSettingInfo * i, xmlNode * node)
 {
 	char *value;
 	char *loc;
@@ -245,7 +265,7 @@ initFloatValue (BSSettingValue * v, BSSettingInfo * i, xmlNode * node)
 }
 
 static void
-initStringValue (BSSettingValue * v, BSSettingInfo * i, xmlNode * node)
+initStringValue (CCSSettingValue * v, CCSSettingInfo * i, xmlNode * node)
 {
 	char *value;
 
@@ -259,7 +279,7 @@ initStringValue (BSSettingValue * v, BSSettingInfo * i, xmlNode * node)
 	{
 		if (i->forString.allowedValues)
 		{
-			BSStringList l = i->forString.allowedValues;
+			CCSStringList l = i->forString.allowedValues;
 			while (l)
 			{
 				if (!strcmp (value, l->data))
@@ -280,7 +300,7 @@ initStringValue (BSSettingValue * v, BSSettingInfo * i, xmlNode * node)
 }
 
 static void
-initColorValue (BSSettingValue * v, xmlNode * node)
+initColorValue (CCSSettingValue * v, xmlNode * node)
 {
 	char *value;
 
@@ -325,7 +345,7 @@ initColorValue (BSSettingValue * v, xmlNode * node)
 
 
 static void
-initMatchValue (BSSettingValue * v, xmlNode * node)
+initMatchValue (CCSSettingValue * v, xmlNode * node)
 {
 	char *value;
 
@@ -434,7 +454,7 @@ stringToButton (const char *binding, int *button, unsigned int *mods)
 }
 
 static void
-initActionValue (BSSettingValue * v, BSSettingInfo * i, xmlNode * node)
+initActionValue (CCSSettingValue * v, CCSSettingInfo * i, xmlNode * node)
 {
 	char *value;
 	int j;
@@ -517,7 +537,7 @@ initActionValue (BSSettingValue * v, BSSettingInfo * i, xmlNode * node)
 }
 
 static void
-initListValue (BSSettingValue * v, BSSettingInfo * i, xmlNode * node)
+initListValue (CCSSettingValue * v, CCSSettingInfo * i, xmlNode * node)
 {
 	xmlNode **nodes;
 	int num, j;
@@ -527,7 +547,7 @@ initListValue (BSSettingValue * v, BSSettingInfo * i, xmlNode * node)
 	{
 		for (j = 0; j < num; j++)
 		{
-			NEW (BSSettingValue, val);
+			NEW (CCSSettingValue, val);
 			val->parent = v->parent;
 			val->isListChild = TRUE;
 			switch (i->forList.listType)
@@ -555,14 +575,14 @@ initListValue (BSSettingValue * v, BSSettingInfo * i, xmlNode * node)
 			default:
 				break;
 			}
-			v->value.asList = bsSettingValueListAppend (v->value.asList, val);
+			v->value.asList = ccsSettingValueListAppend (v->value.asList, val);
 		}
 		free (nodes);
 	}
 }
 
 static void
-initIntInfo (BSSettingInfo * i, xmlNode * node)
+initIntInfo (CCSSettingInfo * i, xmlNode * node)
 {
 	char *value;
 	i->forInt.min = MINSHORT;
@@ -585,7 +605,7 @@ initIntInfo (BSSettingInfo * i, xmlNode * node)
 }
 
 static void
-initFloatInfo (BSSettingInfo * i, xmlNode * node)
+initFloatInfo (CCSSettingInfo * i, xmlNode * node)
 {
 	char *value;
 	char *loc;
@@ -621,7 +641,7 @@ initFloatInfo (BSSettingInfo * i, xmlNode * node)
 }
 
 static void
-initStringInfo (BSSettingInfo * i, xmlNode * node)
+initStringInfo (CCSSettingInfo * i, xmlNode * node)
 {
 	xmlNode **nodes;
 	char *value;
@@ -639,7 +659,7 @@ initStringInfo (BSSettingInfo * i, xmlNode * node)
 			{
 				char *string = strdup (value);
 				i->forString.allowedValues =
-					bsStringListAppend (i->forString.allowedValues, string);
+					ccsStringListAppend (i->forString.allowedValues, string);
 				free (value);
 			}
 		}
@@ -648,7 +668,7 @@ initStringInfo (BSSettingInfo * i, xmlNode * node)
 }
 
 static void
-initActionInfo (BSSettingInfo * i, xmlNode * node)
+initActionInfo (CCSSettingInfo * i, xmlNode * node)
 {
 	char *value;
 	i->forAction.key = FALSE;
@@ -697,7 +717,7 @@ initActionInfo (BSSettingInfo * i, xmlNode * node)
 
 
 static void
-initListInfo (BSSettingInfo * i, xmlNode * node)
+initListInfo (CCSSettingInfo * i, xmlNode * node)
 {
 	char *value;
 
@@ -713,28 +733,28 @@ initListInfo (BSSettingInfo * i, xmlNode * node)
 	{
 	case TypeInt:
 	{
-		NEW (BSSettingInfo, info);
+		NEW (CCSSettingInfo, info);
 		initIntInfo (info, node);
 		i->forList.listInfo = info;
 	}
 		break;
 	case TypeFloat:
 	{
-		NEW (BSSettingInfo, info);
+		NEW (CCSSettingInfo, info);
 		initFloatInfo (info, node);
 		i->forList.listInfo = info;
 	}
 		break;
 	case TypeString:
 	{
-		NEW (BSSettingInfo, info);
+		NEW (CCSSettingInfo, info);
 		initStringInfo (info, node);
 		i->forList.listInfo = info;
 	}
 		break;
 	case TypeAction:
 	{
-		NEW (BSSettingInfo, info);
+		NEW (CCSSettingInfo, info);
 		initActionInfo (info, node);
 		i->forList.listInfo = info;
 	}
@@ -746,7 +766,7 @@ initListInfo (BSSettingInfo * i, xmlNode * node)
 }
 
 static void
-printSetting (BSSetting * s)
+printSetting (CCSSetting * s)
 {
 	char *val;
 	printf ("Name        : %s\n", s->name);
@@ -782,7 +802,7 @@ printSetting (BSSetting * s)
 	{
 		printf ("Type        : string\n");
 		printf ("Value       : %s\n", s->value->value.asString);
-		BSStringList l = s->info.forString.allowedValues;
+		CCSStringList l = s->info.forString.allowedValues;
 		if (l)
 		{
 			printf ("   Allowed  : ");
@@ -808,21 +828,21 @@ printSetting (BSSetting * s)
 		printf ("Type        : action\n");
 		if (s->info.forAction.key)
 		{
-			val = bsKeyBindingToString (&s->value->value.asAction);
+			val = ccsKeyBindingToString (&s->value->value.asAction);
 			printf ("    Key     : %s\n", val);
 			if (val)
 				free (val);
 		}
 		if (s->info.forAction.button)
 		{
-			val = bsButtonBindingToString (&s->value->value.asAction);
+			val = ccsButtonBindingToString (&s->value->value.asAction);
 			printf ("    Button  : %s\n", val);
 			if (val)
 				free (val);
 		}
 		if (s->info.forAction.edge)
 		{
-			val = bsEdgeToString (&s->value->value.asAction);
+			val = ccsEdgeToString (&s->value->value.asAction);
 			printf ("    Edge    : %s\n", val);
 			if (val)
 				free (val);
@@ -858,7 +878,7 @@ printSetting (BSSetting * s)
 		case TypeString:
 		{
 			printf ("Type        : list (string)\n");
-			BSStringList l =
+			CCSStringList l =
 				s->info.forList.listInfo->forString.allowedValues;
 			if (l)
 			{
@@ -884,13 +904,13 @@ printSetting (BSSetting * s)
 		default:
 			break;
 		}
-		BSSettingValueList l = s->value->value.asList;
+		CCSSettingValueList l = s->value->value.asList;
 		if (!l)
 			break;
 		printf ("Values      : ");
 		while (l)
 		{
-			BSSettingValue *val = l->data;
+			CCSSettingValue *val = l->data;
 			switch (s->info.forList.listType)
 			{
 			case TypeInt:
@@ -907,7 +927,7 @@ printSetting (BSSetting * s)
 				break;
 			case TypeColor:
 			{
-				char *str = bsColorToString (&val->value.asColor);
+				char *str = ccsColorToString (&val->value.asColor);
 				printf ("%s,", str);
 				if (str)
 					free (str);
@@ -931,7 +951,7 @@ printSetting (BSSetting * s)
 }
 
 static void
-addOptionFromXMLNode (BSPlugin * plugin, xmlNode * node)
+addOptionFromXMLNode (CCSPlugin * plugin, xmlNode * node)
 {
 	char *name;
 	char *type;
@@ -955,7 +975,7 @@ addOptionFromXMLNode (BSPlugin * plugin, xmlNode * node)
 
 	screen = nodeExists (node, "ancestor::screen");
 
-	if (bsFindSetting (plugin, name, screen, 0))
+	if (ccsFindSetting (plugin, name, screen, 0))
 	{
 		fprintf (stderr, "[ERROR]: Option \"%s\" already defined\n", name);
 		free (name);
@@ -963,7 +983,7 @@ addOptionFromXMLNode (BSPlugin * plugin, xmlNode * node)
 		return;
 	}
 
-	NEW (BSSetting, setting);
+	NEW (CCSSetting, setting);
 
 	setting->parent = plugin;
 	setting->isScreen = screen;
@@ -1047,11 +1067,11 @@ addOptionFromXMLNode (BSPlugin * plugin, xmlNode * node)
 	}
 
 //	printSetting (setting);
-	plugin->settings = bsSettingListAppend (plugin->settings, setting);
+	plugin->settings = ccsSettingListAppend (plugin->settings, setting);
 }
 
 static void
-initOptionsFromRootNode (BSPlugin * plugin, xmlNode * node)
+initOptionsFromRootNode (CCSPlugin * plugin, xmlNode * node)
 {
 	xmlNode **nodes;
 	int num, i;
@@ -1065,7 +1085,7 @@ initOptionsFromRootNode (BSPlugin * plugin, xmlNode * node)
 }
 
 static void
-initRuleFromNode (BSPlugin * plugin, xmlNode * node)
+initRuleFromNode (CCSPlugin * plugin, xmlNode * node)
 {
 	char *type = stringFromNodeDef (node, "@type", "");
 	char *rule = stringFromNodeDef (node, "child::text()", NULL);
@@ -1078,31 +1098,31 @@ initRuleFromNode (BSPlugin * plugin, xmlNode * node)
 	}
 	if (!strcmp (type, "before"))
 	{
-		plugin->loadBefore = bsStringListAppend (plugin->loadBefore, rule);
+		plugin->loadBefore = ccsStringListAppend (plugin->loadBefore, rule);
 	}
 	else if (!strcmp (type, "after"))
 	{
-		plugin->loadAfter = bsStringListAppend (plugin->loadAfter, rule);
+		plugin->loadAfter = ccsStringListAppend (plugin->loadAfter, rule);
 	}
 	else if (!strcmp (type, "require"))
 	{
 		plugin->requiresPlugin =
-			bsStringListAppend (plugin->requiresPlugin, rule);
+			ccsStringListAppend (plugin->requiresPlugin, rule);
 	}
 	else if (!strcmp (type, "require_feature"))
 	{
 		plugin->requiresFeature =
-			bsStringListAppend (plugin->requiresFeature, rule);
+			ccsStringListAppend (plugin->requiresFeature, rule);
 	}
 	free (type);
 }
 
 static void
-initFeatureFromNode (BSPlugin * plugin, xmlNode * node)
+initFeatureFromNode (CCSPlugin * plugin, xmlNode * node)
 {
 	char *feature = stringFromNodeDef (node, "child::text()", NULL);
 	if (feature && strlen (feature))
-		plugin->providesFeature = bsStringListAppend (plugin->providesFeature,
+		plugin->providesFeature = ccsStringListAppend (plugin->providesFeature,
 													  feature);
 	if (feature && !strlen (feature))
 		free (feature);
@@ -1110,7 +1130,7 @@ initFeatureFromNode (BSPlugin * plugin, xmlNode * node)
 
 
 static void
-initRulesFromRootNode (BSPlugin * plugin, xmlNode * node)
+initRulesFromRootNode (CCSPlugin * plugin, xmlNode * node)
 {
 	xmlNode **nodes;
 	int num, i;
@@ -1131,7 +1151,7 @@ initRulesFromRootNode (BSPlugin * plugin, xmlNode * node)
 }
 
 static void
-addPluginFromXMLNode (BSContext * context, xmlNode * node)
+addPluginFromXMLNode (CCSContext * context, xmlNode * node)
 {
 	char *name;
 
@@ -1146,14 +1166,14 @@ addPluginFromXMLNode (BSContext * context, xmlNode * node)
 		return;
 	}
 
-	if (bsFindPlugin (context, name))
+	if (ccsFindPlugin (context, name))
 		return;
 
-	if (!strcmp(name,"ini") || !strcmp(name,"gconf") || !strcmp(name,"bset"))
+	if (!strcmp(name,"ini") || !strcmp(name,"gconf") || !strcmp(name,"ccp"))
 	    return;
 
 	
-	NEW (BSPlugin, plugin);
+	NEW (CCSPlugin, plugin);
 
 	plugin->context = context;
 	plugin->name = strdup (name);
@@ -1172,9 +1192,9 @@ addPluginFromXMLNode (BSContext * context, xmlNode * node)
 
 	initOptionsFromRootNode (plugin, node);
 
-	if (!bsFindSetting (plugin, "____plugin_enabled", FALSE, 0))
+	if (!ccsFindSetting (plugin, "____plugin_enabled", FALSE, 0))
 	{
-		NEW (BSSetting, setting);
+		NEW (CCSSetting, setting);
 
 		setting->parent = plugin;
 		setting->isScreen = FALSE;
@@ -1191,7 +1211,7 @@ addPluginFromXMLNode (BSContext * context, xmlNode * node)
 
 		setting->value = &setting->defaultValue;
 
-		plugin->settings = bsSettingListAppend (plugin->settings, setting);
+		plugin->settings = ccsSettingListAppend (plugin->settings, setting);
 	}
 	else
 	{
@@ -1200,20 +1220,20 @@ addPluginFromXMLNode (BSContext * context, xmlNode * node)
 	}
 
 	collateGroups (plugin);
-	context->plugins = bsPluginListAppend (context->plugins, plugin);
+	context->plugins = ccsPluginListAppend (context->plugins, plugin);
 	free (name);
 }
 
 static void
-addCoreSettingsFromXMLNode (BSContext * context, xmlNode * node)
+addCoreSettingsFromXMLNode (CCSContext * context, xmlNode * node)
 {
 	if (!node)
 		return;
 
-	if (bsFindPlugin (context, "core"))
+	if (ccsFindPlugin (context, "core"))
 		return;
 
-	NEW (BSPlugin, plugin);
+	NEW (CCSPlugin, plugin);
 
 	plugin->context = context;
 	plugin->name = strdup ("core");
@@ -1232,11 +1252,11 @@ addCoreSettingsFromXMLNode (BSContext * context, xmlNode * node)
 	initOptionsFromRootNode (plugin, node);
 
 	collateGroups (plugin);
-	context->plugins = bsPluginListAppend (context->plugins, plugin);
+	context->plugins = ccsPluginListAppend (context->plugins, plugin);
 }
 
 static void
-loadPluginsFromXML (BSContext * context, xmlDoc * doc)
+loadPluginsFromXML (CCSContext * context, xmlDoc * doc)
 {
 	xmlNode **nodes;
 	int num, i;
@@ -1285,7 +1305,7 @@ pluginXMLFilter (const struct dirent *name)
 }
 
 static void
-loadPluginsFromXMLFiles (BSContext * context, char *path)
+loadPluginsFromXMLFiles (CCSContext * context, char *path)
 {
 	struct dirent **nameList;
 	char *name;
@@ -1322,15 +1342,15 @@ loadPluginsFromXMLFiles (BSContext * context, char *path)
 }
 
 static void
-addPluginNamed (BSContext * context, char *name)
+addPluginNamed (CCSContext * context, char *name)
 {
 
-	if (bsFindPlugin (context, name))
+	if (ccsFindPlugin (context, name))
 		return;
-	if (!strcmp(name,"ini") || !strcmp(name,"gconf") || !strcmp(name,"bset"))
+	if (!strcmp(name,"ini") || !strcmp(name,"gconf") || !strcmp(name,"ccp"))
 	    return;
 
-	NEW (BSPlugin, plugin);
+	NEW (CCSPlugin, plugin);
 
 	plugin->context = context;
 	plugin->name = strdup (name);
@@ -1345,7 +1365,7 @@ addPluginNamed (BSContext * context, char *name)
 	if (plugin->category)
 		plugin->category = strdup ("");
 
-	NEW (BSSetting, setting);
+	NEW (CCSSetting, setting);
 
 	setting->parent = plugin;
 	setting->isScreen = FALSE;
@@ -1362,14 +1382,14 @@ addPluginNamed (BSContext * context, char *name)
 
 	setting->value = &setting->defaultValue;
 
-	plugin->settings = bsSettingListAppend (plugin->settings, setting);
+	plugin->settings = ccsSettingListAppend (plugin->settings, setting);
 
 	collateGroups (plugin);
-	context->plugins = bsPluginListAppend (context->plugins, plugin);
+	context->plugins = ccsPluginListAppend (context->plugins, plugin);
 }
 
 static void
-loadPluginsFromName (BSContext * context, char *path)
+loadPluginsFromName (CCSContext * context, char *path)
 {
 	struct dirent **nameList;
 	int nFile, i;
@@ -1398,7 +1418,7 @@ loadPluginsFromName (BSContext * context, char *path)
 }
 
 void
-bsLoadPlugins (BSContext * context)
+ccsLoadPlugins (CCSContext * context)
 {
 	char *home = getenv ("HOME");
 	if (home && strlen (home))

@@ -3,11 +3,11 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
 
-Name: bsettings
-Description: Beryl Settings Library
+Name: libccs
+Description: Compiz configuration system
 Version: @VERSION@
 
 Requires: compiz
-Libs: -L@libdir@ -lbsettings
-Cflags: -I@includedir@/bsettings
+Libs: -L@libdir@ -lccs
+Cflags: -I@includedir@/ccs
 

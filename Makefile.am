@@ -28,4 +28,4 @@ clean:
 	done
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = bsettings.pc
+pkgconfig_DATA = libccs.pc
