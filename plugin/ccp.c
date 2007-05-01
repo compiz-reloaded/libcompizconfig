@@ -676,8 +676,10 @@ ccpInitDisplay (CompPlugin  *p,
     CompOption   *option;
     int	         nOption;
     CCPDisplay *cd;
+	CompScreen *s;
 	int i;
-
+	unsigned int *screens;
+	
     cd = malloc (sizeof (CCPDisplay));
     if (!cd)
 	return FALSE;
@@ -695,7 +697,28 @@ ccpInitDisplay (CompPlugin  *p,
 
     d->privates[displayPrivateIndex].ptr = cd;
 
-	cd->context = ccsContextNew();
+	s = d->screens;
+	i = 0;
+	while (s)
+	{
+		i++;
+		s = s->next;
+	}
+	screens = calloc(1,sizeof(unsigned int) * i);
+
+	s = d->screens;
+	i = 0;
+	while (s)
+	{
+		i++;
+		screens[i] = s->screenNum;
+		s = s->next;
+	}
+	
+	cd->context = ccsContextNew(screens, i);
+
+	free (screens);
+	
 	if (!cd->context)
 	{
 		free(cd);
