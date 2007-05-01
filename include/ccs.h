@@ -93,6 +93,9 @@ struct _CCSContext
 	Bool 				pluginsChanged;
 
 	unsigned int        configWatchId;
+	
+	unsigned int *		screens;
+	unsigned int        numScreens;
 };
 
 struct _CCSBackend
@@ -372,7 +375,7 @@ struct _CCSPluginCategory
 };
 
 
-CCSContext * ccsContextNew(void);
+CCSContext * ccsContextNew(unsigned int *screens, unsigned int numScreens);
 void ccsContextDestroy(CCSContext * context);
 CCSBackendVTable *getBackendInfo (void);
 

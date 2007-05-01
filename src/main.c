@@ -76,11 +76,27 @@ configChangeNotify (unsigned int watchId, void *closure)
 }
 
 CCSContext *
-ccsContextNew (void)
+ccsContextNew (unsigned int *screens, unsigned int numScreens)
 {
 
 	NEW (CCSContext, context);
 
+	if (numScreens > 0 && screens)
+	{
+		int i;
+		
+		context->screens = calloc(1, sizeof(unsigned int) * numScreens);
+		context->numScreens = numScreens;
+		for (i = 0; i < numScreens; i++)
+			context->screens[i] = screens[i];
+	}
+	else
+	{
+		context->screens = calloc(1, sizeof(unsigned int));
+		context->screens[0] = 0;
+		context->numScreens = 1;
+	}
+	
 	ccsLoadPlugins (context);
 
 	initGeneralOptions (context);
@@ -206,6 +222,9 @@ ccsFreeContext (CCSContext * c)
 
 	if (c->changedSettings)
 		ccsSettingListFree (c->changedSettings, FALSE);
+
+	if (c->screens)
+		free (c->screens);
 
 	ccsPluginListFree (c->plugins, TRUE);
 	free (c);

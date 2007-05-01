@@ -951,43 +951,27 @@ printSetting (CCSSetting * s)
 }
 
 static void
-addOptionFromXMLNode (CCSPlugin * plugin, xmlNode * node)
+addOptionForPlugin (CCSPlugin * plugin,
+					char * name,
+					char * type,
+					Bool isScreen,
+					unsigned int screen,
+					xmlNode * node)
 {
-	char *name;
-	char *type;
 	xmlNode **nodes;
 	int num;
-	Bool screen;
-
-	if (!node)
-		return;
-
-	name = getStringFromPath (node->doc, node, "@name");
-	type = getStringFromPath (node->doc, node, "@type");
-	if (!name || !strlen (name) || !type || !strlen (type))
-	{
-		if (name)
-			free (name);
-		if (type)
-			free (type);
-		return;
-	}
-
-	screen = nodeExists (node, "ancestor::screen");
-
-	if (ccsFindSetting (plugin, name, screen, 0))
+	
+	if (ccsFindSetting (plugin, name, isScreen, screen))
 	{
 		fprintf (stderr, "[ERROR]: Option \"%s\" already defined\n", name);
-		free (name);
-		free (type);
 		return;
 	}
-
+	
 	NEW (CCSSetting, setting);
 
 	setting->parent = plugin;
-	setting->isScreen = screen;
-	setting->screenNum = 0;
+	setting->isScreen = isScreen;
+	setting->screenNum = screen;
 	setting->isDefault = TRUE;
 	setting->name = strdup (name);
 	setting->shortDesc =
@@ -1004,8 +988,6 @@ addOptionFromXMLNode (CCSPlugin * plugin, xmlNode * node)
 	setting->type = getOptionType (type);
 	setting->value = &setting->defaultValue;
 	setting->defaultValue.parent = setting;
-	free (name);
-	free (type);
 
 	switch (setting->type)
 	{
@@ -1068,6 +1050,43 @@ addOptionFromXMLNode (CCSPlugin * plugin, xmlNode * node)
 
 //	printSetting (setting);
 	plugin->settings = ccsSettingListAppend (plugin->settings, setting);
+}
+
+static void
+addOptionFromXMLNode (CCSPlugin * plugin, xmlNode * node)
+{
+	char *name;
+	char *type;
+	Bool screen;
+	int i;
+
+	if (!node)
+		return;
+
+	name = getStringFromPath (node->doc, node, "@name");
+	type = getStringFromPath (node->doc, node, "@type");
+	if (!name || !strlen (name) || !type || !strlen (type))
+	{
+		if (name)
+			free (name);
+		if (type)
+			free (type);
+		return;
+	}
+
+	screen = nodeExists (node, "ancestor::screen");
+
+	if (screen)
+	{
+		for (i = 0; i < plugin->context->numScreens; i++)
+			addOptionForPlugin (plugin, name, type, TRUE,
+								plugin->context->screens[i], node);
+	}
+	else
+		addOptionForPlugin (plugin, name, type, FALSE, 0, node);
+
+	free (name);
+	free (type);
 }
 
 static void
