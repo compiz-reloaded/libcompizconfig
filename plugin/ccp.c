@@ -710,8 +710,8 @@ ccpInitDisplay (CompPlugin  *p,
 	i = 0;
 	while (s)
 	{
-		i++;
 		screens[i] = s->screenNum;
+		i++;
 		s = s->next;
 	}
 	
