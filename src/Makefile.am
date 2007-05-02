@@ -5,7 +5,8 @@ INCLUDES =			     \
 	-I$(top_srcdir)/src \
 	-DPLUGINDIR=\"$(PLUGINDIR)\" \
 	-DMETADATADIR=\"$(METADATADIR)\" \
-	-DLIBDIR=\"$(libdir)\"
+	-DLIBDIR=\"$(libdir)\" \
+	-DGLOBALMETADATA=\"$(globalmetadata)\"
 
 
 libccs_la_SOURCES=main.c lists.c compiz.c config.c iniparser.c ini.c bindings.c filewatch.c
