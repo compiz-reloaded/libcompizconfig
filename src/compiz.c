@@ -1164,6 +1164,22 @@ addOptionForPlugin (CCSPlugin * plugin,
 		}
 		free (nodes);
 	}
+	else
+	{
+		/* if we have no set defaults, we have at least to set 
+		   the string defaults to empty strings */
+		switch (setting->type)
+		{
+			case TypeString:
+				setting->defaultValue.value.asString = strdup ("");
+				break;
+			case TypeMatch:
+				setting->defaultValue.value.asMatch = strdup ("");
+				break;
+			default:
+				break;
+		}
+	}
 
 //	printSetting (setting);
 	plugin->settings = ccsSettingListAppend (plugin->settings, setting);
