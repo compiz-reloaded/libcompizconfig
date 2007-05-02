@@ -90,6 +90,9 @@ fi
 PKG_CHECK_MODULES(LIBXML2, "libxml-2.0")
 AC_SUBST(LIBXML2_REQUIRES)
 
+globalmetadata=$datadir/ccs/global.xml
+AC_SUBST(globalmetadata)
+
 AC_CONFIG_FILES([
 libccs.pc
 Makefile
@@ -97,6 +100,7 @@ src/Makefile
 backend/Makefile
 plugin/Makefile
 include/Makefile
+metadata/Makefile
 po/Makefile.in
 ])
 

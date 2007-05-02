@@ -5,7 +5,8 @@ ALL_SUBDIRS = 	 \
     po           \
     src	         \
     backend      \
-    plugin
+    plugin       \
+    metadata
 
 SUBDIRS = $(ALL_SUBDIRS)
 

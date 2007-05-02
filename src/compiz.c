@@ -41,6 +41,8 @@
 
 #include "ccs-private.h"
 
+static xmlDoc * globalMetadata = NULL;
+
 static CCSSettingType
 getOptionType (char *name)
 {
@@ -77,7 +79,85 @@ getOptionType (char *name)
 }
 
 static char *
-getStringFromPath (xmlDoc * doc, xmlNode * base, char *path)
+getGenericNodePath(xmlNode * base)
+{
+	char *rv = NULL;
+	char *parent = NULL;
+	xmlChar *name = NULL;
+	xmlChar *type = NULL;
+	if (base->parent)
+		parent = getGenericNodePath(base->parent);
+	else
+		parent = strdup("");
+	
+	if (!parent)
+		return NULL;
+	
+	if (!base->name)
+		return strdup("");
+	
+	if (!xmlStrcmp(base->name, BAD_CAST "option"))
+	{
+		name = xmlGetProp (base, BAD_CAST "name");
+		if (!name)
+			return NULL;
+		if (!strlen((char *)name))
+		{
+			xmlFree (name);
+			return NULL;
+		}
+		type = xmlGetProp (base, BAD_CAST "type");
+		if (!type)
+		{
+			xmlFree (name);
+			return NULL;
+		}
+		if (!strlen((char *)type))
+		{
+			xmlFree (name);
+			xmlFree (type);
+			return NULL;
+		}
+		asprintf(&rv, "%s/option[@name = '%s' and @type = '%s']",parent,name,type);
+		xmlFree (name);
+		xmlFree (type);
+		free (parent);
+		return rv;	
+	}
+	else if (!xmlStrcmp(base->name, BAD_CAST "plugin"))
+	{
+		name = xmlGetProp (base, BAD_CAST "name");
+		if (!name)
+			return NULL;
+		if (!strlen((char *)name))
+		{
+			xmlFree (name);
+			return NULL;
+		}
+		asprintf(&rv, "%s/plugin[@name = '%s']",parent,name);
+		xmlFree (name);
+		free (parent);
+		return rv;	
+	}
+	else if (!xmlStrcmp(base->name, BAD_CAST "group") ||
+			!xmlStrcmp(base->name, BAD_CAST "subgroup"))
+	{
+		return parent;	
+	}
+	else if (!xmlStrcmp(base->name, BAD_CAST "screen") ||
+			!xmlStrcmp(base->name, BAD_CAST "display"))
+	{
+		asprintf(&rv, "%s/%s/",parent,base->name);
+		free (parent);
+		return rv;
+	}
+	asprintf(&rv, "%s/%s",parent,base->name);
+	free (parent);
+	return rv;
+}
+
+static char *
+getStringFromXPath (xmlDoc * doc, xmlNode * base, char *path)
 {
 	xmlXPathObjectPtr xpathObj;
 	xmlXPathContextPtr xpathCtx;
@@ -103,7 +183,7 @@ getStringFromPath (xmlDoc * doc, xmlNode * base, char *path)
 }
 
 static xmlNode **
-getNodesFromPath (xmlDoc * doc, xmlNode * base, char *path, int *num)
+getNodesFromXPath (xmlDoc * doc, xmlNode * base, char *path, int *num)
 {
 	xmlXPathObjectPtr xpathObj;
 	xmlXPathContextPtr xpathCtx;
@@ -140,6 +220,43 @@ getNodesFromPath (xmlDoc * doc, xmlNode * base, char *path, int *num)
 
 	xmlXPathFreeObject (xpathObj);
 	xmlXPathFreeContext (xpathCtx);
+	return rv;
+}
+
+static char *
+getStringFromPath (xmlDoc * doc, xmlNode * base, char *path)
+{
+	char *rv = getStringFromXPath(doc, base, path);
+	if (!rv && globalMetadata && base)
+	{
+		char *gPath;
+		char *bPath = getGenericNodePath(base);
+		if (!bPath)
+			return NULL;
+		asprintf(&gPath,"%s/%s", bPath, path);
+		rv = getStringFromXPath(globalMetadata, NULL, gPath);
+		free (bPath);
+		free (gPath);
+	}
+	return rv;
+}
+
+static xmlNode **
+getNodesFromPath (xmlDoc * doc, xmlNode * base, char *path, int *num)
+{
+	
+	xmlNode **rv = getNodesFromXPath(doc, base, path, num);
+	if (!*num && globalMetadata && base)
+	{
+		char *gPath;
+		char *bPath = getGenericNodePath(base);
+		if (!bPath)
+			return NULL;
+		asprintf(&gPath,"%s/%s", bPath, path);
+		rv = getNodesFromXPath(globalMetadata, NULL, gPath, num);
+		free (bPath);
+		free (gPath);
+	}
 	return rv;
 }
 
@@ -1369,6 +1486,24 @@ addPluginNamed (CCSContext * context, char *name)
 	if (!strcmp(name,"ini") || !strcmp(name,"gconf") || !strcmp(name,"ccp"))
 	    return;
 
+	if (globalMetadata)
+	{
+		xmlNode **nodes;
+		int num, i;
+		char *path;
+		asprintf(&path, "/compiz/plugin[@name = '%s']", name);
+
+		nodes = getNodesFromPath (globalMetadata, NULL, path, &num);
+		free (path);
+		if (num)
+		{
+			for (i = 0; i < num; i++)
+				addPluginFromXMLNode (context, nodes[i]);
+			free (nodes);
+			return;
+		}
+	}
+	
 	NEW (CCSPlugin, plugin);
 
 	plugin->context = context;
@@ -1439,6 +1574,14 @@ loadPluginsFromName (CCSContext * context, char *path)
 void
 ccsLoadPlugins (CCSContext * context)
 {
+	FILE *fp;
+	fp = fopen (GLOBALMETADATA, "r");
+	if (fp)
+	{
+		fclose (fp);
+		globalMetadata = xmlReadFile (GLOBALMETADATA, NULL, 0);
+	}
+	
 	char *home = getenv ("HOME");
 	if (home && strlen (home))
 	{
@@ -1457,5 +1600,6 @@ ccsLoadPlugins (CCSContext * context)
 		free (homeplugins);
 	}
 	loadPluginsFromName (context, PLUGINDIR);
-
+	if (globalMetadata)
+		xmlFreeDoc (globalMetadata);
 }
