@@ -828,8 +828,6 @@ ccpGetVersion (CompPlugin *plugin,
 
 CompPluginVTable ccpVTable = {
     "ccp",
-    "CCPlugin",
-    "Compiz configuration system plugin",
     ccpGetVersion,
     0,
     ccpInit,
