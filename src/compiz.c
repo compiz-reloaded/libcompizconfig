@@ -1,8 +1,8 @@
 /*
  * Compiz configuration system library
- * 
+ *
  * Copyright (C) 2007  Dennis Kasprzyk <onestone@beryl-project.org>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -89,13 +89,13 @@ getGenericNodePath(xmlNode * base)
 		parent = getGenericNodePath(base->parent);
 	else
 		parent = strdup("");
-	
+
 	if (!parent)
 		return NULL;
-	
+
 	if (!base->name)
 		return strdup("");
-	
+
 	if (!xmlStrcmp(base->name, BAD_CAST "option"))
 	{
 		name = xmlGetProp (base, BAD_CAST "name");
@@ -122,7 +122,7 @@ getGenericNodePath(xmlNode * base)
 		xmlFree (name);
 		xmlFree (type);
 		free (parent);
-		return rv;	
+		return rv;
 	}
 	else if (!xmlStrcmp(base->name, BAD_CAST "plugin"))
 	{
@@ -137,12 +137,12 @@ getGenericNodePath(xmlNode * base)
 		asprintf(&rv, "%s/plugin[@name = '%s']",parent,name);
 		xmlFree (name);
 		free (parent);
-		return rv;	
+		return rv;
 	}
 	else if (!xmlStrcmp(base->name, BAD_CAST "group") ||
 			!xmlStrcmp(base->name, BAD_CAST "subgroup"))
 	{
-		return parent;	
+		return parent;
 	}
 	else if (!xmlStrcmp(base->name, BAD_CAST "screen") ||
 			!xmlStrcmp(base->name, BAD_CAST "display"))
@@ -244,7 +244,7 @@ getStringFromPath (xmlDoc * doc, xmlNode * base, char *path)
 static xmlNode **
 getNodesFromPath (xmlDoc * doc, xmlNode * base, char *path, int *num)
 {
-	
+
 	xmlNode **rv = getNodesFromXPath(doc, base, path, num);
 	if (!*num && globalMetadata && base)
 	{
@@ -726,11 +726,11 @@ initFloatInfo (CCSSettingInfo * i, xmlNode * node)
 {
 	char *value;
 	char *loc;
-	
+
 	i->forFloat.min = MINSHORT;
 	i->forFloat.max = MAXSHORT;
 	i->forFloat.precision = 0.1f;
-	
+
 	loc = setlocale(LC_NUMERIC, NULL);
 	setlocale (LC_NUMERIC, "C");
 	value = getStringFromPath (node->doc, node, "min/child::text()");
@@ -1077,13 +1077,13 @@ addOptionForPlugin (CCSPlugin * plugin,
 {
 	xmlNode **nodes;
 	int num;
-	
+
 	if (ccsFindSetting (plugin, name, isScreen, screen))
 	{
 		fprintf (stderr, "[ERROR]: Option \"%s\" already defined\n", name);
 		return;
 	}
-	
+
 	NEW (CCSSetting, setting);
 
 	setting->parent = plugin;
@@ -1166,7 +1166,7 @@ addOptionForPlugin (CCSPlugin * plugin,
 	}
 	else
 	{
-		/* if we have no set defaults, we have at least to set 
+		/* if we have no set defaults, we have at least to set
 		   the string defaults to empty strings */
 		switch (setting->type)
 		{
@@ -1198,7 +1198,8 @@ addOptionFromXMLNode (CCSPlugin * plugin, xmlNode * node)
 
 	name = getStringFromPath (node->doc, node, "@name");
 	type = getStringFromPath (node->doc, node, "@type");
-	if (!name || !strlen (name) || !type || !strlen (type))
+	if (!name || !strlen (name) || !type || !strlen (type) ||
+	    (!strcmp(plugin->name, "core") && !strcmp(name, "active_plugins")))
 	{
 		if (name)
 			free (name);
@@ -1319,12 +1320,18 @@ addPluginFromXMLNode (CCSContext * context, xmlNode * node)
 	}
 
 	if (ccsFindPlugin (context, name))
+    {
+		free (name);
 		return;
+    }
 
 	if (!strcmp(name,"ini") || !strcmp(name,"gconf") || !strcmp(name,"ccp"))
+	{
+		free (name);
 	    return;
+	}
 
-	
+
 	NEW (CCSPlugin, plugin);
 
 	plugin->context = context;
@@ -1340,7 +1347,6 @@ addPluginFromXMLNode (CCSContext * context, xmlNode * node)
 	plugin->category = stringFromNodeDef (node, "category/child::text()", "");
 
 	printf ("Adding plugin %s (%s)\n", name, plugin->shortDesc);
-//TODO: Rules and features
 
 	initOptionsFromRootNode (plugin, node);
 
@@ -1519,7 +1525,7 @@ addPluginNamed (CCSContext * context, char *name)
 			return;
 		}
 	}
-	
+
 	NEW (CCSPlugin, plugin);
 
 	plugin->context = context;
@@ -1597,7 +1603,7 @@ ccsLoadPlugins (CCSContext * context)
 		fclose (fp);
 		globalMetadata = xmlReadFile (GLOBALMETADATA, NULL, 0);
 	}
-	
+
 	char *home = getenv ("HOME");
 	if (home && strlen (home))
 	{
