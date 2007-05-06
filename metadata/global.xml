@@ -61,6 +61,57 @@
 	<rule type="require">cube</rule>
     </plugin>
 	<!-- scale metadata -->
+	<plugin name="scale">
+	<category>Window Management</category>
+	</plugin>
+	<!-- png metadata -->
+	<plugin name="png">
+	<category>Image Loading</category>
+	</plugin>
+	<!-- annotate metadata -->
+	<plugin name="annotate">
+	<category>Extras</category>
+	</plugin>
+	<!-- dbus metadata -->
+	<plugin name="dbus">
+	<category>Extras</category>
+	</plugin>
+	<!-- screenshot metadata -->
+	<plugin name="screenshot">
+	<category>Extras</category>
+	</plugin>
+	<!-- place metadata -->
+	<plugin name="place">
+	<category>Window Management</category>
+	</plugin>
+	<!-- move metadata -->
+	<plugin name="move">
+	<category>Window Management</category>
+	</plugin>
+	<!-- resize metadata -->
+	<plugin name="resize">
+	<category>Window Management</category>
+	</plugin>
+	<!-- switcher metadata -->
+	<plugin name="switcher">
+	<category>Window Management</category>
+	</plugin>
+	<!-- clone metadata -->
+	<plugin name="clone">
+	<category>Desktop</category>
+	</plugin>
+	<!-- Svg metadata -->
+	<plugin name="svg">
+	<category>Image Loading</category>
+	</plugin>
+	<!-- fuse metadata -->
+	<plugin name="fs">
+	<category>Extras</category>
+	</plugin>
+	<!-- regex metadata -->
+	<plugin name="regex">
+	<category>Extras</category>
+	</plugin>
 	<!-- video metadata -->
     <plugin name="video">
 	<short>Video Playback</short>
