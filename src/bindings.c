@@ -271,7 +271,7 @@ ccsStringToColor (const char          *value,
 {
     int c[4];
 
-    if (sscanf (value, "#%2x%2x%2x%2x", &c[0], &c[1], &c[2], &c[3]) == 4)
+    if (sscanf (value, "%2x%2x%2x%2x", &c[0], &c[1], &c[2], &c[3]) == 4)
     {
 	color->color.red   = c[0] << 8 | c[0];
 	color->color.green = c[1] << 8 | c[1];
@@ -289,9 +289,9 @@ ccsColorToString (CCSSettingColorValue *color)
 {
     char tmp[256];
 
-    snprintf (tmp, 256, "#%.2x%.2x%.2x%.2x",
-	      color->color.red, color->color.green,
-	      color->color.blue, color->color.alpha);
+    snprintf (tmp, 256, "%.2x%.2x%.2x%.2x",
+	      color->color.red>>8, color->color.green>>8,
+	      color->color.blue>>8, color->color.alpha>>8);
 
     return strdup (tmp);
 }
