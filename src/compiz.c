@@ -1352,6 +1352,7 @@ addPluginFromXMLNode (CCSContext * context, xmlNode * node)
 
 	if (!ccsFindSetting (plugin, "____plugin_enabled", FALSE, 0))
 	{
+		char *def = NULL;
 		NEW (CCSSetting, setting);
 
 		setting->parent = plugin;
@@ -1365,8 +1366,10 @@ addPluginFromXMLNode (CCSContext * context, xmlNode * node)
 		setting->subGroup = strdup ("");
 		setting->type = TypeBool;
 		setting->defaultValue.parent = setting;
-		setting->defaultValue.value.asBool = FALSE;
-
+		def = stringFromNodeDef (node, "autoenable/child::text()", "false");
+		setting->defaultValue.value.asBool = (strcmp(def,"true"))? FALSE : TRUE;
+		free (def);
+		
 		setting->value = &setting->defaultValue;
 
 		plugin->settings = ccsSettingListAppend (plugin->settings, setting);
