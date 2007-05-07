@@ -698,7 +698,7 @@ dictionary * iniparser_new(char *ininame)
                 iniparser_add_entry(d, sec, NULL, NULL);
             } else if (sscanf (where, "%[^=] = \"%[^\"]\"", key, val) == 2
                    ||  sscanf (where, "%[^=] = '%[^\']'",   key, val) == 2
-                   ||  sscanf (where, "%[^=] = %s",     key, val) == 2) {
+                   ||  sscanf (where, "%[^=] = %[^\n]",     key, val) == 2) {
                 strcpy(key, strlwc(strcrop(key)));
                 /*
                  * sscanf cannot handle "" or '' as empty value,
