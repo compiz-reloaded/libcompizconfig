@@ -25,7 +25,7 @@
     <plugin name="fade">
 	<short>Fading Windows</short>
 	<long>Fade in windows when mapped and fade out windows when unmapped</long>
-	<category>Window Management</category>
+	<category>Effects</category>
 	<rule type="before">cube</rule>
 	<rule type="before">scale</rule>
     </plugin>
@@ -39,7 +39,7 @@
     <plugin name="minimize">
 	<short>Minimize Effect</short>
 	<long>Transform windows when they are minimized and unminimized</long>
-	<category>Window Management</category>
+	<category>Effects</category>
 	<rule type="before">cube</rule>
 	<rule type="before">scale</rule>
     </plugin>
@@ -128,6 +128,9 @@
 	<rule type="before">video</rule>
     </plugin>
 	<!-- winrules metadata -->
+	<plugin name="winrules">
+		<category>Window Management</category>
+	</plugin>
 	<!-- wobbly metadata -->
     <plugin name="wobbly">
 	<short>Wobbly Windows</short>
