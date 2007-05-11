@@ -456,11 +456,13 @@ Bool ccsPluginSetActive(CCSPlugin *plugin, Bool value);
 /* functions parsing/creating an action string -
    the returned strings must be free'd after usage! */
 
+char * ccsModifiersToString (unsigned int modMask);
 char * ccsKeyBindingToString (CCSSettingActionValue *action);
 char * ccsButtonBindingToString (CCSSettingActionValue *action);
 char * ccsEdgeToString (CCSSettingActionValue *action);
 char * ccsColorToString (CCSSettingColorValue *color);
 
+unsigned int ccsStringToModifiers (const char *binding);
 Bool ccsStringToKeyBinding (const char *binding, CCSSettingActionValue *action);
 Bool ccsStringToButtonBinding (const char *binding, CCSSettingActionValue *action);
 void ccsStringToEdge (const char *edge, CCSSettingActionValue *action);
