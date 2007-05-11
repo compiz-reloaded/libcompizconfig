@@ -111,8 +111,8 @@ stringAppend (char *s,
     return s;
 }
 
-static char *
-modifiersToString (unsigned int modMask)
+char *
+ccsModifiersToString (unsigned int modMask)
 {
     char *binding = NULL;
     int  i;
@@ -131,7 +131,7 @@ ccsKeyBindingToString (CCSSettingActionValue *action)
 {
     char *binding;
 
-    binding = modifiersToString (action->keyModMask);
+    binding = ccsModifiersToString (action->keyModMask);
 
     if (action->keysym != NoSymbol)
     {
@@ -154,7 +154,7 @@ ccsButtonBindingToString (CCSSettingActionValue *action)
     char *binding;
     char buttonStr[256];
 
-    binding = modifiersToString (action->buttonModMask);
+    binding = ccsModifiersToString (action->buttonModMask);
 
     snprintf (buttonStr, 256, "Button%d", action->button);
     binding = stringAppend (binding, buttonStr);
@@ -162,8 +162,8 @@ ccsButtonBindingToString (CCSSettingActionValue *action)
     return binding;
 }
 
-static unsigned int
-stringToModifiers (const char *binding)
+unsigned int
+ccsStringToModifiers (const char *binding)
 {
     unsigned int mods = 0;
     int		 i;
@@ -185,7 +185,7 @@ ccsStringToKeyBinding (const char           *binding,
     unsigned int  mods;
     KeySym	  keysym;
 
-    mods = stringToModifiers (binding);
+    mods = ccsStringToModifiers (binding);
 
     ptr = strrchr (binding, '>');
     if (ptr)
@@ -213,7 +213,7 @@ ccsStringToButtonBinding (const char           *binding,
     char	 *ptr;
     unsigned int mods;
 
-    mods = stringToModifiers (binding);
+    mods = ccsStringToModifiers (binding);
 
     ptr = strrchr (binding, '>');
     if (ptr)
