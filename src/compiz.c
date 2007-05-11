@@ -1541,7 +1541,7 @@ addPluginNamed (CCSContext * context, char *name)
 	if (!plugin->longDesc)
 		plugin->longDesc = strdup (name);
 
-	if (plugin->category)
+	if (!plugin->category)
 		plugin->category = strdup ("");
 
 	NEW (CCSSetting, setting);
