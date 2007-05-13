@@ -145,10 +145,7 @@ CCS##type##List ccs##type##ListRemove (CCS##type##List list, dtype *data, Bool f
 		    ccsFree##type (l->data); \
 		free (l); \
 	} \
-	if (prev) \
-	    return prev; \
-	else \
-	    return list; \
+	return list; \
 } \
 \
 CCS##type##List ccs##type##ListFree (CCS##type##List list, Bool freeObj) \
