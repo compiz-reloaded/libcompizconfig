@@ -459,13 +459,13 @@ Bool ccsPluginSetActive(CCSPlugin *plugin, Bool value);
 char * ccsModifiersToString (unsigned int modMask);
 char * ccsKeyBindingToString (CCSSettingActionValue *action);
 char * ccsButtonBindingToString (CCSSettingActionValue *action);
-char * ccsEdgeToString (CCSSettingActionValue *action);
+CCSStringList ccsEdgesToStringList (CCSSettingActionValue *action);
 char * ccsColorToString (CCSSettingColorValue *color);
 
 unsigned int ccsStringToModifiers (const char *binding);
 Bool ccsStringToKeyBinding (const char *binding, CCSSettingActionValue *action);
 Bool ccsStringToButtonBinding (const char *binding, CCSSettingActionValue *action);
-void ccsStringToEdge (const char *edge, CCSSettingActionValue *action);
+void ccsStringListToEdges (CCSStringList edges, CCSSettingActionValue *action);
 Bool ccsStringToColor (const char *value, CCSSettingColorValue *color);
 
 void ccsProcessEvents(CCSContext *context);

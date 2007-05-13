@@ -238,30 +238,35 @@ ccsStringToButtonBinding (const char           *binding,
     return FALSE;
 }
 
-char *
-ccsEdgeToString (CCSSettingActionValue *action)
+CCSStringList
+ccsEdgesToStringList (CCSSettingActionValue *action)
 {
+    CCSStringList ret = NULL;
     int i;
 
     for (i = 0; i < N_EDGES; i++)
 	if (action->edgeMask & (1 << i))
-	    return strdup(edgeName[i]);
+	    ret = ccsStringListAppend(ret, strdup(edgeName[i]));
 
-    return NULL;
+    return ret;
 }
 
 void
-ccsStringToEdge (const char           *edge, 
-		CCSSettingActionValue *action)
+ccsStringListToEdges (CCSStringList         edges, 
+		      CCSSettingActionValue *action)
 {
     int i;
+    CCSStringList l;
 
     action->edgeMask = 0;
 
-    for (i = 0; i < N_EDGES; i++)
+    for (l = edges; l; l = l->next)
     {
-	if (strcmp(edge, edgeName[i]) == 0)
-	    action->edgeMask |= (1 << i);
+        for (i = 0; i < N_EDGES; i++)
+        {
+	    if (strcmp(l->data, edgeName[i]) == 0)
+	        action->edgeMask |= (1 << i);
+        }
     }
 }
 
