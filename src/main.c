@@ -129,7 +129,7 @@ ccsFindSetting (CCSPlugin * plugin, char *name,
 	{
 		if (!strcmp (l->data->name, name) && 
 		    ((!l->data->isScreen && !isScreen) || (l->data->isScreen && isScreen)) &&
-		    l->data->screenNum == screenNum)
+		    (!isScreen || (l->data->screenNum == screenNum)))
 			return l->data;
 		l = l->next;
 	}
