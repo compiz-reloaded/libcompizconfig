@@ -127,8 +127,9 @@ ccsFindSetting (CCSPlugin * plugin, char *name,
 	CCSSettingList l = plugin->settings;
 	while (l)
 	{
-		if (!strcmp (l->data->name, name) && l->data->isScreen == isScreen &&
-			l->data->screenNum == screenNum)
+		if (!strcmp (l->data->name, name) && 
+		    ((!l->data->isScreen && !isScreen) || (l->data->isScreen && isScreen)) &&
+		    l->data->screenNum == screenNum)
 			return l->data;
 		l = l->next;
 	}
