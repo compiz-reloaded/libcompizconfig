@@ -118,8 +118,9 @@ static char *writeActionString (CCSSettingActionValue * action)
 {
 	char *keyBinding;
 	char *buttonBinding;
-	char *edge;
 	char *actionString = NULL;
+	char edgeString[500];
+	CCSStringList edgeList, l;
 
 	keyBinding = ccsKeyBindingToString (action);
 	if (!keyBinding)
@@ -129,17 +130,23 @@ static char *writeActionString (CCSSettingActionValue * action)
 	if (!buttonBinding)
 		buttonBinding = strdup("");
 
-	edge = ccsEdgeToString (action);
-	if (!edge)
-		edge = strdup("");
+	edgeList = ccsEdgesToStringList (action);
+	memset (edgeString, 0, sizeof (edgeString)); 
+	for (l = edgeList; l; l = l->next)
+	{
+		strncat (edgeString, l->data, 500);
+		if (l->next)
+			strncat (edgeString, "|", 500);
+	}
+	if (edgeList)
+		ccsStringListFree (edgeList, TRUE);
 
 	asprintf (&actionString, "%s,%s,%s,%d,%s", keyBinding,
-			  buttonBinding, edge, action->edgeButton,
+			  buttonBinding, edgeString, action->edgeButton,
 			  action->onBell ? "true" : "false");
 
 	free (keyBinding);
 	free (buttonBinding);
-	free (edge);
 
 	return actionString;
 }
@@ -148,7 +155,8 @@ static Bool parseActionString (const char* string,
 							   CCSSettingActionValue *value)
 {
 	char *valueString, *valueStart;
-	char *token;
+	char *token, *edgeToken;
+	CCSStringList edgeList = NULL;
 
 	memset (value, 0, sizeof(CCSSettingActionValue));
 	valueString = strdup (string);
@@ -182,7 +190,16 @@ static Bool parseActionString (const char* string,
 	}
 
 	/* edge binding */
-	ccsStringToEdge (token, value);
+	edgeToken = strsep (&token, "|");
+	while (edgeToken)
+	{
+		if (strlen (edgeToken))
+			edgeList = ccsStringListAppend (edgeList, strdup(edgeToken));
+		edgeToken = strsep (&token, "|");
+	}
+	ccsStringListToEdges (edgeList, value);
+	if (edgeList)
+		ccsStringListFree (edgeList, TRUE);
 
 	token = strsep (&valueString, ",");
 	if (!token)
@@ -190,7 +207,7 @@ static Bool parseActionString (const char* string,
 		free (valueStart);
 		return FALSE;
 	}
-
+	
 	/* edge button */
 	value->edgeButton = strtoul (token, NULL, 10);
 

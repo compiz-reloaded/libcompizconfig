@@ -959,10 +959,14 @@ printSetting (CCSSetting * s)
 		}
 		if (s->info.forAction.edge)
 		{
-			val = ccsEdgeToString (&s->value->value.asAction);
-			printf ("    Edge    : %s\n", val);
-			if (val)
-				free (val);
+			CCSStringList list, l;
+			list = ccsEdgesToStringList (&s->value->value.asAction);
+			printf ("    Edge    : ");
+			for (l = list; l; l = l->next);
+				printf ("%s ", l->data);
+			printf("\n");
+			if (list)
+				ccsStringListFree (list, TRUE);
 		}
 		if (s->info.forAction.bell)
 			printf ("    Bell    : %s\n",
