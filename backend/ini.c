@@ -174,6 +174,9 @@ static Bool finiBackend(CCSContext * context)
 	if (data->iniFile)
 		ccsIniClose (data->iniFile);
 
+	if (data->iniWatchId)
+		ccsRemoveFileWatch (data->iniWatchId);
+
 	if (data->lastProfile)
 		free (data->lastProfile);
 
