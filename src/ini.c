@@ -336,7 +336,7 @@ Bool ccsIniGetList (IniDictionary * dictionary,
 	CCSSettingValueList list = NULL;
 	char *valueString, *valueStart, *valString;
 	char *token;
-	int nItems = 0, i = 0;
+	int nItems = 1, i = 0;
 
 	valString = getIniString (dictionary, section, entry);
 	if (!valString)
@@ -345,13 +345,12 @@ Bool ccsIniGetList (IniDictionary * dictionary,
 	valueString = strdup (valString);
 	valueStart = valueString;
 
-	token = strsep (&valueString, ";");
+	token = strchr (valueString, ';');
 	while (token)
 	{
-		token = strsep (&valueString, ";");
+		token = strchr (token + 1, ';');
 		nItems++;
 	}
-	valueString = valueStart;
 
 	token = strsep (&valueString, ";");
 
