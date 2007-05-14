@@ -565,8 +565,8 @@ static Bool deleteProfile(char * profile)
 
 static CCSBackendVTable iniVTable = {
     "ini",
-    "INI Configuration Backend",
-    "INI Configuration Backend for libccs",
+    "Flat-file Configuration Backend",
+    "Flat file Configuration Backend for libccs",
     FALSE,
     TRUE,
 	NULL,
