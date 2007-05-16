@@ -1,64 +1,35 @@
 <compiz>
 	<!-- blur metadata -->
     <plugin name="blur">
-	<feature>blur</feature>
 	<category>Effects</category>
-	<rule type="before">video</rule>
-	</plugin>
+    </plugin>
 	<!-- decoration metadata -->
     <plugin name="decoration">
-	<feature>decorations</feature>
 	<category>Effects</category>
-	<rule type="before">wobbly</rule>
-	<rule type="before">fade</rule>
-	<rule type="before">cube</rule>
-	<rule type="before">scale</rule>
-	</plugin>
+    </plugin>
 	<!-- cube metadata -->
     <plugin name="cube">
-	<feature>largedesktop</feature>
 	<category>Desktop</category>
-	<rule type="before">scale</rule>
-	<rule type="before">switcher</rule>
-	</plugin>
+    </plugin>
 	<!-- fade metadata -->
     <plugin name="fade">
-	<short>Fading Windows</short>
-	<long>Fade in windows when mapped and fade out windows when unmapped</long>
 	<category>Effects</category>
-	<rule type="before">cube</rule>
-	<rule type="before">scale</rule>
     </plugin>
 	<!-- inotify metadata -->
     <plugin name="inotify">
-	<short>Inotify</short>
-	<long>File change notification plugin</long>
 	<category>Extras</category>
     </plugin>
 	<!-- minimize metadata -->
     <plugin name="minimize">
-	<short>Minimize Effect</short>
-	<long>Transform windows when they are minimized and unminimized</long>
 	<category>Effects</category>
-	<rule type="before">cube</rule>
-	<rule type="before">scale</rule>
     </plugin>
 	<!-- plane metadata -->
     <plugin name="plane">
-	<short>Desktop Plane</short>
-	<long>Place windows on a plane</long>
 	<category>Desktop</category>
-	<feature>largedesktop</feature>
-	<rule type="before">scale</rule>
-	<rule type="before">switcher</rule>
     </plugin>
 	<!-- rotate metadata -->
     <plugin name="rotate">
-	<short>Rotate Cube</short>
-	<long>Rotate desktop cube</long>
 	<category>Desktop</category>
-	<rule type="after">cube</rule>
-	<rule type="require">cube</rule>
     </plugin>
 	<!-- scale metadata -->
 	<plugin name="scale">
@@ -114,18 +85,11 @@
 	</plugin>
 	<!-- video metadata -->
     <plugin name="video">
-	<short>Video Playback</short>
-	<long>Video playback</long>
 	<category>Extras</category>
-	<feature>video</feature>
     </plugin>
 	<!-- water metadata -->
     <plugin name="water">
-	<short>Water Effect</short>
-	<long>Adds water effects to different desktop actions</long>
 	<category>Effects</category>
-	<rule type="before">blur</rule>
-	<rule type="before">video</rule>
     </plugin>
 	<!-- winrules metadata -->
 	<plugin name="winrules">
@@ -133,12 +97,7 @@
 	</plugin>
 	<!-- wobbly metadata -->
     <plugin name="wobbly">
-	<short>Wobbly Windows</short>
-	<long>Use spring model for wobbly window effect</long>
 	<category>Effects</category>
-	<rule type="before">fade</rule>
-	<rule type="before">cube</rule>
-	<rule type="before">scale</rule>
     </plugin>
 	<!-- zoom metadata -->
     <plugin name="zoom">
