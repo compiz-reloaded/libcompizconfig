@@ -181,6 +181,8 @@ struct _CCSPlugin
 	CCSStringList		loadAfter;
 	CCSStringList		loadBefore;
 	CCSStringList		requiresPlugin;
+	CCSStringList		conflictPlugin;
+	CCSStringList		conflictFeature;
 	CCSStringList		providesFeature;
 	CCSStringList		requiresFeature;
 	CCSSettingList		settings;
@@ -219,7 +221,8 @@ typedef enum _CCSPluginConflictType
     // produced on plugin activation
     ConflictRequiresPlugin,
     ConflictRequiresFeature,
-    ConflictSameFeature,
+    ConflictFeature,
+	ConflictPlugin,
     // produced on plugin deactivation
     ConflictFeatureNeeded,
     ConflictPluginNeeded,

@@ -245,6 +245,8 @@ ccsFreePlugin (CCSPlugin * p)
 	ccsStringListFree (p->loadAfter, TRUE);
 	ccsStringListFree (p->loadBefore, TRUE);
 	ccsStringListFree (p->requiresPlugin, TRUE);
+	ccsStringListFree (p->conflictPlugin, TRUE);
+	ccsStringListFree (p->conflictFeature, TRUE);
 	ccsStringListFree (p->providesFeature, TRUE);
 	ccsStringListFree (p->requiresFeature, TRUE);
 	ccsSettingListFree (p->settings, TRUE);
@@ -1493,7 +1495,7 @@ ccsCanEnablePlugin (CCSContext * context, CCSPlugin * plugin)
 						{
 							conflict = calloc (1, sizeof (CCSPluginConflict));
 							conflict->value = strdup (sl->data);
-							conflict->type = ConflictSameFeature;
+							conflict->type = ConflictFeature;
 						}
 
 						conflict->plugins =
@@ -1508,6 +1510,60 @@ ccsCanEnablePlugin (CCSContext * context, CCSPlugin * plugin)
 		if (conflict)
 			list = ccsPluginConflictListAppend (list, conflict);
 
+		sl = sl->next;
+	}
+
+	/* look if another plugin provides a conflicting feature*/
+	sl = plugin->conflictFeature;
+	while (sl)
+	{
+		pl = context->plugins;
+		CCSPluginConflict *conflict = NULL;
+		while (pl)
+		{
+			if (ccsPluginIsActive (context, pl->data->name))
+			{
+				CCSStringList featureList = pl->data->providesFeature;
+				while (featureList)
+				{
+					if (strcmp (sl->data, featureList->data) == 0)
+					{
+						if (!conflict)
+						{
+							conflict = calloc (1, sizeof (CCSPluginConflict));
+							conflict->value = strdup (sl->data);
+							conflict->type = ConflictFeature;
+						}
+
+						conflict->plugins =
+							ccsPluginListAppend (conflict->plugins, pl->data);
+					}
+					featureList = featureList->next;
+				}
+			}
+			pl = pl->next;
+		}
+
+		if (conflict)
+			list = ccsPluginConflictListAppend (list, conflict);
+
+		sl = sl->next;
+	}
+
+	/* look if the plugin to be loaded conflict with a loaded plugin  */
+	sl = plugin->conflictPlugin;
+	while (sl)
+	{
+		if (ccsPluginIsActive (context, sl->data))
+		{
+			NEW (CCSPluginConflict, conflict);
+			conflict->value = strdup (sl->data);
+			conflict->type = ConflictPlugin;
+			conflict->plugins =
+				ccsPluginListAppend (conflict->plugins,
+									ccsFindPlugin (context, sl->data));
+			list = ccsPluginConflictListAppend (list, conflict);
+		}
 		sl = sl->next;
 	}
 
