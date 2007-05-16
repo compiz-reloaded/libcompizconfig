@@ -520,6 +520,11 @@ ccpSetDisplayOption (CompDisplay     *d,
     status = (*d->setDisplayOption) (d, name, value);
     WRAP (cd, d, setDisplayOption, ccpSetDisplayOption);
 
+	if (status)
+	{
+		ccpSetContextFromOption (d, NULL, name, FALSE, 0);
+	}
+
     return status;
 }
 
@@ -537,6 +542,11 @@ ccpSetDisplayOptionForPlugin (CompDisplay     *d,
     status = (*d->setDisplayOptionForPlugin) (d, plugin, name, value);
     WRAP (cd, d, setDisplayOptionForPlugin, ccpSetDisplayOptionForPlugin);
 
+	if (status)
+	{
+		ccpSetContextFromOption (d, plugin, name, FALSE, 0);
+	}
+
     return status;
 }
 
@@ -552,6 +562,11 @@ ccpSetScreenOption (CompScreen      *s,
     UNWRAP (cs, s, setScreenOption);
     status = (*s->setScreenOption) (s, name, value);
     WRAP (cs, s, setScreenOption, ccpSetScreenOption);
+
+    if (status)
+	{
+		ccpSetContextFromOption (s->display, NULL, name, TRUE, s->screenNum);
+	}
 
     return status;
 }
