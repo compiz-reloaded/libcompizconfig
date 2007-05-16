@@ -172,7 +172,8 @@ CCSLIST(SettingValue,CCSSettingValue)
 CCSLIST(PluginConflict,CCSPluginConflict)
 CCSLIST(ActionConflict,CCSActionConflict)
 CCSLIST(BackendInfo,CCSBackendInfo)
-
+CCSLIST(IntDesc,CCSIntDesc)
+		
 CCSSettingValueList ccsGetValueListFromStringList(CCSStringList list,
 												CCSSetting *parent)
 {
