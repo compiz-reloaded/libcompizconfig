@@ -1307,22 +1307,59 @@ initRuleFromNode (CCSPlugin * plugin, xmlNode * node)
 }
 
 static void
-initFeatureFromNode (CCSPlugin * plugin, xmlNode * node)
+addStringsFromPath (CCSStringList * list, char * path, xmlNode * node)
 {
-	char *feature = stringFromNodeDef (node, "child::text()", NULL);
-	if (feature && strlen (feature))
-		plugin->providesFeature = ccsStringListAppend (plugin->providesFeature,
-													  feature);
-	if (feature && !strlen (feature))
-		free (feature);
+	xmlNode **nodes;
+	int num, i;
+	nodes = getNodesFromPath (node->doc, node, path, &num);
+	if (num)
+	{
+		for (i = 0; i < num; i++)
+		{
+			char *value = stringFromNodeDef (nodes[i], "child::text()", NULL);
+			if (value && strlen (value))
+				*list = ccsStringListAppend (*list, value);
+			if (value && !strlen (value))
+				free (value);
+		}
+		free (nodes);
+	}
 }
 
-
+static void
+printStringList(CCSStringList list)
+{
+	CCSStringList l = list;
+	while (l)
+	{
+		printf("%s, ",l->data);
+		l = l->next;
+	}
+	printf("\n");
+}
+		
 static void
 initRulesFromRootNode (CCSPlugin * plugin, xmlNode * node)
 {
 	xmlNode **nodes;
 	int num, i;
+
+	addStringsFromPath (&plugin->providesFeature, "feature", node);
+	
+	addStringsFromPath (&plugin->loadAfter,
+						"deps/relation[@type = 'after']/plugin", node);
+	addStringsFromPath (&plugin->loadBefore,
+						"deps/relation[@type = 'before']/plugin", node);
+	addStringsFromPath (&plugin->requiresPlugin,
+						"deps/requirement/plugin", node);
+	addStringsFromPath (&plugin->requiresFeature,
+						"deps/requirement/feature", node);
+	addStringsFromPath (&plugin->conflictPlugin,
+						"deps/conflict/plugin", node);
+	addStringsFromPath (&plugin->conflictFeature,
+						"deps/conflict/feature", node);
+
+	// Old system until all plugins get converted
 	nodes = getNodesFromPath (node->doc, node, "rule", &num);
 	if (num)
 	{
@@ -1330,13 +1367,7 @@ initRulesFromRootNode (CCSPlugin * plugin, xmlNode * node)
 			initRuleFromNode (plugin, nodes[i]);
 		free (nodes);
 	}
-	nodes = getNodesFromPath (node->doc, node, "feature", &num);
-	if (num)
-	{
-		for (i = 0; i < num; i++)
-			initFeatureFromNode (plugin, nodes[i]);
-		free (nodes);
-	}
+
 }
 
 static void
