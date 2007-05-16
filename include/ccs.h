@@ -66,7 +66,8 @@ typedef struct _CCSPluginCategory	CCSPluginCategory;
 typedef struct _CCSSettingValue		CCSSettingValue;
 typedef struct _CCSPluginConflict	CCSPluginConflict;
 typedef struct _CCSActionConflict	CCSActionConflict;
-typedef struct _CCSBackendInfo     CCSBackendInfo;
+typedef struct _CCSBackendInfo		CCSBackendInfo;
+typedef struct _CCSIntDesc			CCSIntDesc;
 
 CCSLIST_HDR(Plugin,CCSPlugin)
 CCSLIST_HDR(Setting,CCSSetting)
@@ -77,7 +78,8 @@ CCSLIST_HDR(SettingValue,CCSSettingValue)
 CCSLIST_HDR(PluginConflict,CCSPluginConflict)
 CCSLIST_HDR(ActionConflict,CCSActionConflict)
 CCSLIST_HDR(BackendInfo,CCSBackendInfo)
-	
+CCSLIST_HDR(IntDesc,CCSIntDesc)
+		
 struct _CCSContext
 {
 	CCSPluginList		plugins;
@@ -246,10 +248,17 @@ struct _CCSActionConflict
 
 union _CCSSettingInfo;
 
+struct _CCSIntDesc
+{
+	int		value;
+	char    *name;
+};
+
 typedef struct _CCSSettingIntInfo
 {
-	int		min;
-	int		max;
+	int				min;
+	int				max;
+	CCSIntDescList	desc;
 } CCSSettingIntInfo;
 
 typedef struct _CCSSettingFloatInfo
@@ -395,6 +404,7 @@ void ccsFreeSettingValue(CCSSettingValue *value);
 void ccsFreePluginConflict(CCSPluginConflict *value);
 void ccsFreeActionConflict(CCSActionConflict *value);
 void ccsFreeBackendInfo(CCSBackendInfo *value);
+void ccsFreeIntDesc(CCSIntDesc *value);
 #define ccsFreeString(val) free(val)
 
 Bool ccsSetInt(CCSSetting * setting, int data);

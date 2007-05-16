@@ -701,10 +701,13 @@ initListValue (CCSSettingValue * v, CCSSettingInfo * i, xmlNode * node)
 static void
 initIntInfo (CCSSettingInfo * i, xmlNode * node)
 {
+	xmlNode **nodes;
 	char *value;
+	int num, j;
 	i->forInt.min = MINSHORT;
 	i->forInt.max = MAXSHORT;
-
+	i->forInt.desc = NULL;
+	
 	value = getStringFromPath (node->doc, node, "min/child::text()");
 	if (value)
 	{
@@ -718,6 +721,35 @@ initIntInfo (CCSSettingInfo * i, xmlNode * node)
 		int val = strtol (value, NULL, 0);
 		i->forInt.max = val;
 		free (value);
+	}
+	nodes = getNodesFromPath (node->doc, node, "desc", &num);
+	if (num)
+	{
+		for (j = 0; j < num; j++)
+		{
+			value = getStringFromPath (node->doc, nodes[j],
+									   "value/child::text()");
+			if (value)
+			{
+				int val = strtol (value, NULL, 0);
+				free (value);
+				if (val >= i->forInt.min && val <= i->forInt.max)
+				{
+					value = stringFromNodeDefTrans (nodes[j],
+													"name/child::text()", NULL);
+					if (value)
+					{
+						NEW(CCSIntDesc, intDesc);
+						intDesc->name = strdup(value);
+						intDesc->value = val;
+						i->forInt.desc =
+								ccsIntDescListAppend (i->forInt.desc, intDesc);
+						free (value);
+					}
+				}
+			}
+		}
+		free (nodes);
 	}
 }
 
