@@ -266,6 +266,9 @@ ccsFreeSetting (CCSSetting * s)
 
 	switch (s->type)
 	{
+	case TypeInt:
+		ccsIntDescListFree(s->info.forInt.desc, TRUE);
+		break;
 	case TypeString:
 		ccsStringListFree (s->info.forString.allowedValues, TRUE);
 		break;
@@ -273,6 +276,9 @@ ccsFreeSetting (CCSSetting * s)
 		if (s->info.forList.listType == TypeString)
 			ccsStringListFree (s->info.forList.listInfo->
 							  forString.allowedValues, TRUE);
+		if (s->info.forList.listType == TypeInt)
+			ccsIntDescListFree (s->info.forList.listInfo->
+							  forInt.desc, TRUE);
 		free (s->info.forList.listInfo);
 		break;
 	default:
@@ -369,6 +375,15 @@ ccsFreeBackendInfo (CCSBackendInfo * b)
 		free (b->shortDesc);
 	if (b->longDesc)
 		free (b->longDesc);
+}
+
+void
+ccsFreeIntDesc (CCSIntDesc * i)
+{
+	if (!i)
+		return;
+	if (i->name)
+		free (i->name);
 }
 
 static void *
