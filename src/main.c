@@ -1134,7 +1134,7 @@ ccsGetSortedPluginStringList (CCSContext * context)
 		while (l)
 		{
 			p = findPluginInList (ap, l->data);
-			if (p)
+			if (p && !ccsPluginListFind(plugins[i].after, p))
 				plugins[i].after = ccsPluginListAppend (plugins[i].after, p);
 			l = l->next;
 		}
@@ -1149,7 +1149,7 @@ ccsGetSortedPluginStringList (CCSContext * context)
 				for (j = 0; j < len; j++)
 					if (p == plugins[j].plugin)
 						ph = &plugins[j];
-				if (ph)
+				if (ph && !ccsPluginListFind(ph->after, plugins[i].plugin))
 					ph->after = ccsPluginListAppend (ph->after,
 													plugins[i].plugin);
 			}
