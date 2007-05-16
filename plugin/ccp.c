@@ -14,6 +14,7 @@ typedef struct _CCPDisplay {
     int screenPrivateIndex;
 
 	CCSContext *context;
+	Bool applyingSettings;
 
     CompTimeoutHandle timeoutHandle;
 
@@ -520,7 +521,7 @@ ccpSetDisplayOption (CompDisplay     *d,
     status = (*d->setDisplayOption) (d, name, value);
     WRAP (cd, d, setDisplayOption, ccpSetDisplayOption);
 
-	if (status)
+	if (status && !cd->applyingSettings)
 	{
 		ccpSetContextFromOption (d, NULL, name, FALSE, 0);
 	}
@@ -542,7 +543,7 @@ ccpSetDisplayOptionForPlugin (CompDisplay     *d,
     status = (*d->setDisplayOptionForPlugin) (d, plugin, name, value);
     WRAP (cd, d, setDisplayOptionForPlugin, ccpSetDisplayOptionForPlugin);
 
-	if (status)
+	if (status && !cd->applyingSettings)
 	{
 		ccpSetContextFromOption (d, plugin, name, FALSE, 0);
 	}
@@ -565,7 +566,10 @@ ccpSetScreenOption (CompScreen      *s,
 
     if (status)
 	{
-		ccpSetContextFromOption (s->display, NULL, name, TRUE, s->screenNum);
+		CCP_DISPLAY (s->display);
+
+		if (!cd->applyingSettings)
+			ccpSetContextFromOption (s->display, NULL, name, TRUE, s->screenNum);
 	}
 
     return status;
@@ -587,7 +591,10 @@ ccpSetScreenOptionForPlugin (CompScreen      *s,
 
 	if (status)
     {
-		ccpSetContextFromOption (s->display, plugin,	name, TRUE, s->screenNum);
+		CCP_DISPLAY (s->display);
+
+		if (!cd->applyingSettings)
+			ccpSetContextFromOption (s->display, plugin,	name, TRUE, s->screenNum);
     }
 
     return status;
@@ -658,10 +665,12 @@ ccpTimeout (void *closure)
 
 	if (ccsSettingListLength(cd->context->changedSettings))
 	{
-	        CCSSettingList list = cd->context->changedSettings;
+		CCSSettingList list = cd->context->changedSettings;
 		CCSSettingList l = list;
 		cd->context->changedSettings = NULL;
 		CCSSetting *s;
+
+		cd->applyingSettings = TRUE;
 		while (l)
 		{
 			s = l->data;
@@ -670,13 +679,18 @@ ccpTimeout (void *closure)
 			printf("Setting Update \"%s\"\n",s->name);
 			l = l->next;
 		}
+		cd->applyingSettings = FALSE;
+
 		ccsSettingListFree(list, FALSE);
 		cd->context->changedSettings =
 			ccsSettingListFree(cd->context->changedSettings, FALSE);
 	}
+
 	if (cd->context->pluginsChanged)
 	{
+		cd->applyingSettings = TRUE;
 		ccpUpdatePluginList(d);
+		cd->applyingSettings = FALSE;
 		printf("Active Plugin List update\n");
 		cd->context->pluginsChanged = FALSE;
 	}
@@ -711,6 +725,8 @@ ccpInitDisplay (CompPlugin  *p,
     WRAP (cd, d, setDisplayOptionForPlugin, ccpSetDisplayOptionForPlugin);
 
     d->privates[displayPrivateIndex].ptr = cd;
+
+	cd->applyingSettings = FALSE;
 
 	s = d->screens;
 	i = 0;
