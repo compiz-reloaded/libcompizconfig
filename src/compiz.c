@@ -1274,39 +1274,6 @@ initOptionsFromRootNode (CCSPlugin * plugin, xmlNode * node)
 }
 
 static void
-initRuleFromNode (CCSPlugin * plugin, xmlNode * node)
-{
-	char *type = stringFromNodeDef (node, "@type", "");
-	char *rule = stringFromNodeDef (node, "child::text()", NULL);
-	if (!rule || !strlen (rule))
-	{
-		if (rule)
-			free (rule);
-		free (type);
-		return;
-	}
-	if (!strcmp (type, "before"))
-	{
-		plugin->loadBefore = ccsStringListAppend (plugin->loadBefore, rule);
-	}
-	else if (!strcmp (type, "after"))
-	{
-		plugin->loadAfter = ccsStringListAppend (plugin->loadAfter, rule);
-	}
-	else if (!strcmp (type, "require"))
-	{
-		plugin->requiresPlugin =
-			ccsStringListAppend (plugin->requiresPlugin, rule);
-	}
-	else if (!strcmp (type, "require_feature"))
-	{
-		plugin->requiresFeature =
-			ccsStringListAppend (plugin->requiresFeature, rule);
-	}
-	free (type);
-}
-
-static void
 addStringsFromPath (CCSStringList * list, char * path, xmlNode * node)
 {
 	xmlNode **nodes;
@@ -1325,25 +1292,10 @@ addStringsFromPath (CCSStringList * list, char * path, xmlNode * node)
 		free (nodes);
 	}
 }
-
-static void
-printStringList(CCSStringList list)
-{
-	CCSStringList l = list;
-	while (l)
-	{
-		printf("%s, ",l->data);
-		l = l->next;
-	}
-	printf("\n");
-}
 		
 static void
 initRulesFromRootNode (CCSPlugin * plugin, xmlNode * node)
 {
-	xmlNode **nodes;
-	int num, i;
-
 	addStringsFromPath (&plugin->providesFeature, "feature", node);
 	
 	addStringsFromPath (&plugin->loadAfter,
@@ -1358,16 +1310,6 @@ initRulesFromRootNode (CCSPlugin * plugin, xmlNode * node)
 						"deps/conflict/plugin", node);
 	addStringsFromPath (&plugin->conflictFeature,
 						"deps/conflict/feature", node);
-
-	// Old system until all plugins get converted
-	nodes = getNodesFromPath (node->doc, node, "rule", &num);
-	if (num)
-	{
-		for (i = 0; i < num; i++)
-			initRuleFromNode (plugin, nodes[i]);
-		free (nodes);
-	}
-
 }
 
 static void
