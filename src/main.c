@@ -1058,6 +1058,8 @@ ccsGetList (CCSSetting * setting, CCSSettingValueList * data)
 void
 ccsContextDestroy (CCSContext * context)
 {
+	if (!context)
+	    return;
 	if (context->backend)
 	{
 		if (context->backend->vTable->backendFini)
