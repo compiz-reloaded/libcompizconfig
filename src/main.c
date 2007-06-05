@@ -124,7 +124,11 @@ CCSSetting *
 ccsFindSetting (CCSPlugin * plugin, char *name,
 			   Bool isScreen, unsigned int screenNum)
 {
-	CCSSettingList l = plugin->settings;
+	PLUGIN_PRIV(plugin);
+	if (!pPrivate->loaded && strcmp(name,"____plugin_enabled"))
+		ccsLoadPluginSettings (plugin);
+	
+	CCSSettingList l = pPrivate->settings;
 	while (l)
 	{
 		if (!strcmp (l->data->name, name) && 
@@ -179,9 +183,9 @@ subGroupAdd (CCSSetting * setting, CCSGroup * group)
 }
 
 static void
-groupAdd (CCSSetting * setting, CCSPlugin * plugin)
+groupAdd (CCSSetting * setting, CCSPluginPrivate * p)
 {
-	CCSGroupList l = plugin->groups;
+	CCSGroupList l = p->groups;
 	while (l)
 	{
 		if (!strcmp (l->data->name, setting->group))
@@ -193,18 +197,18 @@ groupAdd (CCSSetting * setting, CCSPlugin * plugin)
 	}
 
 	NEW (CCSGroup, group);
-	plugin->groups = ccsGroupListAppend (plugin->groups, group);
+	p->groups = ccsGroupListAppend (p->groups, group);
 	group->name = strdup (setting->group);
 	subGroupAdd (setting, group);
 }
 
 void
-collateGroups (CCSPlugin * plugin)
+collateGroups (CCSPluginPrivate * p)
 {
-	CCSSettingList l = plugin->settings;
+	CCSSettingList l = p->settings;
 	while (l)
 	{
-		groupAdd (l->data, plugin);
+		groupAdd (l->data, p);
 		l = l->next;
 	}
 }
@@ -241,7 +245,6 @@ ccsFreePlugin (CCSPlugin * p)
 	free (p->longDesc);
 	free (p->hints);
 	free (p->category);
-	free (p->filename);
 	ccsStringListFree (p->loadAfter, TRUE);
 	ccsStringListFree (p->loadBefore, TRUE);
 	ccsStringListFree (p->requiresPlugin, TRUE);
@@ -249,8 +252,16 @@ ccsFreePlugin (CCSPlugin * p)
 	ccsStringListFree (p->conflictFeature, TRUE);
 	ccsStringListFree (p->providesFeature, TRUE);
 	ccsStringListFree (p->requiresFeature, TRUE);
-	ccsSettingListFree (p->settings, TRUE);
-	ccsGroupListFree (p->groups, TRUE);
+
+	PLUGIN_PRIV(p);
+	
+	ccsSettingListFree (pPrivate->settings, TRUE);
+	ccsGroupListFree (pPrivate->groups, TRUE);
+	if (pPrivate->xmlFile)
+		free (pPrivate->xmlFile);
+	if (pPrivate->xmlPath)
+		free (pPrivate->xmlPath);
+	free (pPrivate);
 	free (p);
 }
 
@@ -1271,13 +1282,42 @@ ccsReadSettings (CCSContext * context)
 	CCSPluginList pl = context->plugins;
 	while (pl)
 	{
-		CCSSettingList sl = pl->data->settings;
+		PLUGIN_PRIV(pl->data);
+		CCSSettingList sl = pPrivate->settings;
 		while (sl)
 		{
 			(*context->backend->vTable->readSetting) (context, sl->data);
 			sl = sl->next;
 		}
 		pl = pl->next;
+	}
+	if (context->backend->vTable->readDone)
+		(*context->backend->vTable->readDone) (context);
+}
+
+void
+ccsReadPluginSettings (CCSPlugin * plugin)
+{
+	if (!plugin)
+		return;
+	CCSContext *context = plugin->context;
+	
+	if (!context || !context->backend)
+		return;
+
+	if (!context->backend->vTable->readSetting)
+		return;
+
+	if (context->backend->vTable->readInit)
+		if (!(*context->backend->vTable->readInit) (context))
+			return;
+
+	PLUGIN_PRIV(plugin);
+	CCSSettingList sl = pPrivate->settings;
+	while (sl)
+	{
+		(*context->backend->vTable->readSetting) (context, sl->data);
+		sl = sl->next;
 	}
 	if (context->backend->vTable->readDone)
 		(*context->backend->vTable->readDone) (context);
@@ -1297,7 +1337,8 @@ ccsWriteSettings (CCSContext * context)
 	CCSPluginList pl = context->plugins;
 	while (pl)
 	{
-		CCSSettingList sl = pl->data->settings;
+		PLUGIN_PRIV(pl->data);
+		CCSSettingList sl = pPrivate->settings;
 		while (sl)
 		{
 			(*context->backend->vTable->writeSetting) (context, sl->data);
@@ -1708,7 +1749,10 @@ ccsCanSetAction (CCSContext * context, CCSSettingActionValue action)
 
 	while (pl)
 	{
-		sl = pl->data->settings;
+		PLUGIN_PRIV(pl->data);
+		if (!pPrivate->loaded)
+			ccsLoadPluginSettings(pl->data);
+		sl = pPrivate->settings;
 		while (sl)
 		{
 			s = sl->data;
@@ -1928,7 +1972,10 @@ ccsExportToFile (CCSContext * context, const char * fileName)
     for (p = context->plugins; p; p = p->next)
     {
 	plugin = p->data;
-	for (s = plugin->settings; s; s = s->next)
+	PLUGIN_PRIV(plugin);
+	if (!pPrivate->loaded)
+		ccsLoadPluginSettings (plugin);
+	for (s = pPrivate->settings; s; s = s->next)
 	{
 	    setting = s->data;
 
@@ -1999,7 +2046,10 @@ ccsImportFromFile (CCSContext * context, const char * fileName, Bool overwrite)
     for (p = context->plugins; p; p = p->next)
     {
 	plugin = p->data;
-	for (s = plugin->settings; s; s = s->next)
+	PLUGIN_PRIV(plugin);
+	if (!pPrivate->loaded)
+		ccsLoadPluginSettings (plugin);
+	for (s = pPrivate->settings; s; s = s->next)
 	{
 	    setting = s->data;
 
@@ -2077,3 +2127,20 @@ ccsImportFromFile (CCSContext * context, const char * fileName, Bool overwrite)
 
     return TRUE;
 }
+
+CCSSettingList ccsGetPluginSettings(CCSPlugin *plugin)
+{
+	PLUGIN_PRIV(plugin);
+	if (!pPrivate->loaded)
+		ccsLoadPluginSettings(plugin);
+	return pPrivate->settings;
+}
+
+CCSGroupList ccsGetPluginGroups(CCSPlugin *plugin)
+{
+	PLUGIN_PRIV(plugin);
+	if (!pPrivate->loaded)
+		ccsLoadPluginSettings(plugin);
+	return pPrivate->groups;
+}
+
