@@ -13,7 +13,7 @@ SUBDIRS = $(ALL_SUBDIRS)
 EXTRA_DIST =            \
     VERSION             \
     COPYING			    \
-    bsettings.pc.in         \
+    libccs.pc.in         \
     intltool-extract.in \
     intltool-merge.in   \
     intltool-update.in
