@@ -176,7 +176,6 @@ struct _CCSPlugin
 	char *				longDesc;		// in current locale
 	char *				hints;
 	char *				category;		// simple name
-	char *				filename;		// filename of the so
 	
 	CCSStringList		loadAfter;
 	CCSStringList		loadBefore;
@@ -185,10 +184,11 @@ struct _CCSPlugin
 	CCSStringList		conflictFeature;
 	CCSStringList		providesFeature;
 	CCSStringList		requiresFeature;
-	CCSSettingList		settings;
-	CCSGroupList			groups;
+
 	void *				privatePtr;
-	CCSContext *			context;
+	CCSContext *		context;
+	
+	void *              ccsPrivate;
 };
 
 typedef enum _CCSSettingType
@@ -432,6 +432,9 @@ Bool ccsGetMatch(CCSSetting * setting, char ** data);
 Bool ccsGetAction(CCSSetting * setting, CCSSettingActionValue * data);
 Bool ccsGetList(CCSSetting * setting, CCSSettingValueList * data);
 
+CCSSettingList ccsGetPluginSettings(CCSPlugin *plugin);
+CCSGroupList ccsGetPluginGroups(CCSPlugin *plugin);
+
 CCSSettingValueList ccsGetValueListFromStringList(CCSStringList list, CCSSetting *parent);
 CCSStringList ccsGetStringListFromValueList(CCSSettingValueList list);
 
@@ -484,6 +487,7 @@ Bool ccsStringToColor (const char *value, CCSSettingColorValue *color);
 void ccsProcessEvents(CCSContext *context);
 
 void ccsReadSettings(CCSContext *context);
+void ccsReadPluginSettings(CCSPlugin *plugin);
 void ccsWriteSettings(CCSContext *context);
 void ccsWriteChangedSettings(CCSContext *context);
 void ccsResetToDefault (CCSSetting * setting);
