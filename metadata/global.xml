@@ -1,106 +1,106 @@
 <compiz>
 	<!-- blur metadata -->
-    <plugin name="blur">
-	<category>Effects</category>
-    </plugin>
+	<plugin name="blur">
+		<category>Effects</category>
+	</plugin>
 	<!-- decoration metadata -->
-    <plugin name="decoration">
-	<category>Effects</category>
-    </plugin>
+	<plugin name="decoration">
+		<category>Effects</category>
+	</plugin>
 	<!-- cube metadata -->
-    <plugin name="cube">
-	<category>Desktop</category>
-    </plugin>
+	<plugin name="cube">
+		<category>Desktop</category>
+	</plugin>
 	<!-- fade metadata -->
-    <plugin name="fade">
-	<category>Effects</category>
-    </plugin>
+	<plugin name="fade">
+		<category>Effects</category>
+	</plugin>
 	<!-- inotify metadata -->
-    <plugin name="inotify">
-	<category>Extras</category>
-    </plugin>
+	<plugin name="inotify">
+		<category>Extras</category>
+	</plugin>
 	<!-- minimize metadata -->
-    <plugin name="minimize">
-	<category>Effects</category>
-    </plugin>
+	<plugin name="minimize">
+		<category>Effects</category>
+	</plugin>
 	<!-- plane metadata -->
-    <plugin name="plane">
-	<category>Desktop</category>
-    </plugin>
+	<plugin name="plane">
+		<category>Desktop</category>
+	</plugin>
 	<!-- rotate metadata -->
-    <plugin name="rotate">
-	<category>Desktop</category>
-    </plugin>
+	<plugin name="rotate">
+		<category>Desktop</category>
+	</plugin>
 	<!-- scale metadata -->
 	<plugin name="scale">
-	<category>Window Management</category>
+		<category>Window Management</category>
 	</plugin>
 	<!-- png metadata -->
 	<plugin name="png">
-	<category>Image Loading</category>
+		<category>Image Loading</category>
 	</plugin>
 	<!-- annotate metadata -->
 	<plugin name="annotate">
-	<category>Extras</category>
+		<category>Extras</category>
 	</plugin>
 	<!-- dbus metadata -->
 	<plugin name="dbus">
-	<category>Extras</category>
+		<category>Extras</category>
 	</plugin>
 	<!-- screenshot metadata -->
 	<plugin name="screenshot">
-	<category>Extras</category>
+		<category>Extras</category>
 	</plugin>
 	<!-- place metadata -->
 	<plugin name="place">
-	<category>Window Management</category>
+		<category>Window Management</category>
 	</plugin>
 	<!-- move metadata -->
 	<plugin name="move">
-	<category>Window Management</category>
+		<category>Window Management</category>
 	</plugin>
 	<!-- resize metadata -->
 	<plugin name="resize">
-	<category>Window Management</category>
+		<category>Window Management</category>
 	</plugin>
 	<!-- switcher metadata -->
 	<plugin name="switcher">
-	<category>Window Management</category>
+		<category>Window Management</category>
 	</plugin>
 	<!-- clone metadata -->
 	<plugin name="clone">
-	<category>Desktop</category>
+		<category>Desktop</category>
 	</plugin>
 	<!-- Svg metadata -->
 	<plugin name="svg">
-	<category>Image Loading</category>
+		<category>Image Loading</category>
 	</plugin>
 	<!-- fuse metadata -->
 	<plugin name="fs">
-	<category>Extras</category>
+		<category>Extras</category>
 	</plugin>
 	<!-- regex metadata -->
 	<plugin name="regex">
-	<category>Extras</category>
+		<category>Extras</category>
 	</plugin>
 	<!-- video metadata -->
-    <plugin name="video">
-	<category>Extras</category>
-    </plugin>
+	<plugin name="video">
+		<category>Extras</category>
+	</plugin>
 	<!-- water metadata -->
-    <plugin name="water">
-	<category>Effects</category>
-    </plugin>
+	<plugin name="water">
+		<category>Effects</category>
+	</plugin>
 	<!-- winrules metadata -->
 	<plugin name="winrules">
 		<category>Window Management</category>
 	</plugin>
 	<!-- wobbly metadata -->
-    <plugin name="wobbly">
-	<category>Effects</category>
-    </plugin>
+	<plugin name="wobbly">
+		<category>Effects</category>
+	</plugin>
 	<!-- zoom metadata -->
-    <plugin name="zoom">
-	<category>Accessibility</category>
-    </plugin>
+	<plugin name="zoom">
+		<category>Accessibility</category>
+	</plugin>
 </compiz>
