@@ -1218,7 +1218,8 @@ addOptionForPlugin (CCSPlugin * plugin,
 	}
 
 //	printSetting (setting);
-	plugin->settings = ccsSettingListAppend (plugin->settings, setting);
+	PLUGIN_PRIV(plugin);
+	pPrivate->settings = ccsSettingListAppend (pPrivate->settings, setting);
 }
 
 static void
@@ -1226,6 +1227,7 @@ addOptionFromXMLNode (CCSPlugin * plugin, xmlNode * node)
 {
 	char *name;
 	char *type;
+	char *readonly;
 	Bool screen;
 	int i;
 
@@ -1234,15 +1236,21 @@ addOptionFromXMLNode (CCSPlugin * plugin, xmlNode * node)
 
 	name = getStringFromPath (node->doc, node, "@name");
 	type = getStringFromPath (node->doc, node, "@type");
+	readonly = getStringFromPath (node->doc, node, "@read_only");
 	if (!name || !strlen (name) || !type || !strlen (type) ||
-	    (!strcmp(plugin->name, "core") && !strcmp(name, "active_plugins")))
+	    (!strcmp(plugin->name, "core") && !strcmp(name, "active_plugins")) ||
+	    (readonly && !strcmp(readonly, "true")))
 	{
 		if (name)
 			free (name);
 		if (type)
 			free (type);
+		if (readonly)
+			free (readonly);
 		return;
 	}
+
+	
 
 	screen = nodeExists (node, "ancestor::screen");
 
@@ -1257,6 +1265,8 @@ addOptionFromXMLNode (CCSPlugin * plugin, xmlNode * node)
 
 	free (name);
 	free (type);
+	if (readonly)
+			free (readonly);
 }
 
 static void
@@ -1313,7 +1323,7 @@ initRulesFromRootNode (CCSPlugin * plugin, xmlNode * node)
 }
 
 static void
-addPluginFromXMLNode (CCSContext * context, xmlNode * node)
+addPluginFromXMLNode (CCSContext * context, xmlNode * node, char *file)
 {
 	char *name;
 
@@ -1342,6 +1352,11 @@ addPluginFromXMLNode (CCSContext * context, xmlNode * node)
 
 
 	NEW (CCSPlugin, plugin);
+	NEW (CCSPluginPrivate, pPrivate);
+	plugin->ccsPrivate = (void *)pPrivate;
+	if (file)
+		pPrivate->xmlFile = strdup(file);
+	asprintf(&pPrivate->xmlPath, "/compiz/plugin[@name = '%s']", name);
 
 	plugin->context = context;
 	plugin->name = strdup (name);
@@ -1357,45 +1372,34 @@ addPluginFromXMLNode (CCSContext * context, xmlNode * node)
 
 	printf ("Adding plugin %s (%s)\n", name, plugin->shortDesc);
 
-	initOptionsFromRootNode (plugin, node);
+	char *def = NULL;
+	NEW (CCSSetting, setting);
 
-	if (!ccsFindSetting (plugin, "____plugin_enabled", FALSE, 0))
-	{
-		char *def = NULL;
-		NEW (CCSSetting, setting);
+	setting->parent = plugin;
+	setting->isScreen = FALSE;
+	setting->screenNum = 0;
+	setting->isDefault = TRUE;
+	setting->name = strdup ("____plugin_enabled");
+	setting->shortDesc = strdup ("enabled");
+	setting->longDesc = strdup ("enabled");
+	setting->group = strdup ("");
+	setting->subGroup = strdup ("");
+	setting->type = TypeBool;
+	setting->defaultValue.parent = setting;
+	def = stringFromNodeDef (node, "autoenable/child::text()", "false");
+	setting->defaultValue.value.asBool = (strcmp(def,"true"))? FALSE : TRUE;
+	free (def);
 
-		setting->parent = plugin;
-		setting->isScreen = FALSE;
-		setting->screenNum = 0;
-		setting->isDefault = TRUE;
-		setting->name = strdup ("____plugin_enabled");
-		setting->shortDesc = strdup ("enabled");
-		setting->longDesc = strdup ("enabled");
-		setting->group = strdup ("");
-		setting->subGroup = strdup ("");
-		setting->type = TypeBool;
-		setting->defaultValue.parent = setting;
-		def = stringFromNodeDef (node, "autoenable/child::text()", "false");
-		setting->defaultValue.value.asBool = (strcmp(def,"true"))? FALSE : TRUE;
-		free (def);
-		
-		setting->value = &setting->defaultValue;
+	setting->value = &setting->defaultValue;
 
-		plugin->settings = ccsSettingListAppend (plugin->settings, setting);
-	}
-	else
-	{
-		fprintf (stderr, "Couldn't load plugin %s because it has a setting "
-				 "defined named ____plugin_enabled", plugin->name);
-	}
+	pPrivate->settings = ccsSettingListAppend (pPrivate->settings, setting);
 
-	collateGroups (plugin);
 	context->plugins = ccsPluginListAppend (context->plugins, plugin);
 	free (name);
 }
 
 static void
-addCoreSettingsFromXMLNode (CCSContext * context, xmlNode * node)
+addCoreSettingsFromXMLNode (CCSContext * context, xmlNode * node, char *file)
 {
 	if (!node)
 		return;
@@ -1404,7 +1408,12 @@ addCoreSettingsFromXMLNode (CCSContext * context, xmlNode * node)
 		return;
 
 	NEW (CCSPlugin, plugin);
-
+	NEW (CCSPluginPrivate, pPrivate);
+	plugin->ccsPrivate = (void *)pPrivate;
+	if (file)
+		pPrivate->xmlFile = strdup(file);
+	pPrivate->xmlPath = strdup("/compiz/core");
+	
 	plugin->context = context;
 	plugin->name = strdup ("core");
 	plugin->category = strdup ("General");
@@ -1419,28 +1428,25 @@ addCoreSettingsFromXMLNode (CCSContext * context, xmlNode * node)
 
 	printf ("Adding core settings (%s)\n", plugin->shortDesc);
 
-	initOptionsFromRootNode (plugin, node);
-
-	collateGroups (plugin);
 	context->plugins = ccsPluginListAppend (context->plugins, plugin);
 }
 
 static void
-loadPluginsFromXML (CCSContext * context, xmlDoc * doc)
+loadPluginsFromXML (CCSContext * context, xmlDoc * doc, char *filename)
 {
 	xmlNode **nodes;
 	int num, i;
 	nodes = getNodesFromPath (doc, NULL, "/compiz/core", &num);
 	if (num)
 	{
-		addCoreSettingsFromXMLNode (context, nodes[0]);
+		addCoreSettingsFromXMLNode (context, nodes[0], filename);
 		free (nodes);
 	}
 	nodes = getNodesFromPath (doc, NULL, "/compiz/plugin", &num);
 	if (num)
 	{
 		for (i = 0; i < num; i++)
-			addPluginFromXMLNode (context, nodes[i]);
+			addPluginFromXMLNode (context, nodes[i], filename);
 		free (nodes);
 	}
 }
@@ -1502,7 +1508,7 @@ loadPluginsFromXMLFiles (CCSContext * context, char *path)
 			fclose (fp);
 			doc = xmlReadFile (name, NULL, 0);
 			if (doc)
-				loadPluginsFromXML (context, doc);
+				loadPluginsFromXML (context, doc, name);
 			xmlFreeDoc (doc);
 		}
 		free (name);
@@ -1532,14 +1538,16 @@ addPluginNamed (CCSContext * context, char *name)
 		if (num)
 		{
 			for (i = 0; i < num; i++)
-				addPluginFromXMLNode (context, nodes[i]);
+				addPluginFromXMLNode (context, nodes[i], NULL);
 			free (nodes);
 			return;
 		}
 	}
 
 	NEW (CCSPlugin, plugin);
-
+	NEW (CCSPluginPrivate, pPrivate);
+	plugin->ccsPrivate = (void *)pPrivate;
+	
 	plugin->context = context;
 	plugin->name = strdup (name);
 
@@ -1570,9 +1578,10 @@ addPluginNamed (CCSContext * context, char *name)
 
 	setting->value = &setting->defaultValue;
 
-	plugin->settings = ccsSettingListAppend (plugin->settings, setting);
-
-	collateGroups (plugin);
+	pPrivate->settings = ccsSettingListAppend (pPrivate->settings, setting);
+	pPrivate->loaded = TRUE;
+	collateGroups (pPrivate);
+	
 	context->plugins = ccsPluginListAppend (context->plugins, plugin);
 }
 
@@ -1635,5 +1644,58 @@ ccsLoadPlugins (CCSContext * context)
 	}
 	loadPluginsFromName (context, PLUGINDIR);
 	if (globalMetadata)
+	{
 		xmlFreeDoc (globalMetadata);
+		globalMetadata = NULL;
+	}
+}
+
+void
+ccsLoadPluginSettings(CCSPlugin * plugin)
+{
+	xmlDoc *doc = NULL;
+	xmlNode **nodes;
+	int num;
+	
+	PLUGIN_PRIV(plugin);
+
+	if (pPrivate->loaded)
+		return;
+	pPrivate->loaded = TRUE;
+ 	printf("Initializing %s options...",plugin->name);
+	FILE *fp;
+	fp = fopen (GLOBALMETADATA, "r");
+	if (fp)
+	{
+		fclose (fp);
+		globalMetadata = xmlReadFile (GLOBALMETADATA, NULL, 0);
+	}
+	if (pPrivate->xmlFile)
+	{
+		fp = fopen (pPrivate->xmlFile, "r");
+		if (fp)
+		{
+			fclose (fp);
+			doc = xmlReadFile (pPrivate->xmlFile, NULL, 0);
+		}
+	}
+
+	nodes = getNodesFromPath (doc, NULL, pPrivate->xmlPath, &num);
+	if (num)
+	{
+		initOptionsFromRootNode (plugin, nodes[0]);
+		free (nodes);
+	}
+
+	if (doc)
+		xmlFreeDoc (doc);
+	if (globalMetadata)
+	{
+		xmlFreeDoc (globalMetadata);
+		globalMetadata = NULL;
+	}
+	
+	printf("done\n");
+	collateGroups(pPrivate);
+	ccsReadPluginSettings(plugin);
 }

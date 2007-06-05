@@ -24,8 +24,22 @@
 
 #include <ccs.h>
 
+#define PLUGIN_PRIV(p) \
+	CCSPluginPrivate *pPrivate = (CCSPluginPrivate *) p->ccsPrivate;
+
+
+typedef struct _CCSPluginPrivate
+{
+	CCSSettingList	settings;
+	CCSGroupList	groups;
+	Bool 			loaded;
+	char *			xmlFile;
+	char *			xmlPath;
+} CCSPluginPrivate;
+
 void ccsLoadPlugins(CCSContext * context);
-void collateGroups(CCSPlugin * plugin);
+void ccsLoadPluginSettings(CCSPlugin * plugin);
+void collateGroups(CCSPluginPrivate * p);
 
 void ccsCheckFileWatches(void);
 
@@ -34,6 +48,7 @@ typedef enum {
 	OptionBackend,
 	OptionIntegration
 } ConfigOption;
+
 
 Bool ccsReadConfig(ConfigOption option, char** value);
 Bool ccsWriteConfig(ConfigOption option, char* value);
