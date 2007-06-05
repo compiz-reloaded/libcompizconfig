@@ -1227,6 +1227,7 @@ addOptionFromXMLNode (CCSPlugin * plugin, xmlNode * node)
 {
 	char *name;
 	char *type;
+	char *readonly;
 	Bool screen;
 	int i;
 
@@ -1235,15 +1236,21 @@ addOptionFromXMLNode (CCSPlugin * plugin, xmlNode * node)
 
 	name = getStringFromPath (node->doc, node, "@name");
 	type = getStringFromPath (node->doc, node, "@type");
+	readonly = getStringFromPath (node->doc, node, "@read_only");
 	if (!name || !strlen (name) || !type || !strlen (type) ||
-	    (!strcmp(plugin->name, "core") && !strcmp(name, "active_plugins")))
+	    (!strcmp(plugin->name, "core") && !strcmp(name, "active_plugins")) ||
+	    (readonly && !strcmp(readonly, "true")))
 	{
 		if (name)
 			free (name);
 		if (type)
 			free (type);
+		if (readonly)
+			free (readonly);
 		return;
 	}
+
+	
 
 	screen = nodeExists (node, "ancestor::screen");
 
@@ -1258,6 +1265,8 @@ addOptionFromXMLNode (CCSPlugin * plugin, xmlNode * node)
 
 	free (name);
 	free (type);
+	if (readonly)
+			free (readonly);
 }
 
 static void
