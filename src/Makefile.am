@@ -9,7 +9,18 @@ INCLUDES =			     \
 	-DGLOBALMETADATA=\"$(globalmetadata)\"
 
 
-libccs_la_SOURCES=main.c lists.c compiz.c config.c iniparser.c ini.c bindings.c filewatch.c
+libccs_la_SOURCES = \
+	main.c 		\
+	lists.c 	\
+	compiz.c 	\
+	config.c 	\
+	iniparser.c 	\
+	ini.c 		\
+	bindings.c 	\
+	filewatch.c 	\
+	ccs-private.h	\
+	iniparser.h
+
 libccs_la_LIBADD = @LIBXML2_LIBS@
 
 lib_LTLIBRARIES=libccs.la
