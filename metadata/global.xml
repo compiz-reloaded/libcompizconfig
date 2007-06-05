@@ -6,14 +6,17 @@
 	<!-- decoration metadata -->
 	<plugin name="decoration">
 		<category>Effects</category>
+		<autoenable>true</autoenable>
 	</plugin>
 	<!-- cube metadata -->
 	<plugin name="cube">
 		<category>Desktop</category>
+		<autoenable>true</autoenable>
 	</plugin>
 	<!-- fade metadata -->
 	<plugin name="fade">
 		<category>Effects</category>
+		<autoenable>true</autoenable>
 	</plugin>
 	<!-- inotify metadata -->
 	<plugin name="inotify">
@@ -22,6 +25,7 @@
 	<!-- minimize metadata -->
 	<plugin name="minimize">
 		<category>Effects</category>
+		<autoenable>true</autoenable>
 	</plugin>
 	<!-- plane metadata -->
 	<plugin name="plane">
@@ -30,14 +34,17 @@
 	<!-- rotate metadata -->
 	<plugin name="rotate">
 		<category>Desktop</category>
+		<autoenable>true</autoenable>
 	</plugin>
 	<!-- scale metadata -->
 	<plugin name="scale">
 		<category>Window Management</category>
+		<autoenable>true</autoenable>
 	</plugin>
 	<!-- png metadata -->
 	<plugin name="png">
 		<category>Image Loading</category>
+		<autoenable>true</autoenable>
 	</plugin>
 	<!-- annotate metadata -->
 	<plugin name="annotate">
@@ -46,6 +53,7 @@
 	<!-- dbus metadata -->
 	<plugin name="dbus">
 		<category>Extras</category>
+		<autoenable>true</autoenable>
 	</plugin>
 	<!-- screenshot metadata -->
 	<plugin name="screenshot">
@@ -54,18 +62,22 @@
 	<!-- place metadata -->
 	<plugin name="place">
 		<category>Window Management</category>
+		<autoenable>true</autoenable>
 	</plugin>
 	<!-- move metadata -->
 	<plugin name="move">
 		<category>Window Management</category>
+		<autoenable>true</autoenable>
 	</plugin>
 	<!-- resize metadata -->
 	<plugin name="resize">
 		<category>Window Management</category>
+		<autoenable>true</autoenable>
 	</plugin>
 	<!-- switcher metadata -->
 	<plugin name="switcher">
 		<category>Window Management</category>
+		<autoenable>true</autoenable>
 	</plugin>
 	<!-- clone metadata -->
 	<plugin name="clone">
@@ -98,9 +110,11 @@
 	<!-- wobbly metadata -->
 	<plugin name="wobbly">
 		<category>Effects</category>
+		<autoenable>true</autoenable>
 	</plugin>
 	<!-- zoom metadata -->
 	<plugin name="zoom">
 		<category>Accessibility</category>
+		<autoenable>true</autoenable>
 	</plugin>
 </compiz>
