@@ -282,13 +282,7 @@ ccsFreeSetting (CCSSetting * s)
 	case TypeInt:
 		ccsIntDescListFree(s->info.forInt.desc, TRUE);
 		break;
-	case TypeString:
-		ccsStringListFree (s->info.forString.allowedValues, TRUE);
-		break;
 	case TypeList:
-		if (s->info.forList.listType == TypeString)
-			ccsStringListFree (s->info.forList.listInfo->
-							  forString.allowedValues, TRUE);
 		if (s->info.forList.listType == TypeInt)
 			ccsIntDescListFree (s->info.forList.listInfo->
 							  forInt.desc, TRUE);
@@ -680,22 +674,6 @@ ccsSetString (CCSSetting * setting, const char *data)
 
 	if (!strcmp (setting->value->value.asString, data))
 		return TRUE;
-
-	CCSStringList allowed = setting->info.forString.allowedValues;
-	if (allowed)
-	{
-		while (allowed)
-		{
-			if (strcmp (allowed->data, data) == 0)
-				break;
-			allowed = allowed->next;
-		}
-
-		if (!allowed)
-			/* if allowed is NULL here, it means that none of the
-			   allowed values matched the string to set */
-			return FALSE;
-	}
 
 	if (setting->isDefault)
 		copyFromDefault (setting);
