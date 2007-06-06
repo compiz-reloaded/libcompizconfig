@@ -8,7 +8,7 @@ INCLUDES =			     \
 	-DLIBDIR=\"$(libdir)\"
 
 libini_la_LDFLAGS = -module -avoid-version -no-undefined $(all_libraries)
-libini_la_LIBADD  = $(top_srcdir)/src/libccs.la
+libini_la_LIBADD  = $(top_builddir)/src/libccs.la
 libini_la_SOURCES = ini.c
 backenddir = $(libdir)/ccs/backends
 
