@@ -271,11 +271,6 @@ typedef struct _CCSSettingFloatInfo
 	float	precision;
 } CCSSettingFloatInfo;
 
-typedef struct _CCSSettingStringInfo
-{
-	CCSStringList	allowedValues; //list_of(char *) in current locale
-} CCSSettingStringInfo;
-
 typedef struct _CCSSettingActionInfo
 {
 	Bool	key;
@@ -299,7 +294,6 @@ typedef union _CCSSettingInfo
 {
 	CCSSettingIntInfo			forInt;
 	CCSSettingFloatInfo			forFloat;
-	CCSSettingStringInfo			forString;
 	CCSSettingActionInfo			forAction;
 	CCSSettingActionArrayInfo	forActionAsArray;
 	CCSSettingListInfo			forList;

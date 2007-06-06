@@ -386,32 +386,13 @@ initStringValue (CCSSettingValue * v, CCSSettingInfo * i, xmlNode * node)
 {
 	char *value;
 
-	if (i->forString.allowedValues)
-		v->value.asString = strdup (i->forString.allowedValues->data);
-	else
-		v->value.asString = strdup ("");
+	v->value.asString = strdup ("");
 
 	value = getStringFromPath (node->doc, node, "child::text()");
 	if (value)
 	{
-		if (i->forString.allowedValues)
-		{
-			CCSStringList l = i->forString.allowedValues;
-			while (l)
-			{
-				if (!strcmp (value, l->data))
-				{
-					free (v->value.asString);
-					v->value.asString = strdup (value);
-				}
-				l = l->next;
-			}
-		}
-		else
-		{
-			free (v->value.asString);
-			v->value.asString = strdup (value);
-		}
+		free (v->value.asString);
+		v->value.asString = strdup (value);
 		free (value);
 	}
 }
@@ -790,33 +771,6 @@ initFloatInfo (CCSSettingInfo * i, xmlNode * node)
 }
 
 static void
-initStringInfo (CCSSettingInfo * i, xmlNode * node)
-{
-	xmlNode **nodes;
-	char *value;
-	int num, j;
-
-	i->forString.allowedValues = NULL;
-
-	nodes = getNodesFromPath (node->doc, node, "allowed/value", &num);
-	if (num)
-	{
-		for (j = 0; j < num; j++)
-		{
-			value = getStringFromPath (node->doc, nodes[j], "child::text()");
-			if (value)
-			{
-				char *string = strdup (value);
-				i->forString.allowedValues =
-					ccsStringListAppend (i->forString.allowedValues, string);
-				free (value);
-			}
-		}
-		free (nodes);
-	}
-}
-
-static void
 initActionInfo (CCSSettingInfo * i, xmlNode * node)
 {
 	char *value;
@@ -894,13 +848,6 @@ initListInfo (CCSSettingInfo * i, xmlNode * node)
 		i->forList.listInfo = info;
 	}
 		break;
-	case TypeString:
-	{
-		NEW (CCSSettingInfo, info);
-		initStringInfo (info, node);
-		i->forList.listInfo = info;
-	}
-		break;
 	case TypeAction:
 	{
 		NEW (CCSSettingInfo, info);
@@ -951,17 +898,6 @@ printSetting (CCSSetting * s)
 	{
 		printf ("Type        : string\n");
 		printf ("Value       : %s\n", s->value->value.asString);
-		CCSStringList l = s->info.forString.allowedValues;
-		if (l)
-		{
-			printf ("   Allowed  : ");
-			while (l)
-			{
-				printf ("%s,", l->data);
-				l = l->next;
-			}
-			printf ("\n");
-		}
 	}
 		break;
 	case TypeColor:
@@ -1031,18 +967,6 @@ printSetting (CCSSetting * s)
 		case TypeString:
 		{
 			printf ("Type        : list (string)\n");
-			CCSStringList l =
-				s->info.forList.listInfo->forString.allowedValues;
-			if (l)
-			{
-				printf ("   Allowed  : ");
-				while (l)
-				{
-					printf ("%s,", l->data);
-					l = l->next;
-				}
-				printf ("\n");
-			}
 		}
 			break;
 		case TypeColor:
@@ -1149,9 +1073,6 @@ addOptionForPlugin (CCSPlugin * plugin,
 		break;
 	case TypeFloat:
 		initFloatInfo (&setting->info, node);
-		break;
-	case TypeString:
-		initStringInfo (&setting->info, node);
 		break;
 	case TypeAction:
 		initActionInfo (&setting->info, node);
