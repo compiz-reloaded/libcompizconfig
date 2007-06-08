@@ -129,10 +129,6 @@
 	<plugin name="water">
 		<category>Effects</category>
 	</plugin>
-	<!-- winrules metadata -->
-	<plugin name="winrules">
-		<category>Window Management</category>
-	</plugin>
 	<!-- wobbly metadata -->
 	<plugin name="wobbly">
 		<category>Effects</category>
