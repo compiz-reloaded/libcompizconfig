@@ -72,6 +72,23 @@
 	<plugin name="place">
 		<category>Window Management</category>
 		<autoenable>true</autoenable>
+		<screen>
+			<group>
+				<short>Fixed Window Placement</short>
+				<subgroup>
+					<short>Windows with fixed positions</short>
+					<option type="list" name="position_matches"/>
+					<option type="list" name="position_x_values"/>
+					<option type="list" name="position_y_values"/>
+				</subgroup>
+				<subgroup>
+					<short>Windows with fixed viewport</short>
+					<option type="list" name="viewport_matches"/>
+					<option type="list" name="viewport_x_values"/>
+					<option type="list" name="viewport_y_values"/>
+				</subgroup>
+			</group>
+		</screen>
 	</plugin>
 	<!-- move metadata -->
 	<plugin name="move">
