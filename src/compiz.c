@@ -403,7 +403,8 @@ initColorValue (CCSSettingValue * v, xmlNode * node)
 	char *value;
 
 	memset (&v->value.asColor, 0, sizeof (v->value.asColor));
-
+	v->value.asColor.color.alpha = 0xffff;
+	
 	value = getStringFromPath (node->doc, node, "red/child::text()");
 	if (value)
 	{
