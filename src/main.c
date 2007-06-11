@@ -403,7 +403,7 @@ openBackend (char *backend)
 
 	if (home && strlen (home))
 	{
-		asprintf (&dlname, "%s/.ccs/backends/lib%s.so", home, backend);
+		asprintf (&dlname, "%s/.compizconfig/backends/lib%s.so", home, backend);
 
 		dlerror ();
 		dlhand = dlopen (dlname, RTLD_NOW);
@@ -413,7 +413,7 @@ openBackend (char *backend)
 	if (err || !dlhand)
 	{
 		free (dlname);
-		asprintf (&dlname, "%s/ccs/backends/lib%s.so", LIBDIR, backend);
+		asprintf (&dlname, "%s/compizconfig/backends/lib%s.so", LIBDIR, backend);
 		dlhand = dlopen (dlname, RTLD_NOW);
 		err = dlerror ();
 	}
@@ -1922,12 +1922,12 @@ ccsGetExistingBackends ()
 	char *backenddir;
 	if (home && strlen (home))
 	{
-		asprintf (&backenddir, "%s/.ccs/backends", home);
+		asprintf (&backenddir, "%s/.compizconfig/backends", home);
 		getBackendInfoFromDir (&rv, backenddir);
 		free (backenddir);
 	}
 
-	asprintf (&backenddir, "%s/ccs/backends", LIBDIR);
+	asprintf (&backenddir, "%s/compizconfig/backends", LIBDIR);
 	getBackendInfoFromDir (&rv, backenddir);
 	free (backenddir);
 	return rv;

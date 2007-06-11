@@ -3,11 +3,11 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
 
-Name: libccs
+Name: libcompizconfig
 Description: Compiz configuration system
 Version: @VERSION@
 
 Requires: compiz
-Libs: -L@libdir@ -lccs
-Cflags: -I@includedir@/ccs
+Libs: -L@libdir@ -lcompizconfig
+Cflags: -I@includedir@/compizconfig
 

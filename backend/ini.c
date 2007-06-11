@@ -39,7 +39,7 @@
 #include <X11/Xlib.h>
 
 #define DEFAULTPROF "Default"
-#define SETTINGPATH ".ccs/"
+#define SETTINGPATH ".compizconfig/"
 
 typedef struct _IniPrivData
 {

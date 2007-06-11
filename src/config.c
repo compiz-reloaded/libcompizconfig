@@ -37,7 +37,7 @@ static char *getConfigFileName(void)
 	if (!home || !strlen(home))
 		return NULL;
 
-	asprintf(&fileName, "%s/.ccs/config",home);
+	asprintf(&fileName, "%s/.compizconfig/config",home);
 
 	return fileName;
 }
