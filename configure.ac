@@ -1,6 +1,6 @@
 AC_PREREQ(2.57)
 
-AC_INIT([libccs],esyscmd(. ./VERSION;echo -n $VERSION), [dev@beryl-project.org])
+AC_INIT([libcompizconfig],esyscmd(. ./VERSION;echo -n $VERSION), [dev@opencompositing.org])
 
 AC_DEFINE_UNQUOTED(VERSION,"$VERSION",[Version])
 
@@ -20,7 +20,7 @@ AC_CHECK_HEADERS([stdlib.h sys/time.h unistd.h])
 IT_PROG_INTLTOOL([0.35.0])
 AC_SUBST(ALL_LINGUAS)
 AM_GLIB_GNU_GETTEXT
-GETTEXT_PACKAGE=libccs
+GETTEXT_PACKAGE=libcompizconfig
 AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE,"$GETTEXT_PACKAGE", [Gettext package.])
 AC_SUBST(GETTEXT_PACKAGE)
 
@@ -90,11 +90,11 @@ fi
 PKG_CHECK_MODULES(LIBXML2, "libxml-2.0")
 AC_SUBST(LIBXML2_REQUIRES)
 
-globalmetadata=$datadir/ccs/global.xml
+globalmetadata=$datadir/compizconfig/global.xml
 AC_SUBST(globalmetadata)
 
 AC_CONFIG_FILES([
-libccs.pc
+libcompizconfig.pc
 Makefile
 src/Makefile
 backend/Makefile

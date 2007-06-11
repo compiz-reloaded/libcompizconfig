@@ -1,4 +1,4 @@
-metadir = $(datadir)/ccs
+metadir = $(datadir)/compizconfig
 meta_DATA =	       \
 	global.xml
 

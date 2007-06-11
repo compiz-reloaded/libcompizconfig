@@ -12,8 +12,8 @@ SUBDIRS = $(ALL_SUBDIRS)
 
 EXTRA_DIST =            \
     VERSION             \
-    COPYING			    \
-    libccs.pc.in         \
+    COPYING		\
+    libcompizconfig.pc.in \
     intltool-extract.in \
     intltool-merge.in   \
     intltool-update.in
@@ -29,4 +29,4 @@ clean:
 	done
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = libccs.pc
+pkgconfig_DATA = libcompizconfig.pc
