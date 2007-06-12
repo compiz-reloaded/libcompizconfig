@@ -90,6 +90,8 @@ fi
 PKG_CHECK_MODULES(LIBXML2, "libxml-2.0")
 AC_SUBST(LIBXML2_REQUIRES)
 
+AC_CHECK_HEADERS([sys/inotify.h], [have_inotify=yes], [have_inotify=no])
+
 globalmetadata=$datadir/compizconfig/global.xml
 AC_SUBST(globalmetadata)
 
@@ -106,3 +108,13 @@ po/Makefile.in
 
 AC_OUTPUT
 
+if test "x$have_inotify" = xno; then
+    echo ""
+    echo "NOTE: "
+    echo "======"
+    echo ""
+    echo "Inotify header files not found. While this library might work" \
+         "without them, user experience is degraded as settings won't be" \
+	 "applied instantly. We strongly suggest installing the inotify" \
+	 "header files."
+fi
