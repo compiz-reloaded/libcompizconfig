@@ -17,7 +17,11 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
- 
+
+#ifdef HAVE_CONFIG_H
+# include "../config.h"
+#endif
+
 #define _GNU_SOURCE
 #include <stdlib.h>
 #include <stdio.h>
@@ -25,7 +29,10 @@
 #include <unistd.h>
 #include <malloc.h>
 
+#if HAVE_SYS_INOTIFY_H
 #include <sys/inotify.h>
+#endif
+
 #include <fcntl.h>
 
 #include <ccs.h>
@@ -60,6 +67,7 @@ static inline int findDataIndexById(unsigned int watchId)
 
 void ccsCheckFileWatches(void)
 {
+#if HAVE_SYS_INOTIFY_H
     char buf[256 * (sizeof (struct inotify_event) + 16)];
     struct  inotify_event *event;
     int	len, i = 0, j;
@@ -82,6 +90,7 @@ void ccsCheckFileWatches(void)
 
 	    i += sizeof (*event) + event->len;
     }
+#endif
 }
 
 unsigned int ccsAddFileWatch (const char *fileName, 
@@ -91,22 +100,26 @@ unsigned int ccsAddFileWatch (const char *fileName,
 {
     unsigned int i, maxWatchId = 0;
 
+#if HAVE_SYS_INOTIFY_H
     if (!inotifyFd)
     {
 	inotifyFd = inotify_init ();
 	fcntl (inotifyFd, F_SETFL, O_NONBLOCK);
     }
+#endif
 
     fwData = realloc (fwData, (fwDataSize + 1) * sizeof(FilewatchData));
 
     fwData[fwDataSize].fileName  = strdup (fileName);
 
+#if HAVE_SYS_INOTIFY_H
     if (enable)
 	fwData[fwDataSize].watchDesc = inotify_add_watch (inotifyFd, fileName,
 							  IN_MODIFY | IN_MOVE |
 							  IN_MOVE_SELF | IN_DELETE_SELF |
 							  IN_CREATE | IN_DELETE);
     else
+#endif
 	fwData[fwDataSize].watchDesc = 0;
 
     fwData[fwDataSize].callback  = callback;
@@ -134,8 +147,10 @@ void ccsRemoveFileWatch (unsigned int watchId)
 
     /* clear entry */
     free (fwData[selectedIndex].fileName);
+#if HAVE_SYS_INOTIFY_H
     if (fwData[selectedIndex].watchDesc)
     	inotify_rm_watch (inotifyFd, fwData[selectedIndex].watchDesc);
+#endif
 
     /* shrink array */
     for (i = selectedIndex; i < (fwDataSize - 1); i++)
@@ -153,7 +168,8 @@ void ccsRemoveFileWatch (unsigned int watchId)
     
     if (!fwDataSize)
     {
-	close (inotifyFd);
+	if (inotifyFd)
+	    close (inotifyFd);
 	inotifyFd = 0;
     }
 }
@@ -167,11 +183,13 @@ void ccsDisableFileWatch (unsigned int watchId)
     if (index < 0)
 	return;
 
+#if HAVE_SYS_INOTIFY_H
     if (fwData[index].watchDesc)
     {
     	inotify_rm_watch (inotifyFd, fwData[index].watchDesc);
 	fwData[index].watchDesc = 0;
     }
+#endif
 }
 
 void ccsEnableFileWatch (unsigned int watchId)
@@ -183,11 +201,13 @@ void ccsEnableFileWatch (unsigned int watchId)
     if (index < 0)
 	return;
 
+#if HAVE_SYS_INOTIFY_H
     if (!fwData[index].watchDesc)
 	fwData[index].watchDesc = inotify_add_watch (inotifyFd, 
 						     fwData[index].fileName,
 	   					     IN_MODIFY | IN_MOVE |
 						     IN_MOVE_SELF | IN_DELETE_SELF |
    						     IN_CREATE | IN_DELETE);
+#endif
 }
 
