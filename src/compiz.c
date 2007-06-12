@@ -1,7 +1,7 @@
 /*
  * Compiz configuration system library
  *
- * Copyright (C) 2007  Dennis Kasprzyk <onestone@beryl-project.org>
+ * Copyright (C) 2007  Dennis Kasprzyk <onestone@opencompositing.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -403,7 +403,8 @@ initColorValue (CCSSettingValue * v, xmlNode * node)
 	char *value;
 
 	memset (&v->value.asColor, 0, sizeof (v->value.asColor));
-
+	v->value.asColor.color.alpha = 0xffff;
+	
 	value = getStringFromPath (node->doc, node, "red/child::text()");
 	if (value)
 	{

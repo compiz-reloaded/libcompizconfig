@@ -4,7 +4,7 @@
  *
  * ini.c
  *
- * Copyright (c) 2007 Danny Baumann <maniac@beryl-project.org>
+ * Copyright (c) 2007 Danny Baumann <maniac@opencompositing.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
