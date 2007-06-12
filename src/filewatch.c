@@ -1,7 +1,7 @@
 /*
  * Compiz configuration system library
  * 
- * Copyright (C) 2007  Danny Baumann <maniac@beryl-project.org>
+ * Copyright (C) 2007  Danny Baumann <maniac@opencompositing.org>
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
