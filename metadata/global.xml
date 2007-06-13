@@ -1,12 +1,12 @@
 <compiz>
 	<core>
-	    <screen>
-		<subgroup>
-		    <short>Window opacities</short>
-		    <option type="list" name="opacity_matches"/>
-		    <option type="list" name="opacity_values"/>
-		</subgroup>
-	    </screen>
+		<screen>
+			<subgroup>
+				<short>Window opacities</short>
+				<option type="list" name="opacity_matches"/>
+				<option type="list" name="opacity_values"/>
+			</subgroup>
+		</screen>
 	</core>
 	<!-- blur metadata -->
 	<plugin name="blur">
