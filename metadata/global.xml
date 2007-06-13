@@ -93,6 +93,38 @@
 	<plugin name="cube">
 		<category>Desktop</category>
 		<autoenable>true</autoenable>
+		<screen>
+			<group>
+				<short>Behaviour</short>
+				<option name="in" type="bool"/>
+				<option name="acceleration" type="float"/>
+				<option name="speed" type="float"/>
+				<option name="timestep" type="float"/>
+			</group>
+			<group>
+				<short>Appearance</short>
+				<option name="backgrounds" type="list">
+					<hints>file;image;</hints>
+				</option>
+				<option name="color" type="color"/>
+				<subgroup>
+					<short>Cube Caps</short>
+					<option name="scale_image" type="bool"/>
+					<option name="images" type="list"/>
+					<option name="adjust_image" type="bool"/>
+				</subgroup>
+				<subgroup>
+					<short>Skydome</short>
+					<option name="skydome" type="bool"/>
+					<option name="skydome_image" type="string">
+						<hints>file;image;</hints>
+					</option>
+					<option name="skydome_animated" type="bool"/>
+					<option name="skydome_gradient_start_color" type="color"/>
+					<option name="skydome_gradient_end_color" type="color"/>
+				</subgroup>
+			</group>
+		</screen>
 	</plugin>
 	<!-- fade metadata -->
 	<plugin name="fade">
