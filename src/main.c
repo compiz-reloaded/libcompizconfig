@@ -2126,3 +2126,27 @@ CCSGroupList ccsGetPluginGroups(CCSPlugin *plugin)
 	return pPrivate->groups;
 }
 
+Bool ccsSettingIsIntegrated (CCSSetting *setting)
+{
+	CCSBackend *b;
+	if (!setting)
+		return FALSE;
+	b = setting->parent->context->backend;
+
+	if (b && b->vTable->getSettingIsIntegrated)
+		return b->vTable->getSettingIsIntegrated (setting);
+	return FALSE;
+}
+
+Bool ccsSettingIsReadOnly (CCSSetting *setting)
+{
+	CCSBackend *b;
+	if (!setting)
+		return FALSE;
+	b = setting->parent->context->backend;
+
+	if (b && b->vTable->getSettingIsReadOnly)
+		return b->vTable->getSettingIsReadOnly (setting);
+	return FALSE;
+}
+

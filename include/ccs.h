@@ -560,4 +560,7 @@ void ccsDeleteProfile (CCSContext * context, char *name);
 
 CCSBackendInfoList ccsGetExistingBackends (void);
 
+Bool ccsSettingIsIntegrated (CCSSetting *setting);
+Bool ccsSettingIsReadOnly (CCSSetting *setting);
+
 #endif
