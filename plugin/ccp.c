@@ -681,7 +681,7 @@ ccpTimeout (void *closure)
 
 	CCP_DISPLAY(d);
 
-	ccsProcessEvents(cd->context);
+	ccsProcessEvents(cd->context, findActivePlugin ("glib") != NULL);
 
 	if (ccsSettingListLength(cd->context->changedSettings))
 	{
