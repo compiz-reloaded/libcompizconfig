@@ -6,7 +6,8 @@ INCLUDES =			     \
 	-DPLUGINDIR=\"$(PLUGINDIR)\" \
 	-DMETADATADIR=\"$(METADATADIR)\" \
 	-DLIBDIR=\"$(libdir)\" \
-	-DGLOBALMETADATA=\"$(globalmetadata)\"
+	-DGLOBALMETADATA=\"$(globalmetadata)\" \
+	-DSYSCONFDIR=\"$(sysconfdir)\"
 
 
 libcompizconfig_la_SOURCES = \
