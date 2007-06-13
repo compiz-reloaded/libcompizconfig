@@ -72,6 +72,51 @@ unsigned int ccsAddConfigWatch(CCSContext *context, FileWatchCallbackProc callba
     return ret;
 }
 
+static Bool ccsReadGlobalConfig(ConfigOption option, char** value)
+{
+	IniDictionary *iniFile;
+	char *entry = NULL;
+	Bool ret;
+	FILE *fp;
+	fp = fopen (SYSCONFDIR "/compizconf/config", "r");
+	if (!fp)
+	{
+		return FALSE;
+	}	
+	fclose (fp);
+	iniFile = ccsIniOpen (SYSCONFDIR "/compizconf/config");
+	if (!iniFile)
+		return FALSE;
+
+	switch (option)
+	{
+		case OptionProfile:
+			entry = "profile";
+			break;
+		case OptionBackend:
+			entry = "backend";
+			break;
+		case OptionIntegration:
+			entry = "integration";
+			break;
+		default:
+			break;
+	}
+
+	if (!entry)
+	{
+		ccsIniClose (iniFile);
+		return FALSE;
+	}
+	
+	*value = NULL;
+	
+	ret = ccsIniGetString (iniFile, "general", entry, value);
+
+	ccsIniClose (iniFile);
+	return ret;
+}
+
 Bool ccsReadConfig(ConfigOption option, char** value)
 {
 	IniDictionary *iniFile;
@@ -106,8 +151,11 @@ Bool ccsReadConfig(ConfigOption option, char** value)
 	*value = NULL;
 
 	ret = ccsIniGetString (iniFile, "general", entry, value);
-
+	
 	ccsIniClose (iniFile);
+
+	if (!ret)
+		ret = ccsReadGlobalConfig(option, value);
 	return ret;
 }
 
