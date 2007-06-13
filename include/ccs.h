@@ -478,7 +478,7 @@ Bool ccsStringToButtonBinding (const char *binding, CCSSettingActionValue *actio
 void ccsStringListToEdges (CCSStringList edges, CCSSettingActionValue *action);
 Bool ccsStringToColor (const char *value, CCSSettingColorValue *color);
 
-void ccsProcessEvents(CCSContext *context);
+void ccsProcessEvents(CCSContext *context, Bool glibMainLoop);
 
 void ccsReadSettings(CCSContext *context);
 void ccsReadPluginSettings(CCSPlugin *plugin);
