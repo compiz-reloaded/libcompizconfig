@@ -49,12 +49,21 @@ static char *getSectionName(void)
 	
 	profile = getenv("COMPIZ_CONFIG_PROFILE");
 
-	if (!profile || !strlen(profile))
-		return strdup("general");
+	if (profile && strlen(profile))
+	{
+		asprintf(&section, "general_%s",profile);
+		return section;
+	}
 
-	asprintf(&section, "general_%s",profile);
+	profile = getenv("GNOME_DESKTOP_SESSION_ID");
+	if (profile && strlen(profile))
+		return strdup("GNOME_session");
 
-	return section;
+	profile = getenv("KDE_FULL_SESSION");
+	if (profile && strlen(profile) && strcasecmp(profile,"true") == 0)
+		return strdup("KDE_session");
+
+	return strdup("general");
 }
 
 static IniDictionary *getConfigFile(void)
