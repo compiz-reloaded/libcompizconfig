@@ -692,13 +692,14 @@ dictionary * iniparser_new(char *ininame)
         if (*where==';' || *where=='#' || *where==0)
             continue ; /* Comment lines */
         else {
+            val[0] = '\0';
             if (sscanf(where, "[%[^]]", sec)==1) {
                 /* Valid section name */
                 strcpy(sec, strlwc(sec));
                 iniparser_add_entry(d, sec, NULL, NULL);
             } else if (sscanf (where, "%[^=] = \"%[^\"]\"", key, val) == 2
                    ||  sscanf (where, "%[^=] = '%[^\']'",   key, val) == 2
-                   ||  sscanf (where, "%[^=] = %[^\n]",     key, val) == 2) {
+                   ||  sscanf (where, "%[^=] = %[^\n]",     key, val) >= 1) {
                 strcpy(key, strlwc(strcrop(key)));
                 /*
                  * sscanf cannot handle "" or '' as empty value,
