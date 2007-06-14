@@ -188,6 +188,11 @@ Bool ccsWriteConfig(ConfigOption option, char* value)
 	char *entry = NULL;
 	char *section;
 	char *fileName;
+	char *curVal;
+
+	/* don't change config if nothing changed */
+	if (ccsReadConfig(option, &curVal) && strcmp(value, curVal) == 0)
+		return TRUE;
 
 	iniFile = getConfigFile();
 	if (!iniFile)
