@@ -42,6 +42,21 @@ static char *getConfigFileName(void)
 	return fileName;
 }
 
+static char *getSectionName(void)
+{
+	char *profile;
+	char *section;
+	
+	profile = getenv("COMPIZ_CONFIG_PROFILE");
+
+	if (!profile || !strlen(profile))
+		return strdup("general");
+
+	asprintf(&section, "general_%s",profile);
+
+	return section;
+}
+
 static IniDictionary *getConfigFile(void)
 {
 	char *fileName;
@@ -76,6 +91,7 @@ static Bool ccsReadGlobalConfig(ConfigOption option, char** value)
 {
 	IniDictionary *iniFile;
 	char *entry = NULL;
+	char *section;
 	Bool ret;
 	FILE *fp;
 	fp = fopen (SYSCONFDIR "/compizconf/config", "r");
@@ -110,9 +126,12 @@ static Bool ccsReadGlobalConfig(ConfigOption option, char** value)
 	}
 	
 	*value = NULL;
-	
-	ret = ccsIniGetString (iniFile, "general", entry, value);
 
+	section = getSectionName();
+	
+	ret = ccsIniGetString (iniFile, section, entry, value);
+
+	free(section);
 	ccsIniClose (iniFile);
 	return ret;
 }
@@ -121,6 +140,7 @@ Bool ccsReadConfig(ConfigOption option, char** value)
 {
 	IniDictionary *iniFile;
 	char *entry = NULL;
+	char *section;
 	Bool ret;
 
 	iniFile = getConfigFile();
@@ -150,8 +170,11 @@ Bool ccsReadConfig(ConfigOption option, char** value)
 
 	*value = NULL;
 
-	ret = ccsIniGetString (iniFile, "general", entry, value);
-	
+	section = getSectionName();
+
+	ret = ccsIniGetString (iniFile, section, entry, value);
+
+	free(section);
 	ccsIniClose (iniFile);
 
 	if (!ret)
@@ -163,6 +186,7 @@ Bool ccsWriteConfig(ConfigOption option, char* value)
 {
 	IniDictionary *iniFile;
 	char *entry = NULL;
+	char *section;
 	char *fileName;
 
 	iniFile = getConfigFile();
@@ -190,8 +214,11 @@ Bool ccsWriteConfig(ConfigOption option, char* value)
 		return FALSE;
 	}
 
-	ccsIniSetString (iniFile, "general", entry, value);
+	section = getSectionName();
 
+	ccsIniSetString (iniFile, section, entry, value);
+
+	free(section);
 	fileName = getConfigFileName();
 	if (!fileName)
 	{
