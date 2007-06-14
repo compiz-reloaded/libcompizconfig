@@ -1233,19 +1233,15 @@ ccsSetProfile (CCSContext * context, char *name)
 }
 
 void
-ccsProcessEvents (CCSContext * context, Bool glibMainLoop)
+ccsProcessEvents (CCSContext * context, unsigned int flags)
 {
 	if (!context)
 		return;
 
 	ccsCheckFileWatches ();
 
-	if (glibMainLoop && context->backend &&
-		!strcasecmp(context->backend->vTable->name, "gconf"))
-		return;
-
 	if (context->backend && context->backend->vTable->executeEvents)
-		(*context->backend->vTable->executeEvents) ();
+		(*context->backend->vTable->executeEvents) (flags);
 }
 
 void

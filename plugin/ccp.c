@@ -678,10 +678,14 @@ static Bool
 ccpTimeout (void *closure)
 {
 	CompDisplay *d = (CompDisplay *)closure;
+	unsigned int flags = 0;
 
 	CCP_DISPLAY(d);
 
-	ccsProcessEvents(cd->context, findActivePlugin ("glib") != NULL);
+	if (findActivePlugin ("glib"))
+	    flags |= ProcessEventsNoGlibMainLoopMask;
+
+	ccsProcessEvents(cd->context, flags);
 
 	if (ccsSettingListLength(cd->context->changedSettings))
 	{

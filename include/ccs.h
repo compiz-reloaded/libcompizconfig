@@ -108,7 +108,7 @@ struct _CCSBackend
 
 typedef CCSBackendVTable *(*BackendGetInfoProc) (void);
 
-typedef void (*CCSExecuteEventsFunc) (void);
+typedef void (*CCSExecuteEventsFunc) (unsigned int flags);
 
 typedef Bool (*CCSInitBackendFunc) (CCSContext * context);
 typedef Bool (*CCSFiniBackendFunc) (CCSContext * context);
@@ -478,7 +478,10 @@ Bool ccsStringToButtonBinding (const char *binding, CCSSettingActionValue *actio
 void ccsStringListToEdges (CCSStringList edges, CCSSettingActionValue *action);
 Bool ccsStringToColor (const char *value, CCSSettingColorValue *color);
 
-void ccsProcessEvents(CCSContext *context, Bool glibMainLoop);
+/* flag values for ccsProcessEvents */
+#define ProcessEventsNoGlibMainLoopMask (1 << 0)
+
+void ccsProcessEvents(CCSContext *context, unsigned int flags);
 
 void ccsReadSettings(CCSContext *context);
 void ccsReadPluginSettings(CCSPlugin *plugin);
