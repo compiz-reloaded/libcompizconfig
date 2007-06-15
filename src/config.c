@@ -57,11 +57,11 @@ static char *getSectionName(void)
 
 	profile = getenv("GNOME_DESKTOP_SESSION_ID");
 	if (profile && strlen(profile))
-		return strdup("GNOME_session");
+		return strdup("gnome_session");
 
 	profile = getenv("KDE_FULL_SESSION");
 	if (profile && strlen(profile) && strcasecmp(profile,"true") == 0)
-		return strdup("KDE_session");
+		return strdup("kde_session");
 
 	return strdup("general");
 }
