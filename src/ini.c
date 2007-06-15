@@ -46,7 +46,8 @@ IniDictionary * ccsIniOpen (const char * fileName)
 
     /* create file if it doesn't exist or is desired */
     file = fopen (fileName, "a+");
-    fclose (file);
+    if (file)
+	fclose (file);
 
     return iniparser_new ((char*) fileName);
 }
