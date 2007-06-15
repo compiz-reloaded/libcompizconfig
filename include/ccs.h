@@ -126,8 +126,8 @@ typedef void (*CCSContextWriteDoneFunc) (CCSContext * context);
 typedef Bool (*CCSGetIsIntegratedFunc) (CCSSetting * setting);
 typedef Bool (*CCSGetIsReadOnlyFunc) (CCSSetting * setting);
 
-typedef CCSStringList (*CCSGetExistingProfilesFunc) (void);
-typedef Bool (*CCSDeleteProfileFunc) (char * name);
+typedef CCSStringList (*CCSGetExistingProfilesFunc) (CCSContext * context);
+typedef Bool (*CCSDeleteProfileFunc) (CCSContext * context, char * name);
 
 struct _CCSBackendVTable
 {

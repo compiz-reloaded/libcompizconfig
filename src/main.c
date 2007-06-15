@@ -1804,17 +1804,27 @@ ccsGetExistingProfiles (CCSContext * context)
 	if (!context || !context->backend)
 		return NULL;
 	if (context->backend->vTable->getExistingProfiles)
-		return context->backend->vTable->getExistingProfiles ();
+		return context->backend->vTable->getExistingProfiles (context);
 	return NULL;
 }
 
 void
 ccsDeleteProfile (CCSContext * context, char *name)
 {
-	if (!context || !context->backend || !name)
+	if (!context || !context->backend)
 		return;
+
+	/* never ever delete default profile */
+	if (!name || !strlen (name))
+	    return;
+
+	/* if the current profile should be deleted, 
+	   switch to default profile first */
+	if (strcmp (context->profile, name) == 0)
+	    ccsSetProfile (context, "");
+
 	if (context->backend->vTable->deleteProfile)
-		context->backend->vTable->deleteProfile (name);
+		context->backend->vTable->deleteProfile (context, name);
 }
 
 static void
