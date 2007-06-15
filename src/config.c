@@ -103,13 +103,8 @@ static Bool ccsReadGlobalConfig(ConfigOption option, char** value)
 	char *section;
 	Bool ret;
 	FILE *fp;
-	fp = fopen (SYSCONFDIR "/compizconfig/config", "r");
-	if (!fp)
-	{
-		return FALSE;
-	}	
-	fclose (fp);
-	iniFile = ccsIniOpen (SYSCONFDIR "/compizconfig/config");
+
+    iniFile = ccsIniOpen (SYSCONFDIR "/compizconfig/config");
 	if (!iniFile)
 		return FALSE;
 
@@ -154,7 +149,7 @@ Bool ccsReadConfig(ConfigOption option, char** value)
 
 	iniFile = getConfigFile();
 	if (!iniFile)
-		return FALSE;
+		return ccsReadGlobalConfig(option, value);
 
 	switch (option)
 	{
