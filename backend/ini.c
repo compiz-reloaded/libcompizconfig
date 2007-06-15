@@ -506,7 +506,7 @@ static int profileNameFilter (const struct dirent *name)
 	return 1;
 }
 
-static CCSStringList getExistingProfiles(void)
+static CCSStringList getExistingProfiles(CCSContext * context)
 {
 	CCSStringList  ret = NULL;
 	struct dirent **nameList;
@@ -546,7 +546,7 @@ static CCSStringList getExistingProfiles(void)
 	return ret;
 }
 
-static Bool deleteProfile(char * profile)
+static Bool deleteProfile(CCSContext * context, char * profile)
 {
 	char *fileName;
 
