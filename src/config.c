@@ -102,7 +102,6 @@ static Bool ccsReadGlobalConfig(ConfigOption option, char** value)
 	char *entry = NULL;
 	char *section;
 	Bool ret;
-	FILE *fp;
 
     iniFile = ccsIniOpen (SYSCONFDIR "/compizconfig/config");
 	if (!iniFile)
