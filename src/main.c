@@ -1213,6 +1213,11 @@ ccsGetProfile (CCSContext * context)
 void
 ccsSetIntegrationEnabled (CCSContext * context, Bool value)
 {
+	/* no action required if nothing changed */
+	if ((!context->deIntegration && !value) ||
+		(context->deIntegration && value))
+		return;
+
 	context->deIntegration = value;
 
 	ccsDisableFileWatch (context->configWatchId);
@@ -1223,6 +1228,10 @@ ccsSetIntegrationEnabled (CCSContext * context, Bool value)
 void
 ccsSetProfile (CCSContext * context, char *name)
 {
+	/* no action required if profile stays the same */
+	if (context->profile && (strcmp (context->profile, name) == 0))
+		return;
+
 	if (context->profile)
 		free (context->profile);
 	context->profile = (name) ? strdup (name) : strdup ("");
