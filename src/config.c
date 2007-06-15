@@ -102,6 +102,14 @@ static Bool ccsReadGlobalConfig(ConfigOption option, char** value)
 	char *entry = NULL;
 	char *section;
 	Bool ret;
+	FILE *fp;
+
+	/* check if the global config file exists - if it doesn't, exit
+	   to avoid it being created by ccsIniOpen */
+	fp = fopen (SYSCONFDIR "/compizconfig/config", "r");
+	if (!fp)
+		return FALSE;
+	fclose (fp);
 
     iniFile = ccsIniOpen (SYSCONFDIR "/compizconfig/config");
 	if (!iniFile)
