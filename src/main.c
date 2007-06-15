@@ -102,6 +102,11 @@ ccsContextNew (unsigned int *screens, unsigned int numScreens)
 	initGeneralOptions (context);
 	context->configWatchId = ccsAddConfigWatch (context, configChangeNotify);
 
+	if (context->backend)
+	printf("Backend     : %s\n",context->backend->vTable->name);
+	printf("Integration : %s\n",context->deIntegration?"true":"false");
+	printf("Profile     : %s\n",
+	       (context->profile && strlen(context->profile))?context->profile:"default");
 	return context;
 }
 
