@@ -33,6 +33,14 @@
 
 #include "ccs-private.h"
 
+Bool basicMetadata = FALSE;
+
+void
+ccsSetBasicMetadata (Bool value)
+{
+	basicMetadata = value;
+}
+
 static void
 initGeneralOptions (CCSContext * context)
 {
