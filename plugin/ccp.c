@@ -769,7 +769,7 @@ ccpInitDisplay (CompPlugin  *p,
 		i++;
 		s = s->next;
 	}
-	
+	ccsSetBasicMetadata (TRUE);
 	cd->context = ccsContextNew(screens, i);
 
 	free (screens);

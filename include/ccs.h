@@ -380,7 +380,9 @@ struct _CCSPluginCategory
 	CCSStringList		plugins;
 };
 
-
+/* set basic metadata to TRUE and no additional
+   metadata informations will be parsed */
+void ccsSetBasicMetadata (Bool value);
 CCSContext * ccsContextNew(unsigned int *screens, unsigned int numScreens);
 void ccsContextDestroy(CCSContext * context);
 CCSBackendVTable *getBackendInfo (void);

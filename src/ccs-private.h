@@ -27,6 +27,7 @@
 #define PLUGIN_PRIV(p) \
 	CCSPluginPrivate *pPrivate = (CCSPluginPrivate *) p->ccsPrivate;
 
+extern Bool basicMetadata;
 
 typedef struct _CCSPluginPrivate
 {

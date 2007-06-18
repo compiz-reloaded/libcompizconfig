@@ -704,34 +704,38 @@ initIntInfo (CCSSettingInfo * i, xmlNode * node)
 		i->forInt.max = val;
 		free (value);
 	}
-	nodes = getNodesFromPath (node->doc, node, "desc", &num);
-	if (num)
+	
+	if (!basicMetadata)
 	{
-		for (j = 0; j < num; j++)
+		nodes = getNodesFromPath (node->doc, node, "desc", &num);
+		if (num)
 		{
-			value = getStringFromPath (node->doc, nodes[j],
-									   "value/child::text()");
-			if (value)
+			for (j = 0; j < num; j++)
 			{
-				int val = strtol (value, NULL, 0);
-				free (value);
-				if (val >= i->forInt.min && val <= i->forInt.max)
+				value = getStringFromPath (node->doc, nodes[j],
+										   "value/child::text()");
+				if (value)
 				{
-					value = stringFromNodeDefTrans (nodes[j],
-													"name/child::text()", NULL);
-					if (value)
+					int val = strtol (value, NULL, 0);
+					free (value);
+					if (val >= i->forInt.min && val <= i->forInt.max)
 					{
-						NEW(CCSIntDesc, intDesc);
-						intDesc->name = strdup(value);
-						intDesc->value = val;
-						i->forInt.desc =
+						value = stringFromNodeDefTrans (nodes[j],
+									"name/child::text()", NULL);
+						if (value)
+						{
+							NEW(CCSIntDesc, intDesc);
+							intDesc->name = strdup(value);
+							intDesc->value = val;
+							i->forInt.desc =
 								ccsIntDescListAppend (i->forInt.desc, intDesc);
-						free (value);
+							free (value);
+						}
 					}
 				}
 			}
+			free (nodes);
 		}
-		free (nodes);
 	}
 }
 
@@ -1052,17 +1056,31 @@ addOptionForPlugin (CCSPlugin * plugin,
 	setting->screenNum = screen;
 	setting->isDefault = TRUE;
 	setting->name = strdup (name);
-	setting->shortDesc =
-		stringFromNodeDefTrans (node, "short/child::text()", name);
-	setting->longDesc =
-		stringFromNodeDefTrans (node, "long/child::text()", "");
-	setting->hints = stringFromNodeDef (node, "hints/child::text()", "");
-	setting->group =
-		stringFromNodeDefTrans (node, "ancestor::group/short/child::text()",
-								"");
-	setting->subGroup =
-		stringFromNodeDefTrans (node,
-								"ancestor::subgroup/short/child::text()", "");
+
+	if (!basicMetadata)
+	{
+		setting->shortDesc =
+			stringFromNodeDefTrans (node, "short/child::text()", name);
+		setting->longDesc =
+			stringFromNodeDefTrans (node, "long/child::text()", "");
+		setting->hints = stringFromNodeDef (node, "hints/child::text()", "");
+		setting->group =
+			stringFromNodeDefTrans (node, "ancestor::group/short/child::text()",
+									"");
+		setting->subGroup =
+			stringFromNodeDefTrans (node,
+									"ancestor::subgroup/short/child::text()",
+		 							"");
+	}
+	else
+	{
+		setting->shortDesc = strdup(name);
+		setting->longDesc  = strdup("");
+		setting->hints     = strdup("");
+		setting->group     = strdup("");
+		setting->subGroup  = strdup("");
+	}
+	
 	setting->type = getOptionType (type);
 	setting->value = &setting->defaultValue;
 	setting->defaultValue.parent = setting;
@@ -1283,14 +1301,23 @@ addPluginFromXMLNode (CCSContext * context, xmlNode * node, char *file)
 	plugin->context = context;
 	plugin->name = strdup (name);
 
-	plugin->shortDesc =
-		stringFromNodeDefTrans (node, "short/child::text()", name);
-	plugin->longDesc =
-		stringFromNodeDefTrans (node, "long/child::text()", name);
-
+	if (!basicMetadata)
+	{
+		plugin->shortDesc =
+			stringFromNodeDefTrans (node, "short/child::text()", name);
+		plugin->longDesc =
+			stringFromNodeDefTrans (node, "long/child::text()",	name);
+		plugin->category =
+			stringFromNodeDef (node, "category/child::text()", "");
+	}
+	else
+	{
+		plugin->shortDesc = strdup(name);
+		plugin->longDesc  = strdup(name);
+		plugin->category  = strdup("");
+	}
+	
 	initRulesFromRootNode (plugin, node);
-
-	plugin->category = stringFromNodeDef (node, "category/child::text()", "");
 
 	printf ("Adding plugin %s (%s)\n", name, plugin->shortDesc);
 
@@ -1340,14 +1367,21 @@ addCoreSettingsFromXMLNode (CCSContext * context, xmlNode * node, char *file)
 	plugin->name = strdup ("core");
 	plugin->category = strdup ("General");
 
-
-	plugin->shortDesc =
-		stringFromNodeDefTrans (node, "short/child::text()",
-								"General Options");
-	plugin->longDesc =
-		stringFromNodeDefTrans (node, "long/child::text()",
-								"General Compiz Options");
-
+	if (!basicMetadata)
+	{
+		plugin->shortDesc =
+			stringFromNodeDefTrans (node, "short/child::text()",
+									"General Options");
+		plugin->longDesc =
+			stringFromNodeDefTrans (node, "long/child::text()",
+									"General Compiz Options");
+	}
+	else
+	{
+		plugin->shortDesc = strdup("General Options");
+		plugin->longDesc  = strdup("General Compiz Options");
+	}
+	
 	printf ("Adding core settings (%s)\n", plugin->shortDesc);
 
 	context->plugins = ccsPluginListAppend (context->plugins, plugin);
