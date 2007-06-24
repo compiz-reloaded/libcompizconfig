@@ -260,6 +260,29 @@ getNodesFromPath (xmlDoc * doc, xmlNode * base, char *path, int *num)
 	return rv;
 }
 
+static xmlNode **
+getNodesFromPathGlobal (xmlDoc * doc, xmlNode * base, char *path, int *num)
+{
+	xmlNode **rv = NULL;
+	
+	if (globalMetadata && base)
+	{
+		char *gPath;
+		char *bPath = getGenericNodePath(base);
+		if (!bPath)
+			return NULL;
+		asprintf(&gPath,"%s/%s", bPath, path);
+		rv = getNodesFromXPath(globalMetadata, NULL, gPath, num);
+		free (bPath);
+		free (gPath);
+	}
+	if (!*num)
+		rv = getNodesFromXPath(doc, base, path, num);
+
+	return rv;
+}
+
+
 static Bool
 nodeExists (xmlNode * node, char *path)
 {
@@ -1103,7 +1126,7 @@ addOptionForPlugin (CCSPlugin * plugin,
 		break;
 	}
 
-	nodes = getNodesFromPath (node->doc, node, "default", &num);
+	nodes = getNodesFromPathGlobal (node->doc, node, "default", &num);
 
 	if (num)
 	{
@@ -1174,9 +1197,9 @@ addOptionFromXMLNode (CCSPlugin * plugin, xmlNode * node)
 	if (!node)
 		return;
 
-	name = getStringFromPath (node->doc, node, "@name");
-	type = getStringFromPath (node->doc, node, "@type");
-	readonly = getStringFromPath (node->doc, node, "@read_only");
+	name = getStringFromXPath (node->doc, node, "@name");
+	type = getStringFromXPath (node->doc, node, "@type");
+	readonly = getStringFromXPath (node->doc, node, "@read_only");
 	if (!name || !strlen (name) || !type || !strlen (type) ||
 	    (!strcmp(plugin->name, "core") && !strcmp(name, "active_plugins")) ||
 	    (readonly && !strcmp(readonly, "true")))
@@ -1270,7 +1293,7 @@ addPluginFromXMLNode (CCSContext * context, xmlNode * node, char *file)
 	if (!node)
 		return;
 
-	name = getStringFromPath (node->doc, node, "@name");
+	name = getStringFromXPath (node->doc, node, "@name");
 	if (!name || !strlen (name))
 	{
 		if (name)
@@ -1392,13 +1415,13 @@ loadPluginsFromXML (CCSContext * context, xmlDoc * doc, char *filename)
 {
 	xmlNode **nodes;
 	int num, i;
-	nodes = getNodesFromPath (doc, NULL, "/compiz/core", &num);
+	nodes = getNodesFromXPath (doc, NULL, "/compiz/core", &num);
 	if (num)
 	{
 		addCoreSettingsFromXMLNode (context, nodes[0], filename);
 		free (nodes);
 	}
-	nodes = getNodesFromPath (doc, NULL, "/compiz/plugin", &num);
+	nodes = getNodesFromXPath (doc, NULL, "/compiz/plugin", &num);
 	if (num)
 	{
 		for (i = 0; i < num; i++)
