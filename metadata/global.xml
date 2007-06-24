@@ -124,6 +124,13 @@
 					<option name="skydome_gradient_end_color" type="color"/>
 				</subgroup>
 			</group>
+			<group>
+				<short>Transparent Cube</short>
+				<option name="active_opacity" type="float"/>
+				<option name="inactive_opacity" type="float"/>
+				<option name="fade_time" type="float"/>
+				<option name="transparent_manual_only" type="bool"/>
+			</group>
 		</screen>
 	</plugin>
 	<!-- fade metadata -->
