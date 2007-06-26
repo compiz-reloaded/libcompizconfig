@@ -1241,13 +1241,16 @@ ccsSetIntegrationEnabled (CCSContext * context, Bool value)
 void
 ccsSetProfile (CCSContext * context, char *name)
 {
+	if (!name)
+		name = "";
+
 	/* no action required if profile stays the same */
 	if (context->profile && (strcmp (context->profile, name) == 0))
 		return;
 
 	if (context->profile)
 		free (context->profile);
-	context->profile = (name) ? strdup (name) : strdup ("");
+	context->profile = strdup (name);
 
 	ccsDisableFileWatch (context->configWatchId);
 	ccsWriteConfig (OptionProfile, context->profile);
