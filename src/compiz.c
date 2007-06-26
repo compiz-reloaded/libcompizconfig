@@ -959,7 +959,7 @@ printSetting (CCSSetting * s)
 			CCSStringList list, l;
 			list = ccsEdgesToStringList (&s->value->value.asAction);
 			printf ("    Edge    : ");
-			for (l = list; l; l = l->next);
+			for (l = list; l; l = l->next)
 				printf ("%s ", l->data);
 			printf("\n");
 			if (list)
