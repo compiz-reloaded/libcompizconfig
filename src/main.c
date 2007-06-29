@@ -1395,34 +1395,35 @@ ccsWriteChangedSettings (CCSContext * context)
 		ccsSettingListFree (context->changedSettings, FALSE);
 }
 
-#define FIELDCOMPARABLE(field1, field2) \
-	{ \
-		typeof(field1) _field2=field2; \
-		if (field1 != _field2) \
-			return 0;\
-	}
-#define FOURFIELDS(field1, field2, field3, field4) \
-	FIELDCOMPARABLE(field1, field2) \
-	FIELDCOMPARABLE(field3, field4)
-#define EIGHTFIELDS(field1, field2, field3, field4, field5, field6, field7, field8) \
-	FOURFIELDS(field1, field2, field3, field4) \
-	FOURFIELDS(field5, field6, field7, field8)
-
 Bool
 ccsIsEqualColor (CCSSettingColorValue c1, CCSSettingColorValue c2)
 {
-	EIGHTFIELDS (c1.color.red, c2.color.red, c1.color.blue, c2.color.blue,
-				 c1.color.green, c2.color.green, c1.color.alpha,
-				 c2.color.alpha) return 1;
+	if (c1.color.red == c2.color.red     &&
+		c1.color.green == c2.color.green &&
+		c1.color.blue == c2.color.blue   &&
+		c1.color.alpha == c2.color.alpha)
+	{
+		return TRUE;
+	}
+
+	return FALSE;
 }
 
 Bool
 ccsIsEqualAction (CCSSettingActionValue c1, CCSSettingActionValue c2)
 {
-	EIGHTFIELDS (c1.button, c2.button, c1.buttonModMask, c2.buttonModMask,
-				 c1.keysym, c2.keysym, c1.keyModMask,
-				 c2.keyModMask) FOURFIELDS (c1.onBell, c2.onBell, c1.edgeMask,
-											c2.edgeMask) return 1;
+	if (c1.button == c2.button               &&
+		c1.buttonModMask == c2.buttonModMask &&
+		c1.keysym == c2.keysym               &&
+		c1.keyModMask == c2.keyModMask       &&
+		c1.edgeMask == c2.edgeMask           &&
+		c1.edgeButton == c2.edgeButton       &&
+		((c1.onBell && c2.onBell) || (!c1.onBell && !c2.onBell)))
+	{
+		return TRUE;
+	}
+
+	return FALSE;
 }
 
 
