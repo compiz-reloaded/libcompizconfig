@@ -43,6 +43,41 @@
 extern "C" {
 #endif
 
+/* lock INI file access against concurrent access */
+static FileLock* ini_file_lock (const char *fileName)
+{
+	int fd;
+	FileLock *lock;
+	struct flock lockinfo;
+
+	fd = open (fileName, O_RDONLY | O_CREAT);
+	if (fd < 0)
+		return NULL;
+	
+	lock = malloc (sizeof(FileLock));
+	lock->fd = fd;
+
+	memset (&lockinfo, 0, sizeof (struct flock));
+	lockinfo.l_type = F_WRLCK;
+	lockinfo.l_pid = getpid();
+	fcntl (fd, F_SETLKW, &lockinfo);
+
+	return lock;
+}
+
+static void ini_file_unlock (FileLock *lock)
+{
+	struct flock lockinfo;
+
+	memset (&lockinfo, 0, sizeof (struct flock));
+	lockinfo.l_type = F_UNLCK;
+	lockinfo.l_pid = getpid();
+	fcntl (lock->fd, F_SETLKW, &lockinfo);
+
+	close (lock->fd);
+	free (lock);
+}
+
 /* strlib.c following */
 
 #define ASCIILINESZ 1024
@@ -524,22 +559,25 @@ char * iniparser_getsecname(dictionary * d, int n)
 void iniparser_dump_ini(dictionary * d, const char * file_name)
 {
     int     i, j ;
-	int     fd;
     char    keym[ASCIILINESZ+1];
     int     nsec ;
     char *  secname ;
     int     seclen ;
 	FILE *  f;
+	FileLock *lock;
 
 	if (d==NULL) return;
 
-	fd = open (file_name, O_WRONLY | O_CREAT);
-	if (fd < 0)
+	lock = ini_file_lock (file_name);
+	if (lock == NULL)
 		return;
 
-	f = fdopen (fd, "w");
+	f = fopen (file_name, "w");
 	if (f == NULL)
+	{
+		ini_file_unlock (lock);
 		return;
+	}
 
     nsec = iniparser_getnsec(d);
     if (nsec<1) {
@@ -570,6 +608,7 @@ void iniparser_dump_ini(dictionary * d, const char * file_name)
     }
 
 	fclose(f);
+	ini_file_unlock (lock);
 }
 
 /*-------------------------------------------------------------------------*/
@@ -689,15 +728,18 @@ dictionary * iniparser_new(char *ininame)
     char    *   where ;
     FILE    *   ini ;
     int         lineno ;
-	int         fd;
+	FileLock *  lock;
 
-	fd = open (ininame, O_RDONLY);
-	if (fd < 0)
+	lock = ini_file_lock (ininame);
+	if (lock == NULL)
 		return NULL;
 
-	ini = fdopen (fd, "r");
+	ini = fopen (ininame, "r");
 	if (ini == NULL)
+	{
+		ini_file_unlock (lock);
 		return NULL;
+	}
 
     sec[0]=0;
 
@@ -734,7 +776,10 @@ dictionary * iniparser_new(char *ininame)
             }
         }
     }
+
 	fclose(ini);
+	ini_file_unlock (lock);
+
     return d ;
 }
 
