@@ -517,15 +517,20 @@ char * iniparser_getsecname(dictionary * d, int n)
  */
 /*--------------------------------------------------------------------------*/
 
-void iniparser_dump_ini(dictionary * d, FILE * f)
+void iniparser_dump_ini(dictionary * d, const char * file_name)
 {
     int     i, j ;
     char    keym[ASCIILINESZ+1];
     int     nsec ;
     char *  secname ;
     int     seclen ;
+	FILE *  f;
 
-    if (d==NULL || f==NULL) return ;
+	if (d==NULL) return;
+
+	f = fopen (file_name, "w");
+	if (f==NULL)
+		return;
 
     nsec = iniparser_getnsec(d);
     if (nsec<1) {
@@ -554,7 +559,8 @@ void iniparser_dump_ini(dictionary * d, FILE * f)
         }
 	fprintf(f, "\n");
     }
-    return ;
+
+	fclose(f);
 }
 
 /*-------------------------------------------------------------------------*/
