@@ -33,6 +33,10 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 #include "iniparser.h"
 
 #ifdef __cplusplus
@@ -520,6 +524,7 @@ char * iniparser_getsecname(dictionary * d, int n)
 void iniparser_dump_ini(dictionary * d, const char * file_name)
 {
     int     i, j ;
+	int     fd;
     char    keym[ASCIILINESZ+1];
     int     nsec ;
     char *  secname ;
@@ -528,8 +533,12 @@ void iniparser_dump_ini(dictionary * d, const char * file_name)
 
 	if (d==NULL) return;
 
-	f = fopen (file_name, "w");
-	if (f==NULL)
+	fd = open (file_name, O_WRONLY | O_CREAT);
+	if (fd < 0)
+		return;
+
+	f = fdopen (fd, "w");
+	if (f == NULL)
 		return;
 
     nsec = iniparser_getnsec(d);
@@ -680,10 +689,15 @@ dictionary * iniparser_new(char *ininame)
     char    *   where ;
     FILE    *   ini ;
     int         lineno ;
+	int         fd;
 
-    if ((ini=fopen(ininame, "r"))==NULL) {
-        return NULL ;
-    }
+	fd = open (ininame, O_RDONLY);
+	if (fd < 0)
+		return NULL;
+
+	ini = fdopen (fd, "r");
+	if (ini == NULL)
+		return NULL;
 
     sec[0]=0;
 
@@ -720,7 +734,7 @@ dictionary * iniparser_new(char *ininame)
             }
         }
     }
-    fclose(ini);
+	fclose(ini);
     return d ;
 }
 
