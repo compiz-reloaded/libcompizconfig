@@ -64,7 +64,6 @@ void ccsIniClose (IniDictionary * dictionary)
 
 void ccsIniSave (IniDictionary * dictionary, const char * fileName)
 {
-	FILE *file;
 	char *path, *delim;
 
 	path = strdup (fileName);
@@ -79,9 +78,7 @@ void ccsIniSave (IniDictionary * dictionary, const char * fileName)
 	}
 	free (path);
 
-	file = fopen (fileName, "w");
-	iniparser_dump_ini (dictionary, file);
-	fclose (file);
+	iniparser_dump_ini (dictionary, fileName);
 }
 
 static char *getIniString (IniDictionary * dictionary,

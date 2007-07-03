@@ -49,7 +49,7 @@ void iniparser_free(dictionary * d);
 
 int iniparser_getnsec(dictionary * d);
 char * iniparser_getsecname(dictionary * d, int n);
-void iniparser_dump_ini(dictionary * d, FILE * f);
+void iniparser_dump_ini(dictionary * d, const char * file_name);
 char * iniparser_getstring(dictionary * d, char * key, char * def);
 void iniparser_add_entry(dictionary * d, char * sec, char * key, char * val);
 int iniparser_find_entry(dictionary  *   ini, char        *   entry);
