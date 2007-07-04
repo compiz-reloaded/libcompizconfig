@@ -239,63 +239,35 @@ ccsStringToButtonBinding (const char           *binding,
 }
 
 CCSStringList
-ccsEdgeMaskToStringList (int edgeMask)
+ccsEdgesToStringList (CCSSettingActionValue *action)
 {
     CCSStringList ret = NULL;
     int i;
 
     for (i = 0; i < N_EDGES; i++)
-	if (edgeMask & (1 << i))
+	if (action->edgeMask & (1 << i))
 	    ret = ccsStringListAppend(ret, strdup(edgeName[i]));
 
     return ret;
-}
-
-int
-ccsStringListToEdgeMask (CCSStringList edges)
-{
-    int i;
-    int edgeMask;
-    CCSStringList l;
-
-    edgeMask = 0;
-
-    for (l = edges; l; l = l->next)
-    {
-        for (i = 0; i < N_EDGES; i++)
-        {
-	    if (strcmp(l->data, edgeName[i]) == 0)
-	        edgeMask |= (1 << i);
-        }
-    }
-
-    return edgeMask;
-}
-
-CCSStringList
-ccsEdgesToStringList (CCSSettingActionValue *action)
-{
-    return ccsEdgeMaskToStringList(action->edgeMask);
 }
 
 void
 ccsStringListToEdges (CCSStringList         edges, 
 		      CCSSettingActionValue *action)
 {
-    action->edgeMask = ccsStringListToEdgeMask(edges);
-}
+    int i;
+    CCSStringList l;
 
-CCSStringList
-ccsEdgeButtonsToStringList (CCSSettingActionValue *action)
-{
-    return ccsEdgeMaskToStringList(action->edgeButton);
-}
+    action->edgeMask = 0;
 
-void
-ccsStringListToEdgeButtons (CCSStringList         edgeButtons, 
-			    CCSSettingActionValue *action)
-{
-    action->edgeButton = ccsStringListToEdgeMask(edgeButtons);
+    for (l = edges; l; l = l->next)
+    {
+        for (i = 0; i < N_EDGES; i++)
+        {
+	    if (strcmp(l->data, edgeName[i]) == 0)
+	        action->edgeMask |= (1 << i);
+        }
+    }
 }
 
 Bool
