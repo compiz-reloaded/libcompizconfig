@@ -54,33 +54,32 @@ struct _Modifier
 }
 
 modifierList[] = {
-		     { "<Shift>",      ShiftMask		 },
-		     { "<Control>",    ControlMask	 },
-		     { "<Mod1>",	      Mod1Mask		 },
-		     { "<Mod2>",	      Mod2Mask		 },
-		     { "<Mod3>",	      Mod3Mask		 },
-		     { "<Mod4>",	      Mod4Mask		 },
-		     { "<Mod5>",	      Mod5Mask		 },
-		     { "<Alt>",	      CompAltMask        },
-		     { "<Meta>",	      CompMetaMask       },
-		     { "<Super>",      CompSuperMask      },
-		     { "<Hyper>",      CompHyperMask	 },
-		     { "<ModeSwitch>", CompModeSwitchMask },
-		 };
+    { "<Shift>",      ShiftMask		 },
+    { "<Control>",    ControlMask	 },
+    { "<Mod1>",	      Mod1Mask		 },
+    { "<Mod2>",	      Mod2Mask		 },
+    { "<Mod3>",	      Mod3Mask		 },
+    { "<Mod4>",	      Mod4Mask		 },
+    { "<Mod5>",	      Mod5Mask		 },
+    { "<Alt>",	      CompAltMask        },
+    { "<Meta>",	      CompMetaMask       },
+    { "<Super>",      CompSuperMask      },
+    { "<Hyper>",      CompHyperMask	 },
+    { "<ModeSwitch>", CompModeSwitchMask },
+};
 
 #define N_MODIFIERS (sizeof (modifierList) / sizeof (struct _Modifier))
 
-static char *edgeName[] =
-    {
-	"Left",
-	"Right",
-	"Top",
-	"Bottom",
-	"TopLeft",
-	"TopRight",
-	"BottomLeft",
-	"BottomRight"
-    };
+static char *edgeName[] = {
+    "Left",
+    "Right",
+    "Top",
+    "Bottom",
+    "TopLeft",
+    "TopRight",
+    "BottomLeft",
+    "BottomRight"
+};
 
 #define N_EDGES (sizeof (edgeName) / sizeof (edgeName[0]))
 
@@ -117,7 +116,6 @@ stringAppend (char *s,
 }
 
 char *
-
 ccsModifiersToString (unsigned int modMask)
 {
     char *binding = NULL;
@@ -141,10 +139,9 @@ ccsKeyBindingToString (CCSSettingActionValue *action)
 
     if (action->keysym != NoSymbol)
     {
-	char   *keyname;
+	char *keyname;
 
 	keyname = XKeysymToString (action->keysym);
-
 	if (keyname)
 	{
 	    binding = stringAppend (binding, keyname);
@@ -169,7 +166,6 @@ ccsButtonBindingToString (CCSSettingActionValue *action)
 }
 
 unsigned int
-
 ccsStringToModifiers (const char *binding)
 {
     unsigned int mods = 0;
@@ -177,7 +173,7 @@ ccsStringToModifiers (const char *binding)
 
     for (i = 0; i < N_MODIFIERS; i++)
     {
-	if (strcasestr (binding, modifierList[i].name) )
+	if (strcasestr (binding, modifierList[i].name))
 	    mods |= modifierList[i].modifier;
     }
 
@@ -185,7 +181,6 @@ ccsStringToModifiers (const char *binding)
 }
 
 Bool
-
 ccsStringToKeyBinding (const char           *binding,
 		       CCSSettingActionValue *action)
 {
@@ -200,7 +195,7 @@ ccsStringToKeyBinding (const char           *binding,
     if (ptr)
 	binding = ptr + 1;
 
-    while (*binding && !isalnum (*binding) )
+    while (*binding && !isalnum (*binding))
 	binding++;
 
     keysym = XStringToKeysym (binding);
@@ -217,7 +212,6 @@ ccsStringToKeyBinding (const char           *binding,
 }
 
 Bool
-
 ccsStringToButtonBinding (const char           *binding,
 			  CCSSettingActionValue *action)
 {
@@ -231,10 +225,10 @@ ccsStringToButtonBinding (const char           *binding,
     if (ptr)
 	binding = ptr + 1;
 
-    while (*binding && !isalnum (*binding) )
+    while (*binding && !isalnum (*binding))
 	binding++;
 
-    if (strncmp (binding, "Button", strlen ("Button") ) == 0)
+    if (strncmp (binding, "Button", strlen ("Button")) == 0)
     {
 	int buttonNum;
 
@@ -251,15 +245,14 @@ ccsStringToButtonBinding (const char           *binding,
 }
 
 CCSStringList
-
 ccsEdgesToStringList (CCSSettingActionValue *action)
 {
     CCSStringList ret = NULL;
     int i;
 
     for (i = 0; i < N_EDGES; i++)
-	if (action->edgeMask & (1 << i) )
-	    ret = ccsStringListAppend (ret, strdup (edgeName[i]) );
+	if (action->edgeMask & (1 << i))
+	    ret = ccsStringListAppend (ret, strdup (edgeName[i]));
 
     return ret;
 }
@@ -284,7 +277,6 @@ ccsStringListToEdges (CCSStringList         edges,
 }
 
 Bool
-
 ccsStringToColor (const char          *value,
 		  CCSSettingColorValue *color)
 {
@@ -304,7 +296,6 @@ ccsStringToColor (const char          *value,
 }
 
 char *
-
 ccsColorToString (CCSSettingColorValue *color)
 {
     char tmp[256];

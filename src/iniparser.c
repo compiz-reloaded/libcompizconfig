@@ -49,30 +49,23 @@ extern "C"
 
     static FileLock* ini_file_lock (const char *fileName)
     {
-	int fd;
-
-	FileLock *lock ;
-
+	int          fd;
+	FileLock     *lock;
 	struct flock lockinfo;
 
 	fd = open (fileName, O_RDONLY | O_CREAT);
-
 	if (fd < 0)
 	    return NULL;
 
-	lock = malloc (sizeof (FileLock) );
-
+	lock = malloc (sizeof (FileLock));
 	lock ->fd = fd;
-
-    memset (&lockinfo, 0, sizeof (struct flock) );
+	memset (&lockinfo, 0, sizeof (struct flock));
 
 	lockinfo.l_type = F_WRLCK;
-
 	lockinfo.l_pid = getpid();
-
 	fcntl (fd, F_SETLKW, &lockinfo);
 
-	return lock ;
+	return lock;
 }
 
 static void ini_file_unlock (FileLock *lock )
@@ -80,7 +73,7 @@ static void ini_file_unlock (FileLock *lock )
 
 	struct flock lockinfo;
 
-	memset (&lockinfo, 0, sizeof (struct flock) );
+	memset (&lockinfo, 0, sizeof (struct flock));
 	lockinfo.l_type = F_UNLCK;
 	lockinfo.l_pid = getpid();
 
@@ -111,23 +104,23 @@ static void ini_file_unlock (FileLock *lock )
     {
 	static char l[ASCIILINESZ+1];
 
-	int i ;
+	int i;
 
-	if (s == NULL) return NULL ;
+	if (s == NULL) return NULL;
 
 	memset (l, 0, ASCIILINESZ + 1);
 
-	i = 0 ;
+	i = 0;
 
 	while (s[i] && i < ASCIILINESZ)
 	{
-	    l[i] = (char) tolower ( (int) s[i]);
-	    i++ ;
+	    l[i] = (char) tolower ((int) s[i]);
+	    i++;
 	}
 
 	l[ASCIILINESZ] = (char) 0;
 
-	return l ;
+	return l;
     }
 
     /*-------------------------------------------------------------------------*/
@@ -145,11 +138,11 @@ static void ini_file_unlock (FileLock *lock )
     {
 	char * skip = s;
 
-	if (s == NULL) return NULL ;
+	if (s == NULL) return NULL;
 
-	while (isspace ( (int) *skip) && *skip) skip++;
+	while (isspace ((int) *skip) && *skip) skip++;
 
-	return skip ;
+	return skip;
     }
 
 
@@ -173,9 +166,9 @@ static void ini_file_unlock (FileLock *lock )
     {
 	static char l[ASCIILINESZ+1];
 
-	char * last ;
+	char * last;
 
-	if (s == NULL) return NULL ;
+	if (s == NULL) return NULL;
 
 	memset (l, 0, ASCIILINESZ + 1);
 
@@ -185,15 +178,15 @@ static void ini_file_unlock (FileLock *lock )
 
 	while (last > l)
 	{
-	    if (!isspace ( (int) * (last - 1) ) )
-		break ;
+	    if (!isspace ((int) * (last - 1)))
+		break;
 
-	    last -- ;
+	    last --;
 	}
 
 	*last = (char) 0;
 
-	return l ;
+	return l;
     }
 
 
@@ -218,7 +211,7 @@ static void ini_file_unlock (FileLock *lock )
 	newptr = calloc (2 * size, 1);
 	memcpy (newptr, ptr, size);
 	free (ptr);
-	return newptr ;
+	return newptr;
     }
 
 
@@ -241,24 +234,24 @@ static void ini_file_unlock (FileLock *lock )
 
     static unsigned dictionary_hash (char * key)
     {
-	int         len ;
-	unsigned    hash ;
-	int         i ;
+	int         len;
+	unsigned    hash;
+	int         i;
 
 	len = strlen (key);
 
-	for (hash = 0, i = 0 ; i < len ; i++)
+	for (hash = 0, i = 0; i < len; i++)
 	{
-	    hash += (unsigned) key[i] ;
+	    hash += (unsigned) key[i];
 	    hash += (hash << 10);
-	    hash ^= (hash >> 6) ;
+	    hash ^= (hash >> 6);
 	}
 
 	hash += (hash << 3);
 
 	hash ^= (hash >> 11);
 	hash += (hash << 15);
-	return hash ;
+	return hash;
     }
 
 
@@ -276,21 +269,21 @@ static void ini_file_unlock (FileLock *lock )
 
     dictionary * dictionary_new (int size)
     {
-	dictionary *d ;
+	dictionary *d;
 
 	/* If no size was specified, allocate space for DICTMINSZ */
 
-	if (size < DICTMINSZ) size = DICTMINSZ ;
+	if (size < DICTMINSZ) size = DICTMINSZ;
 
-	d = (dictionary *) calloc (1, sizeof (dictionary) );
+	d = (dictionary *) calloc (1, sizeof (dictionary));
 
-	d->size = size ;
+	d->size = size;
 
-	d->val  = (char **) calloc (size, sizeof (char*) );
+	d->val  = (char **) calloc (size, sizeof (char*));
 
-	d->key  = (char **) calloc (size, sizeof (char*) );
+	d->key  = (char **) calloc (size, sizeof (char*));
 
-	d->hash = (unsigned int *) calloc (size, sizeof (unsigned) );
+	d->hash = (unsigned int *) calloc (size, sizeof (unsigned));
 
 	return d;
     }
@@ -308,11 +301,11 @@ static void ini_file_unlock (FileLock *lock )
 
     static void dictionary_del (dictionary * d)
     {
-	int     i ;
+	int     i;
 
-	if (d == NULL) return ;
+	if (d == NULL) return;
 
-	for (i = 0 ; i < d->size ; i++)
+	for (i = 0; i < d->size; i++)
 	{
 	    if (d->key[i] != NULL)
 		free (d->key[i]);
@@ -348,29 +341,29 @@ static void ini_file_unlock (FileLock *lock )
     /*--------------------------------------------------------------------------*/
     static char * dictionary_get (dictionary * d, char * key, char * def)
     {
-	unsigned    hash ;
-	int         i ;
+	unsigned    hash;
+	int         i;
 
 	hash = dictionary_hash (key);
 
-	for (i = 0 ; i < d->size ; i++)
+	for (i = 0; i < d->size; i++)
 	{
 	    if (d->key == NULL)
-		continue ;
+		continue;
 
 	    /* Compare hash */
 	    if (hash == d->hash[i])
 	    {
 		/* Compare string, to avoid hash collisions */
 
-		if (!strcmp (key, d->key[i]) )
+		if (!strcmp (key, d->key[i]))
 		{
-		    return d->val[i] ;
+		    return d->val[i];
 		}
 	    }
 	}
 
-	return def ;
+	return def;
     }
 
 
@@ -401,36 +394,36 @@ static void ini_file_unlock (FileLock *lock )
 
     static void dictionary_set (dictionary * d, char * key, char * val)
     {
-	int         i ;
-	unsigned    hash ;
+	int         i;
+	unsigned    hash;
 
-	if (d == NULL || key == NULL) return ;
+	if (d == NULL || key == NULL) return;
 
 	/* Compute hash for this key */
-	hash = dictionary_hash (key) ;
+	hash = dictionary_hash (key);
 
 	/* Find if value is already in blackboard */
 	if (d->n > 0)
 	{
-	    for (i = 0 ; i < d->size ; i++)
+	    for (i = 0; i < d->size; i++)
 	    {
 		if (d->key[i] == NULL)
-		    continue ;
+		    continue;
 
 		if (hash == d->hash[i])
 		{ /* Same hash value */
 
-		    if (!strcmp (key, d->key[i]) )
+		    if (!strcmp (key, d->key[i]))
 		    {   /* Same key */
 			/* Found a value: modify and return */
 
 			if (d->val[i] != NULL)
 			    free (d->val[i]);
 
-			d->val[i] = val ? strdup (val) : NULL ;
+			d->val[i] = val ? strdup (val) : NULL;
 
 			/* Value has been modified: return */
-			return ;
+			return;
 		    }
 		}
 	    }
@@ -442,34 +435,34 @@ static void ini_file_unlock (FileLock *lock )
 	{
 
 	    /* Reached maximum size: reallocate blackboard */
-	    d->val  = (char **) mem_double (d->val,  d->size * sizeof (char*) ) ;
-	    d->key  = (char **) mem_double (d->key,  d->size * sizeof (char*) ) ;
-	    d->hash = (unsigned int *) mem_double (d->hash, d->size * sizeof (unsigned) ) ;
+	    d->val  = (char **) mem_double (d->val,  d->size * sizeof (char*));
+	    d->key  = (char **) mem_double (d->key,  d->size * sizeof (char*));
+	    d->hash = (unsigned int *) mem_double (d->hash, d->size * sizeof (unsigned));
 
 	    /* Double size */
-	    d->size *= 2 ;
+	    d->size *= 2;
 	}
 
 	/* Insert key in the first empty slot */
-	for (i = 0 ; i < d->size ; i++)
+	for (i = 0; i < d->size; i++)
 	{
 	    if (d->key[i] == NULL)
 	    {
 		/* Add key here */
-		break ;
+		break;
 	    }
 	}
 
 	/* Copy key */
 	d->key[i]  = strdup (key);
 
-	d->val[i]  = val ? strdup (val) : NULL ;
+	d->val[i]  = val ? strdup (val) : NULL;
 
 	d->hash[i] = hash;
 
-	d->n ++ ;
+	d->n ++;
 
-	return ;
+	return;
     }
 
     /*-------------------------------------------------------------------------*/
@@ -485,47 +478,47 @@ static void ini_file_unlock (FileLock *lock )
     /*--------------------------------------------------------------------------*/
     static void dictionary_unset (dictionary * d, char * key)
     {
-	unsigned    hash ;
-	int         i ;
+	unsigned    hash;
+	int         i;
 
 	hash = dictionary_hash (key);
 
-	for (i = 0 ; i < d->size ; i++)
+	for (i = 0; i < d->size; i++)
 	{
 	    if (d->key[i] == NULL)
-		continue ;
+		continue;
 
 	    /* Compare hash */
 	    if (hash == d->hash[i])
 	    {
 		/* Compare string, to avoid hash collisions */
 
-		if (!strcmp (key, d->key[i]) )
+		if (!strcmp (key, d->key[i]))
 		{
 		    /* Found key */
-		    break ;
+		    break;
 		}
 	    }
 	}
 
 	if (i >= d->size)
 	    /* Key not found */
-	    return ;
+	    return;
 
 	free (d->key[i]);
 
-	d->key[i] = NULL ;
+	d->key[i] = NULL;
 
 	if (d->val[i] != NULL)
 	{
 	    free (d->val[i]);
-	    d->val[i] = NULL ;
+	    d->val[i] = NULL;
 	}
 
-	d->hash[i] = 0 ;
+	d->hash[i] = 0;
 
-	d->n -- ;
-	return ;
+	d->n --;
+	return;
     }
 
     /* iniparser.c.c following */
@@ -555,7 +548,7 @@ static void ini_file_unlock (FileLock *lock )
 	/* Add (key,val) to dictionary */
 	dictionary_set (d, longkey, val);
 
-	return ;
+	return;
     }
 
 
@@ -580,25 +573,25 @@ static void ini_file_unlock (FileLock *lock )
 
     int iniparser_getnsec (dictionary * d)
     {
-	int i ;
-	int nsec ;
+	int i;
+	int nsec;
 
-	if (d == NULL) return -1 ;
+	if (d == NULL) return -1;
 
-	nsec = 0 ;
+	nsec = 0;
 
-	for (i = 0 ; i < d->size ; i++)
+	for (i = 0; i < d->size; i++)
 	{
 	    if (d->key[i] == NULL)
-		continue ;
+		continue;
 
 	    if (strchr (d->key[i], ':') == NULL)
 	    {
-		nsec ++ ;
+		nsec ++;
 	    }
 	}
 
-	return nsec ;
+	return nsec;
     }
 
 
@@ -619,33 +612,33 @@ static void ini_file_unlock (FileLock *lock )
 
     char * iniparser_getsecname (dictionary * d, int n)
     {
-	int i ;
-	int foundsec ;
+	int i;
+	int foundsec;
 
-	if (d == NULL || n < 0) return NULL ;
+	if (d == NULL || n < 0) return NULL;
 
-	foundsec = 0 ;
+	foundsec = 0;
 
-	for (i = 0 ; i < d->size ; i++)
+	for (i = 0; i < d->size; i++)
 	{
 	    if (d->key[i] == NULL)
-		continue ;
+		continue;
 
 	    if (strchr (d->key[i], ':') == NULL)
 	    {
-		foundsec++ ;
+		foundsec++;
 
 		if (foundsec > n)
-		    break ;
+		    break;
 	    }
 	}
 
 	if (foundsec <= n)
 	{
-	    return NULL ;
+	    return NULL;
 	}
 
-	return d->key[i] ;
+	return d->key[i];
     }
 
     /*-------------------------------------------------------------------------*/
@@ -662,14 +655,14 @@ static void ini_file_unlock (FileLock *lock )
 
     void iniparser_dump_ini (dictionary * d, const char * file_name)
     {
-	int     i, j ;
+	int     i, j;
 	char    keym[ASCIILINESZ+1];
-	int     nsec ;
-	char *  secname ;
-	int     seclen ;
+	int     nsec;
+	char *  secname;
+	int     seclen;
 	FILE *  f;
 
-	FileLock *lock ;
+	FileLock *lock;
 
 	if (d == NULL) return;
 
@@ -694,10 +687,10 @@ static void ini_file_unlock (FileLock *lock )
 	{
 	    /* No section in file: dump all keys as they are */
 
-	    for (i = 0 ; i < d->size ; i++)
+	    for (i = 0; i < d->size; i++)
 	    {
 		if (d->key[i] == NULL)
-		    continue ;
+		    continue;
 
 		fprintf (f, "%s = %s\n", d->key[i], d->val[i]);
 	    }
@@ -706,22 +699,22 @@ static void ini_file_unlock (FileLock *lock )
 
 	    ini_file_unlock (lock );
 
-	    return ;
+	    return;
 	}
 
-	for (i = 0 ; i < nsec ; i++)
+	for (i = 0; i < nsec; i++)
 	{
-	    secname = iniparser_getsecname (d, i) ;
+	    secname = iniparser_getsecname (d, i);
 	    seclen  = (int) strlen (secname);
 	    fprintf (f, "[%s]\n", secname);
 	    sprintf (keym, "%s:", secname);
 
-	    for (j = 0 ; j < d->size ; j++)
+	    for (j = 0; j < d->size; j++)
 	    {
 		if (d->key[j] == NULL)
-		    continue ;
+		    continue;
 
-		if (!strncmp (d->key[j], keym, seclen + 1) )
+		if (!strncmp (d->key[j], keym, seclen + 1))
 		{
 		    fprintf (f,
 			     "%s = %s\n",
@@ -755,19 +748,19 @@ static void ini_file_unlock (FileLock *lock )
     /*--------------------------------------------------------------------------*/
     char * iniparser_getstring (dictionary * d, char * key, char * def)
     {
-	char * lc_key ;
-	char * sval ;
+	char * lc_key;
+	char * sval;
 
 	if (d == NULL || key == NULL)
-	    return def ;
+	    return def;
 
-	lc_key = strdup (strlwc (key) );
+	lc_key = strdup (strlwc (key));
 
 	sval = dictionary_get (d, lc_key, def);
 
 	free (lc_key);
 
-	return sval ;
+	return sval;
     }
 
     /*-------------------------------------------------------------------------*/
@@ -788,14 +781,14 @@ static void ini_file_unlock (FileLock *lock )
 	char        *   entry
     )
     {
-	int found = 0 ;
+	int found = 0;
 
 	if (iniparser_getstring (ini, entry, INI_INVALID_KEY) != INI_INVALID_KEY)
 	{
-	    found = 1 ;
+	    found = 1;
 	}
 
-	return found ;
+	return found;
     }
 
 
@@ -817,7 +810,7 @@ static void ini_file_unlock (FileLock *lock )
     int iniparser_setstr (dictionary * ini, char * entry, char * val)
     {
 	dictionary_set (ini, strlwc (entry), val);
-	return 0 ;
+	return 0;
     }
 
     /*-------------------------------------------------------------------------*/
@@ -832,7 +825,7 @@ static void ini_file_unlock (FileLock *lock )
     /*--------------------------------------------------------------------------*/
     void iniparser_unset (dictionary * ini, char * entry)
     {
-	dictionary_unset (ini, strlwc (entry) );
+	dictionary_unset (ini, strlwc (entry));
     }
 
 
@@ -853,16 +846,16 @@ static void ini_file_unlock (FileLock *lock )
 
     dictionary * iniparser_new (char *ininame)
     {
-	dictionary  *   d ;
+	dictionary  *   d;
 	char        lin[ASCIILINESZ+1];
 	char        sec[ASCIILINESZ+1];
 	char        key[ASCIILINESZ+1];
 	char        val[ASCIILINESZ+1];
-	char    *   where ;
-	FILE    *   ini ;
-	int         lineno ;
+	char    *   where;
+	FILE    *   ini;
+	int         lineno;
 
-	FileLock *  lock ;
+	FileLock *  lock;
 
     lock = ini_file_lock (ininame);
 
@@ -885,15 +878,15 @@ static void ini_file_unlock (FileLock *lock )
 	 * Initialize a new dictionary entry
 	 */
 	d = dictionary_new (0);
-	lineno = 0 ;
+	lineno = 0;
 
 	while (fgets (lin, ASCIILINESZ, ini) != NULL)
 	{
-	    lineno++ ;
+	    lineno++;
 	    where = strskp (lin); /* Skip leading spaces */
 
 	    if (*where == ';' || *where == '#' || *where == 0)
-		continue ; /* Comment lines */
+		continue; /* Comment lines */
 	    else
 	    {
 		val[0] = '\0';
@@ -901,26 +894,26 @@ static void ini_file_unlock (FileLock *lock )
 		if (sscanf (where, "[%[^]]", sec) == 1)
 		{
 		    /* Valid section name */
-		    strcpy (sec, strlwc (sec) );
+		    strcpy (sec, strlwc (sec));
 		    iniparser_add_entry (d, sec, NULL, NULL);
 		}
 		else if (sscanf (where, "%[^=] = \"%[^\"]\"", key, val) == 2
 			 ||  sscanf (where, "%[^=] = '%[^\']'",   key, val) == 2
 			 ||  sscanf (where, "%[^=] = %[^\n]",     key, val) >= 1)
 		{
-		    strcpy (key, strlwc (strcrop (key) ) );
+		    strcpy (key, strlwc (strcrop (key)));
 		    /*
 		     * sscanf cannot handle "" or '' as empty value,
 		     * this is done here
 		     */
 
-		    if (!strcmp (val, "\"\"") || !strcmp (val, "''") )
+		    if (!strcmp (val, "\"\"") || !strcmp (val, "''"))
 		    {
 			val[0] = (char) 0;
 		    }
 		    else
 		    {
-			strcpy (val, strcrop (val) );
+			strcpy (val, strcrop (val));
 		    }
 
 		    iniparser_add_entry (d, sec, key, val);
@@ -932,7 +925,7 @@ static void ini_file_unlock (FileLock *lock )
 
 	ini_file_unlock (lock );
 
-	return d ;
+	return d;
     }
 
 

@@ -50,12 +50,11 @@ typedef struct _FilewatchData
 FilewatchData;
 
 static FilewatchData *fwData = NULL;
+static int           fwDataSize = 0;
+static int           inotifyFd = 0;
 
-static int fwDataSize = 0;
-
-static int inotifyFd = 0;
-
-static inline int findDataIndexById (unsigned int watchId)
+static inline int
+findDataIndexById (unsigned int watchId)
 {
     int i, index = -1;
 
@@ -70,71 +69,61 @@ static inline int findDataIndexById (unsigned int watchId)
 }
 
 void ccsCheckFileWatches (void)
-
 {
 #if HAVE_SYS_INOTIFY_H
-
-    char buf[256 * (sizeof (struct inotify_event) + 16) ];
-
-    struct  inotify_event *event;
-    int	len, i = 0, j;
+    char                 buf[256 * (sizeof (struct inotify_event) + 16)];
+    struct inotify_event *event;
+    int	                 len, i = 0, j;
 
     if (!inotifyFd)
 	return;
 
-    len = read (inotifyFd, buf, sizeof (buf) );
-
+    len = read (inotifyFd, buf, sizeof (buf));
     if (len < 0)
 	return;
 
     while (i < len)
     {
-
 	event = (struct inotify_event *) & buf[i];
 
 	for (j = 0; j < fwDataSize; j++)
-	    if ( (fwData[j].watchDesc == event->wd) && fwData[j].callback)
+	    if ((fwData[j].watchDesc == event->wd) && fwData[j].callback)
 		(*fwData[j].callback) (fwData[j].watchId, fwData[j].closure);
 
 	i += sizeof (*event) + event->len;
     }
-
 #endif
 }
 
-unsigned int ccsAddFileWatch (const char *fileName,
-			      Bool enable,
+unsigned int ccsAddFileWatch (const char            *fileName,
+			      Bool                  enable,
 			      FileWatchCallbackProc callback,
-			      void *closure)
+			      void                  *closure)
 {
     unsigned int i, maxWatchId = 0;
 
 #if HAVE_SYS_INOTIFY_H
-
     if (!inotifyFd)
     {
 	inotifyFd = inotify_init ();
 	fcntl (inotifyFd, F_SETFL, O_NONBLOCK);
     }
-
 #endif
 
-    fwData = realloc (fwData, (fwDataSize + 1) * sizeof (FilewatchData) );
-
+    fwData = realloc (fwData, (fwDataSize + 1) * sizeof (FilewatchData));
     fwData[fwDataSize].fileName  = strdup (fileName);
 
 #if HAVE_SYS_INOTIFY_H
     if (enable)
-	fwData[fwDataSize].watchDesc = inotify_add_watch (inotifyFd, fileName,
-							  IN_MODIFY | IN_MOVE |
-							  IN_MOVE_SELF | IN_DELETE_SELF |
-							  IN_CREATE | IN_DELETE);
+	fwData[fwDataSize].watchDesc =
+	    inotify_add_watch (inotifyFd, fileName,
+			       IN_MODIFY | IN_MOVE | IN_MOVE_SELF |
+			       IN_DELETE_SELF | IN_CREATE | IN_DELETE);
     else
 #endif
 	fwData[fwDataSize].watchDesc = 0;
 
     fwData[fwDataSize].callback  = callback;
-
     fwData[fwDataSize].closure   = closure;
 
     /* determine current highest ID */
@@ -143,20 +132,19 @@ unsigned int ccsAddFileWatch (const char *fileName,
 	    maxWatchId = fwData[i].watchId;
 
     fwData[fwDataSize].watchId = maxWatchId + 1;
-
     fwDataSize++;
 
     return (maxWatchId + 1);
 }
 
-void ccsRemoveFileWatch (unsigned int watchId)
+void
+ccsRemoveFileWatch (unsigned int watchId)
 
 {
     int selectedIndex, i;
 
     selectedIndex = findDataIndexById (watchId);
     /* not found */
-
     if (selectedIndex < 0)
 	return;
 
@@ -166,7 +154,6 @@ void ccsRemoveFileWatch (unsigned int watchId)
 #if HAVE_SYS_INOTIFY_H
     if (fwData[selectedIndex].watchDesc)
 	inotify_rm_watch (inotifyFd, fwData[selectedIndex].watchDesc);
-
 #endif
 
     /* shrink array */
@@ -176,7 +163,7 @@ void ccsRemoveFileWatch (unsigned int watchId)
     fwDataSize--;
 
     if (fwDataSize > 0)
-	fwData = realloc (fwData, fwDataSize * sizeof (FilewatchData) );
+	fwData = realloc (fwData, fwDataSize * sizeof (FilewatchData));
     else
     {
 	free (fwData);
@@ -187,17 +174,16 @@ void ccsRemoveFileWatch (unsigned int watchId)
     {
 	if (inotifyFd)
 	    close (inotifyFd);
-
 	inotifyFd = 0;
     }
 }
 
-void ccsDisableFileWatch (unsigned int watchId)
+void
+ccsDisableFileWatch (unsigned int watchId)
 {
     int index;
 
     index = findDataIndexById (watchId);
-
     if (index < 0)
 	return;
 
@@ -207,27 +193,25 @@ void ccsDisableFileWatch (unsigned int watchId)
 	inotify_rm_watch (inotifyFd, fwData[index].watchDesc);
 	fwData[index].watchDesc = 0;
     }
-
 #endif
 }
 
-void ccsEnableFileWatch (unsigned int watchId)
+void
+ccsEnableFileWatch (unsigned int watchId)
 {
     int index;
 
     index = findDataIndexById (watchId);
-
     if (index < 0)
 	return;
 
 #if HAVE_SYS_INOTIFY_H
     if (!fwData[index].watchDesc)
-	fwData[index].watchDesc = inotify_add_watch (inotifyFd,
-						     fwData[index].fileName,
-						     IN_MODIFY | IN_MOVE |
-						     IN_MOVE_SELF | IN_DELETE_SELF |
-						     IN_CREATE | IN_DELETE);
-
+	fwData[index].watchDesc =
+	    inotify_add_watch (inotifyFd,
+			       fwData[index].fileName,
+			       IN_MODIFY | IN_MOVE | IN_MOVE_SELF |
+			       IN_DELETE_SELF | IN_CREATE | IN_DELETE);
 #endif
 }
 
