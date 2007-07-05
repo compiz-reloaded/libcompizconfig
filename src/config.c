@@ -1,9 +1,9 @@
 /*
  * Compiz configuration system library
- * 
+ *
  * Copyright (C) 2007  Dennis Kasprzyk <onestone@opencompositing.org>
  * Copyright (C) 2007  Danny Baumann <maniac@opencompositing.org>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -18,7 +18,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
- 
+
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,224 +27,262 @@
 
 #include "ccs-private.h"
 
-static char *getConfigFileName(void)
+static char *getConfigFileName (void)
 {
-	char *home;
-	char *fileName = NULL;
-	
-	home = getenv("HOME");
+    char *home;
+    char *fileName = NULL;
 
-	if (!home || !strlen(home))
-		return NULL;
+    home = getenv ("HOME");
 
-	asprintf(&fileName, "%s/.compizconfig/config",home);
+    if (!home || !strlen (home) )
+	return NULL;
 
-	return fileName;
+    asprintf (&fileName, "%s/.compizconfig/config", home);
+
+    return fileName;
 }
 
-static char *getSectionName(void)
+static char *getSectionName (void)
 {
-	char *profile;
-	char *section;
-	
-	profile = getenv("COMPIZ_CONFIG_PROFILE");
+    char *profile;
+    char *section;
 
-	if (profile && strlen(profile))
-	{
-		asprintf(&section, "general_%s",profile);
-		return section;
-	}
+    profile = getenv ("COMPIZ_CONFIG_PROFILE");
 
-	profile = getenv("GNOME_DESKTOP_SESSION_ID");
-	if (profile && strlen(profile))
-		return strdup("gnome_session");
+    if (profile && strlen (profile) )
+    {
+	asprintf (&section, "general_%s", profile);
+	return section;
+    }
 
-	profile = getenv("KDE_FULL_SESSION");
-	if (profile && strlen(profile) && strcasecmp(profile,"true") == 0)
-		return strdup("kde_session");
+    profile = getenv ("GNOME_DESKTOP_SESSION_ID");
 
-	return strdup("general");
+    if (profile && strlen (profile) )
+	return strdup ("gnome_session");
+
+    profile = getenv ("KDE_FULL_SESSION");
+
+    if (profile && strlen (profile) && strcasecmp (profile, "true") == 0)
+	return strdup ("kde_session");
+
+    return strdup ("general");
 }
 
-static IniDictionary *getConfigFile(void)
+static IniDictionary *getConfigFile (void)
 {
-	char *fileName;
-	IniDictionary *iniFile;
+    char *fileName;
+    IniDictionary *iniFile;
 
-	fileName = getConfigFileName();
-	if (!fileName)
-		return NULL;
+    fileName = getConfigFileName();
 
-	iniFile = ccsIniOpen (fileName);
+    if (!fileName)
+	return NULL;
 
-	free (fileName);
-	return iniFile;
+    iniFile = ccsIniOpen (fileName);
+
+    free (fileName);
+
+    return iniFile;
 }
 
-unsigned int ccsAddConfigWatch(CCSContext *context, FileWatchCallbackProc callback)
+unsigned int ccsAddConfigWatch (CCSContext *context, FileWatchCallbackProc callback)
+
 {
     unsigned int ret;
     char *fileName;
 
     fileName = getConfigFileName();
+
     if (!fileName)
 	return 0;
 
     ret = ccsAddFileWatch (fileName, TRUE, callback, context);
+
     free (fileName);
 
     return ret;
 }
 
-static Bool ccsReadGlobalConfig(ConfigOption option, char** value)
+static Bool ccsReadGlobalConfig (ConfigOption option, char** value)
 {
-	IniDictionary *iniFile;
-	char *entry = NULL;
-	char *section;
-	Bool ret;
-	FILE *fp;
+    IniDictionary *iniFile;
+    char *entry = NULL;
+    char *section;
+    Bool ret;
+    FILE *fp;
 
-	/* check if the global config file exists - if it doesn't, exit
-	   to avoid it being created by ccsIniOpen */
-	fp = fopen (SYSCONFDIR "/compizconfig/config", "r");
-	if (!fp)
-		return FALSE;
-	fclose (fp);
+    /* check if the global config file exists - if it doesn't, exit
+       to avoid it being created by ccsIniOpen */
+    fp = fopen (SYSCONFDIR "/compizconfig/config", "r");
+
+    if (!fp)
+	return FALSE;
+
+    fclose (fp);
 
     iniFile = ccsIniOpen (SYSCONFDIR "/compizconfig/config");
-	if (!iniFile)
-		return FALSE;
 
-	switch (option)
-	{
-		case OptionProfile:
-			entry = "profile";
-			break;
-		case OptionBackend:
-			entry = "backend";
-			break;
-		case OptionIntegration:
-			entry = "integration";
-			break;
-		default:
-			break;
-	}
+    if (!iniFile)
+	return FALSE;
 
-	if (!entry)
-	{
-		ccsIniClose (iniFile);
-		return FALSE;
-	}
-	
-	*value = NULL;
+    switch (option)
+    {
 
-	section = getSectionName();
-	
-	ret = ccsIniGetString (iniFile, section, entry, value);
+    case OptionProfile:
+	entry = "profile";
 
-	free(section);
+	break;
+
+    case OptionBackend:
+	entry = "backend";
+
+	break;
+
+    case OptionIntegration:
+	entry = "integration";
+
+	break;
+
+    default:
+	break;
+    }
+
+    if (!entry)
+    {
 	ccsIniClose (iniFile);
-	return ret;
+	return FALSE;
+    }
+
+    *value = NULL;
+
+    section = getSectionName();
+
+    ret = ccsIniGetString (iniFile, section, entry, value);
+
+    free (section);
+    ccsIniClose (iniFile);
+    return ret;
 }
 
-Bool ccsReadConfig(ConfigOption option, char** value)
+Bool ccsReadConfig (ConfigOption option, char** value)
+
 {
-	IniDictionary *iniFile;
-	char *entry = NULL;
-	char *section;
-	Bool ret;
+    IniDictionary *iniFile;
+    char *entry = NULL;
+    char *section;
+    Bool ret;
 
-	iniFile = getConfigFile();
-	if (!iniFile)
-		return ccsReadGlobalConfig(option, value);
+    iniFile = getConfigFile();
 
-	switch (option)
-	{
-		case OptionProfile:
-			entry = "profile";
-			break;
-		case OptionBackend:
-			entry = "backend";
-			break;
-		case OptionIntegration:
-			entry = "integration";
-			break;
-		default:
-			break;
-	}
+    if (!iniFile)
+	return ccsReadGlobalConfig (option, value);
 
-	if (!entry)
-	{
-		ccsIniClose (iniFile);
-		return FALSE;
-	}
+    switch (option)
+    {
 
-	*value = NULL;
+    case OptionProfile:
+	entry = "profile";
 
-	section = getSectionName();
+	break;
 
-	ret = ccsIniGetString (iniFile, section, entry, value);
+    case OptionBackend:
+	entry = "backend";
 
-	free(section);
+	break;
+
+    case OptionIntegration:
+	entry = "integration";
+
+	break;
+
+    default:
+	break;
+    }
+
+    if (!entry)
+    {
 	ccsIniClose (iniFile);
+	return FALSE;
+    }
 
-	if (!ret)
-		ret = ccsReadGlobalConfig(option, value);
-	return ret;
+    *value = NULL;
+
+    section = getSectionName();
+
+    ret = ccsIniGetString (iniFile, section, entry, value);
+
+    free (section);
+    ccsIniClose (iniFile);
+
+    if (!ret)
+	ret = ccsReadGlobalConfig (option, value);
+
+    return ret;
 }
 
-Bool ccsWriteConfig(ConfigOption option, char* value)
+Bool ccsWriteConfig (ConfigOption option, char* value)
 {
-	IniDictionary *iniFile;
-	char *entry = NULL;
-	char *section;
-	char *fileName;
-	char *curVal;
+    IniDictionary *iniFile;
+    char *entry = NULL;
+    char *section;
+    char *fileName;
+    char *curVal;
 
-	/* don't change config if nothing changed */
-	if (ccsReadConfig(option, &curVal) && strcmp(value, curVal) == 0)
-		return TRUE;
+    /* don't change config if nothing changed */
 
-	iniFile = getConfigFile();
-	if (!iniFile)
-		return FALSE;
-
-	switch (option)
-	{
-		case OptionProfile:
-			entry = "profile";
-			break;
-		case OptionBackend:
-			entry = "backend";
-			break;
-		case OptionIntegration:
-			entry = "integration";
-			break;
-		default:
-			break;
-	}
-
-	if (!entry)
-	{
-		ccsIniClose (iniFile);
-		return FALSE;
-	}
-
-	section = getSectionName();
-
-	ccsIniSetString (iniFile, section, entry, value);
-
-	free(section);
-	fileName = getConfigFileName();
-	if (!fileName)
-	{
-		ccsIniClose (iniFile);
-		return FALSE;
-	}
-	ccsIniSave (iniFile, fileName);
-
-	ccsIniClose (iniFile);
-	free (fileName);
+    if (ccsReadConfig (option, &curVal) && strcmp (value, curVal) == 0)
 	return TRUE;
+
+    iniFile = getConfigFile();
+
+    if (!iniFile)
+	return FALSE;
+
+    switch (option)
+    {
+
+    case OptionProfile:
+	entry = "profile";
+
+	break;
+
+    case OptionBackend:
+	entry = "backend";
+
+	break;
+
+    case OptionIntegration:
+	entry = "integration";
+
+	break;
+
+    default:
+	break;
+    }
+
+    if (!entry)
+    {
+	ccsIniClose (iniFile);
+	return FALSE;
+    }
+
+    section = getSectionName();
+
+    ccsIniSetString (iniFile, section, entry, value);
+
+    free (section);
+    fileName = getConfigFileName();
+
+    if (!fileName)
+    {
+	ccsIniClose (iniFile);
+	return FALSE;
+    }
+
+    ccsIniSave (iniFile, fileName);
+
+    ccsIniClose (iniFile);
+    free (fileName);
+    return TRUE;
 }
 

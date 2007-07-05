@@ -1,8 +1,8 @@
 /*
  * Compiz configuration system library
- * 
+ *
  * Copyright (C) 2007  Danny Baumann <maniac@opencompositing.org>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -23,7 +23,7 @@
  * Copyright © 2005 Novell, Inc.
  * Author: David Reveman <davidr@novell.com>
  */
- 
+
 
 #define _GNU_SOURCE
 
@@ -47,36 +47,40 @@
 #define CompNumLockMask    (1 << 21)
 #define CompScrollLockMask (1 << 22)
 
-struct _Modifier {
+struct _Modifier
+{
     char *name;
     int  modifier;
-} modifierList[] = {
-    { "<Shift>",      ShiftMask		 },
-    { "<Control>",    ControlMask	 },
-    { "<Mod1>",	      Mod1Mask		 },
-    { "<Mod2>",	      Mod2Mask		 },
-    { "<Mod3>",	      Mod3Mask		 },
-    { "<Mod4>",	      Mod4Mask		 },
-    { "<Mod5>",	      Mod5Mask		 },
-    { "<Alt>",	      CompAltMask        },
-    { "<Meta>",	      CompMetaMask       },
-    { "<Super>",      CompSuperMask      },
-    { "<Hyper>",      CompHyperMask	 },
-    { "<ModeSwitch>", CompModeSwitchMask },
-};
+}
+
+modifierList[] = {
+		     { "<Shift>",      ShiftMask		 },
+		     { "<Control>",    ControlMask	 },
+		     { "<Mod1>",	      Mod1Mask		 },
+		     { "<Mod2>",	      Mod2Mask		 },
+		     { "<Mod3>",	      Mod3Mask		 },
+		     { "<Mod4>",	      Mod4Mask		 },
+		     { "<Mod5>",	      Mod5Mask		 },
+		     { "<Alt>",	      CompAltMask        },
+		     { "<Meta>",	      CompMetaMask       },
+		     { "<Super>",      CompSuperMask      },
+		     { "<Hyper>",      CompHyperMask	 },
+		     { "<ModeSwitch>", CompModeSwitchMask },
+		 };
 
 #define N_MODIFIERS (sizeof (modifierList) / sizeof (struct _Modifier))
 
-static char *edgeName[] = {
-    "Left",
-    "Right",
-    "Top",
-    "Bottom",
-    "TopLeft",
-    "TopRight",
-    "BottomLeft",
-    "BottomRight"
-};
+static char *edgeName[] =
+    {
+	"Left",
+	"Right",
+	"Top",
+	"Bottom",
+	"TopLeft",
+	"TopRight",
+	"BottomLeft",
+	"BottomRight"
+    };
 
 #define N_EDGES (sizeof (edgeName) / sizeof (edgeName[0]))
 
@@ -93,6 +97,7 @@ stringAppend (char *s,
 	len += strlen (s);
 
     r = malloc (len + 1);
+
     if (r)
     {
 	if (s)
@@ -112,6 +117,7 @@ stringAppend (char *s,
 }
 
 char *
+
 ccsModifiersToString (unsigned int modMask)
 {
     char *binding = NULL;
@@ -163,6 +169,7 @@ ccsButtonBindingToString (CCSSettingActionValue *action)
 }
 
 unsigned int
+
 ccsStringToModifiers (const char *binding)
 {
     unsigned int mods = 0;
@@ -170,7 +177,7 @@ ccsStringToModifiers (const char *binding)
 
     for (i = 0; i < N_MODIFIERS; i++)
     {
-	if (strcasestr (binding, modifierList[i].name))
+	if (strcasestr (binding, modifierList[i].name) )
 	    mods |= modifierList[i].modifier;
     }
 
@@ -178,8 +185,9 @@ ccsStringToModifiers (const char *binding)
 }
 
 Bool
+
 ccsStringToKeyBinding (const char           *binding,
-		      CCSSettingActionValue *action)
+		       CCSSettingActionValue *action)
 {
     char	  *ptr;
     unsigned int  mods;
@@ -188,13 +196,15 @@ ccsStringToKeyBinding (const char           *binding,
     mods = ccsStringToModifiers (binding);
 
     ptr = strrchr (binding, '>');
+
     if (ptr)
 	binding = ptr + 1;
 
-    while (*binding && !isalnum (*binding))
+    while (*binding && !isalnum (*binding) )
 	binding++;
 
     keysym = XStringToKeysym (binding);
+
     if (keysym != NoSymbol)
     {
 	action->keysym     = keysym;
@@ -207,8 +217,9 @@ ccsStringToKeyBinding (const char           *binding,
 }
 
 Bool
+
 ccsStringToButtonBinding (const char           *binding,
-			 CCSSettingActionValue *action)
+			  CCSSettingActionValue *action)
 {
     char	 *ptr;
     unsigned int mods;
@@ -216,13 +227,14 @@ ccsStringToButtonBinding (const char           *binding,
     mods = ccsStringToModifiers (binding);
 
     ptr = strrchr (binding, '>');
+
     if (ptr)
 	binding = ptr + 1;
 
-    while (*binding && !isalnum (*binding))
+    while (*binding && !isalnum (*binding) )
 	binding++;
 
-    if (strncmp (binding, "Button", strlen ("Button")) == 0)
+    if (strncmp (binding, "Button", strlen ("Button") ) == 0)
     {
 	int buttonNum;
 
@@ -239,20 +251,21 @@ ccsStringToButtonBinding (const char           *binding,
 }
 
 CCSStringList
+
 ccsEdgesToStringList (CCSSettingActionValue *action)
 {
     CCSStringList ret = NULL;
     int i;
 
     for (i = 0; i < N_EDGES; i++)
-	if (action->edgeMask & (1 << i))
-	    ret = ccsStringListAppend(ret, strdup(edgeName[i]));
+	if (action->edgeMask & (1 << i) )
+	    ret = ccsStringListAppend (ret, strdup (edgeName[i]) );
 
     return ret;
 }
 
 void
-ccsStringListToEdges (CCSStringList         edges, 
+ccsStringListToEdges (CCSStringList         edges,
 		      CCSSettingActionValue *action)
 {
     int i;
@@ -262,17 +275,18 @@ ccsStringListToEdges (CCSStringList         edges,
 
     for (l = edges; l; l = l->next)
     {
-        for (i = 0; i < N_EDGES; i++)
-        {
-	    if (strcmp(l->data, edgeName[i]) == 0)
-	        action->edgeMask |= (1 << i);
-        }
+	for (i = 0; i < N_EDGES; i++)
+	{
+	    if (strcmp (l->data, edgeName[i]) == 0)
+		action->edgeMask |= (1 << i);
+	}
     }
 }
 
 Bool
-ccsStringToColor (const char          *value, 
-		 CCSSettingColorValue *color)
+
+ccsStringToColor (const char          *value,
+		  CCSSettingColorValue *color)
 {
     int c[4];
 
@@ -290,13 +304,14 @@ ccsStringToColor (const char          *value,
 }
 
 char *
+
 ccsColorToString (CCSSettingColorValue *color)
 {
     char tmp[256];
 
     snprintf (tmp, 256, "#%.2x%.2x%.2x%.2x",
-	      color->color.red>>8, color->color.green>>8,
-	      color->color.blue>>8, color->color.alpha>>8);
+	      color->color.red >> 8, color->color.green >> 8,
+	      color->color.blue >> 8, color->color.alpha >> 8);
 
     return strdup (tmp);
 }
