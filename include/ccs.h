@@ -366,7 +366,7 @@ struct _CCSSettingValue
 
 struct _CCSSetting
 {
-    char name;
+    char *name;
     char *shortDesc; /* in current locale */
     char *longDesc;  /* in current locale */
 

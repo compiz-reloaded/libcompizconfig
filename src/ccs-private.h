@@ -31,14 +31,12 @@ extern Bool basicMetadata;
 
 typedef struct _CCSPluginPrivate
 {
-    CCSSettingList	settings;
-    CCSGroupList	groups;
-    Bool 			loaded;
-    char *			xmlFile;
-    char *			xmlPath;
-}
-
-CCSPluginPrivate;
+    CCSSettingList settings;
+    CCSGroupList   groups;
+    Bool 	   loaded;
+    char *	   xmlFile;
+    char *	   xmlPath;
+} CCSPluginPrivate;
 
 void ccsLoadPlugins (CCSContext * context);
 void ccsLoadPluginSettings (CCSPlugin * plugin);
@@ -52,9 +50,11 @@ typedef enum {
     OptionIntegration
 } ConfigOption;
 
-
-Bool ccsReadConfig (ConfigOption option, char** value);
-Bool ccsWriteConfig (ConfigOption option, char* value);
-unsigned int ccsAddConfigWatch (CCSContext *context, FileWatchCallbackProc callback);
+Bool ccsReadConfig (ConfigOption option,
+		    char         **value);
+Bool ccsWriteConfig (ConfigOption option,
+		     char         *value);
+unsigned int ccsAddConfigWatch (CCSContext            *context,
+				FileWatchCallbackProc callback);
 
 #endif

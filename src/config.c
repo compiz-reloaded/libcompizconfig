@@ -27,14 +27,15 @@
 
 #include "ccs-private.h"
 
-static char *getConfigFileName (void)
+static char*
+getConfigFileName (void)
 {
     char *home;
     char *fileName = NULL;
 
     home = getenv ("HOME");
 
-    if (!home || !strlen (home) )
+    if (!home || !strlen (home))
 	return NULL;
 
     asprintf (&fileName, "%s/.compizconfig/config", home);
@@ -42,35 +43,34 @@ static char *getConfigFileName (void)
     return fileName;
 }
 
-static char *getSectionName (void)
+static char*
+getSectionName (void)
 {
     char *profile;
     char *section;
 
     profile = getenv ("COMPIZ_CONFIG_PROFILE");
-
-    if (profile && strlen (profile) )
+    if (profile && strlen (profile))
     {
 	asprintf (&section, "general_%s", profile);
 	return section;
     }
 
     profile = getenv ("GNOME_DESKTOP_SESSION_ID");
-
-    if (profile && strlen (profile) )
+    if (profile && strlen (profile))
 	return strdup ("gnome_session");
 
     profile = getenv ("KDE_FULL_SESSION");
-
     if (profile && strlen (profile) && strcasecmp (profile, "true") == 0)
 	return strdup ("kde_session");
 
     return strdup ("general");
 }
 
-static IniDictionary *getConfigFile (void)
+static IniDictionary*
+getConfigFile (void)
 {
-    char *fileName;
+    char          *fileName;
     IniDictionary *iniFile;
 
     fileName = getConfigFileName();
@@ -85,64 +85,56 @@ static IniDictionary *getConfigFile (void)
     return iniFile;
 }
 
-unsigned int ccsAddConfigWatch (CCSContext *context, FileWatchCallbackProc callback)
+unsigned int
+ccsAddConfigWatch (CCSContext            *context,
+		   FileWatchCallbackProc callback)
 
 {
     unsigned int ret;
-    char *fileName;
+    char         *fileName;
 
     fileName = getConfigFileName();
-
     if (!fileName)
 	return 0;
 
     ret = ccsAddFileWatch (fileName, TRUE, callback, context);
-
     free (fileName);
 
     return ret;
 }
 
-static Bool ccsReadGlobalConfig (ConfigOption option, char** value)
+static Bool
+ccsReadGlobalConfig (ConfigOption option,
+		     char         **value)
 {
     IniDictionary *iniFile;
-    char *entry = NULL;
-    char *section;
-    Bool ret;
-    FILE *fp;
+    char          *entry = NULL;
+    char          *section;
+    Bool          ret;
+    FILE          *fp;
 
     /* check if the global config file exists - if it doesn't, exit
        to avoid it being created by ccsIniOpen */
     fp = fopen (SYSCONFDIR "/compizconfig/config", "r");
-
     if (!fp)
 	return FALSE;
-
     fclose (fp);
 
     iniFile = ccsIniOpen (SYSCONFDIR "/compizconfig/config");
-
     if (!iniFile)
 	return FALSE;
 
     switch (option)
     {
-
     case OptionProfile:
 	entry = "profile";
-
 	break;
-
     case OptionBackend:
 	entry = "backend";
-
 	break;
-
     case OptionIntegration:
 	entry = "integration";
-
 	break;
-
     default:
 	break;
     }
@@ -154,47 +146,39 @@ static Bool ccsReadGlobalConfig (ConfigOption option, char** value)
     }
 
     *value = NULL;
-
     section = getSectionName();
-
     ret = ccsIniGetString (iniFile, section, entry, value);
-
     free (section);
     ccsIniClose (iniFile);
+
     return ret;
 }
 
-Bool ccsReadConfig (ConfigOption option, char** value)
+Bool
+ccsReadConfig (ConfigOption option,
+	       char         **value)
 
 {
     IniDictionary *iniFile;
-    char *entry = NULL;
-    char *section;
-    Bool ret;
+    char          *entry = NULL;
+    char          *section;
+    Bool          ret;
 
     iniFile = getConfigFile();
-
     if (!iniFile)
 	return ccsReadGlobalConfig (option, value);
 
     switch (option)
     {
-
     case OptionProfile:
 	entry = "profile";
-
 	break;
-
     case OptionBackend:
 	entry = "backend";
-
 	break;
-
     case OptionIntegration:
 	entry = "integration";
-
 	break;
-
     default:
 	break;
     }
@@ -206,11 +190,8 @@ Bool ccsReadConfig (ConfigOption option, char** value)
     }
 
     *value = NULL;
-
     section = getSectionName();
-
     ret = ccsIniGetString (iniFile, section, entry, value);
-
     free (section);
     ccsIniClose (iniFile);
 
@@ -220,42 +201,35 @@ Bool ccsReadConfig (ConfigOption option, char** value)
     return ret;
 }
 
-Bool ccsWriteConfig (ConfigOption option, char* value)
+Bool
+ccsWriteConfig (ConfigOption option,
+		char         *value)
 {
     IniDictionary *iniFile;
-    char *entry = NULL;
-    char *section;
-    char *fileName;
-    char *curVal;
+    char          *entry = NULL;
+    char          *section;
+    char          *fileName;
+    char          *curVal;
 
     /* don't change config if nothing changed */
-
     if (ccsReadConfig (option, &curVal) && strcmp (value, curVal) == 0)
 	return TRUE;
 
     iniFile = getConfigFile();
-
     if (!iniFile)
 	return FALSE;
 
     switch (option)
     {
-
     case OptionProfile:
 	entry = "profile";
-
 	break;
-
     case OptionBackend:
 	entry = "backend";
-
 	break;
-
     case OptionIntegration:
 	entry = "integration";
-
 	break;
-
     default:
 	break;
     }
@@ -267,12 +241,10 @@ Bool ccsWriteConfig (ConfigOption option, char* value)
     }
 
     section = getSectionName();
-
     ccsIniSetString (iniFile, section, entry, value);
-
     free (section);
-    fileName = getConfigFileName();
 
+    fileName = getConfigFileName();
     if (!fileName)
     {
 	ccsIniClose (iniFile);
@@ -280,9 +252,9 @@ Bool ccsWriteConfig (ConfigOption option, char* value)
     }
 
     ccsIniSave (iniFile, fileName);
-
     ccsIniClose (iniFile);
     free (fileName);
+
     return TRUE;
 }
 
