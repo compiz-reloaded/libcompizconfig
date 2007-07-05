@@ -587,6 +587,9 @@ void iniparser_dump_ini(dictionary * d, const char * file_name)
                 continue ;
             fprintf(f, "%s = %s\n", d->key[i], d->val[i]);
         }
+
+		fclose (f);
+		ini_file_unlock (lock);
         return ;
     }
     for (i=0 ; i<nsec ; i++) {
