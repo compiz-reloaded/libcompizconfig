@@ -56,7 +56,8 @@ static int privDataSize = 0;
 /* forward declaration */
 static void setProfile (IniPrivData *data, char *profile);
 
-static IniPrivData *findPrivFromContext (CCSContext *context)
+static IniPrivData*
+findPrivFromContext (CCSContext *context)
 {
     int i;
     IniPrivData *data;
@@ -71,7 +72,8 @@ static IniPrivData *findPrivFromContext (CCSContext *context)
     return data;
 }
 
-static char* getIniFileName (char *profile)
+static char*
+getIniFileName (char *profile)
 {
     char *homeDir = NULL;
     char *fileName = NULL;
@@ -86,10 +88,12 @@ static char* getIniFileName (char *profile)
     return fileName;
 }
 
-static void processFileEvent (unsigned int watchId, void *closure)
+static void
+processFileEvent (unsigned int watchId,
+		  void         *closure)
 {
     IniPrivData *data = (IniPrivData *) closure;
-    char *fileName;
+    char        *fileName;
 
     /* our ini file has been modified, reload it */
 
@@ -106,10 +110,11 @@ static void processFileEvent (unsigned int watchId, void *closure)
     ccsReadSettings (data->context);
 }
 
-static void setProfile (IniPrivData *data, char *profile)
+static void
+setProfile (IniPrivData *data,
+	    char        *profile)
 {
-    char *fileName;
-
+    char        *fileName;
     struct stat fileStat;
 
     if (data->iniFile)
@@ -145,7 +150,8 @@ static void setProfile (IniPrivData *data, char *profile)
 	    return;
     }
 
-    data->iniWatchId = ccsAddFileWatch (fileName, TRUE, processFileEvent, data);
+    data->iniWatchId = ccsAddFileWatch (fileName, TRUE,
+					processFileEvent, data);
 
     /* load the data from the file */
     data->iniFile = ccsIniOpen (fileName);
@@ -153,15 +159,16 @@ static void setProfile (IniPrivData *data, char *profile)
     free (fileName);
 }
 
-static Bool initBackend (CCSContext * context)
+static Bool
+initBackend (CCSContext * context)
 {
     IniPrivData *newData;
 
-    privData = realloc (privData, (privDataSize + 1) * sizeof (IniPrivData) );
+    privData = realloc (privData, (privDataSize + 1) * sizeof (IniPrivData));
     newData = privData + privDataSize;
 
     /* initialize the newly allocated part */
-    memset (newData, 0, sizeof (IniPrivData) );
+    memset (newData, 0, sizeof (IniPrivData));
     newData->context = context;
 
     privDataSize++;
@@ -169,7 +176,8 @@ static Bool initBackend (CCSContext * context)
     return TRUE;
 }
 
-static Bool finiBackend (CCSContext * context)
+static Bool
+finiBackend (CCSContext * context)
 {
     IniPrivData *data;
 
@@ -190,14 +198,15 @@ static Bool finiBackend (CCSContext * context)
     privDataSize--;
 
     if (privDataSize)
-	privData = realloc (privData, privDataSize * sizeof (IniPrivData) );
+	privData = realloc (privData, privDataSize * sizeof (IniPrivData));
     else
 	free (privData);
 
     return TRUE;
 }
 
-static Bool readInit (CCSContext * context)
+static Bool
+readInit (CCSContext * context)
 {
     char *currentProfile;
     IniPrivData *data;
@@ -209,12 +218,12 @@ static Bool readInit (CCSContext * context)
 
     currentProfile = ccsGetProfile (context);
 
-    if (!currentProfile || !strlen (currentProfile) )
+    if (!currentProfile || !strlen (currentProfile))
 	currentProfile = strdup (DEFAULTPROF);
     else
 	currentProfile = strdup (currentProfile);
 
-    if (!data->lastProfile || (strcmp (data->lastProfile, currentProfile) != 0) )
+    if (!data->lastProfile || (strcmp (data->lastProfile, currentProfile) != 0))
 	setProfile (data, currentProfile);
 
     if (data->lastProfile)
@@ -225,14 +234,15 @@ static Bool readInit (CCSContext * context)
     return (data->iniFile != NULL);
 }
 
-static void readSetting (CCSContext * context, CCSSetting * setting)
+static void
+readSetting (CCSContext *context,
+	     CCSSetting *setting)
 {
-    Bool status = FALSE;
-    char *keyName;
+    Bool         status = FALSE;
+    char        *keyName;
     IniPrivData *data;
 
     data = findPrivFromContext (context);
-
     if (!data)
 	return;
 
@@ -243,120 +253,96 @@ static void readSetting (CCSContext * context, CCSSetting * setting)
 
     switch (setting->type)
     {
-
     case TypeString:
-{
-    char *value;
-
-    if (ccsIniGetString (data->iniFile, setting->parent->name,
-			 keyName, &value) )
-    {
-	ccsSetString (setting, value);
-	status = TRUE;
-    }
-}
-
-break;
-
+	{
+	    char *value;
+	    if (ccsIniGetString (data->iniFile, setting->parent->name,
+				 keyName, &value))
+	    {
+		ccsSetString (setting, value);
+		status = TRUE;
+	    }
+	}
+	break;
     case TypeMatch:
-{
-    char *value;
-
-    if (ccsIniGetString (data->iniFile, setting->parent->name,
-			 keyName, &value) )
-    {
-	ccsSetMatch (setting, value);
-	status = TRUE;
-    }
-}
-
-break;
-
+	{
+	    char *value;
+	    if (ccsIniGetString (data->iniFile, setting->parent->name,
+				 keyName, &value))
+	    {
+		ccsSetMatch (setting, value);
+		status = TRUE;
+	    }
+	}
+	break;
     case TypeInt:
-{
-    int value;
-
-    if (ccsIniGetInt (data->iniFile, setting->parent->name,
-		      keyName, &value) )
-    {
-	ccsSetInt (setting, value);
-	status = TRUE;
-    }
-}
-
-break;
-
+	{
+	    int value;
+	    if (ccsIniGetInt (data->iniFile, setting->parent->name,
+			      keyName, &value))
+	    {
+		ccsSetInt (setting, value);
+		status = TRUE;
+	    }
+	}
+	break;
     case TypeBool:
-{
-    Bool value;
-
-    if (ccsIniGetBool (data->iniFile, setting->parent->name,
-		       keyName, &value) )
-    {
-	ccsSetBool (setting, (value != 0) );
-	status = TRUE;
-    }
-}
-
-break;
-
+	{
+	    Bool value;
+	    if (ccsIniGetBool (data->iniFile, setting->parent->name,
+			       keyName, &value))
+	    {
+		ccsSetBool (setting, (value != 0));
+		status = TRUE;
+	    }
+	}
+	break;
     case TypeFloat:
-{
-    float value;
-
-    if (ccsIniGetFloat (data->iniFile, setting->parent->name,
-			keyName, &value) )
-    {
-	ccsSetFloat (setting, value);
-	status = TRUE;
-    }
-}
-
-break;
-
+	{
+	    float value;
+	    if (ccsIniGetFloat (data->iniFile, setting->parent->name,
+				keyName, &value))
+	    {
+		ccsSetFloat (setting, value);
+		status = TRUE;
+	    }
+	}
+	break;
     case TypeColor:
-{
-    CCSSettingColorValue color;
+	{
+	    CCSSettingColorValue color;
 
-    if (ccsIniGetColor (data->iniFile, setting->parent->name,
-			keyName, &color) )
-    {
-	ccsSetColor (setting, color);
-	status = TRUE;
-    }
-}
-
-break;
-
+	    if (ccsIniGetColor (data->iniFile, setting->parent->name,
+				keyName, &color))
+	    {
+		ccsSetColor (setting, color);
+		status = TRUE;
+	    }
+	}
+	break;
     case TypeAction:
-{
-    CCSSettingActionValue action;
-
-    if (ccsIniGetAction (data->iniFile, setting->parent->name,
-			 keyName, &action) )
-    {
-	ccsSetAction (setting, action);
-	status = TRUE;
-    }
-}
-
-break;
-
+	{
+	    CCSSettingActionValue action;
+	    if (ccsIniGetAction (data->iniFile, setting->parent->name,
+				 keyName, &action))
+	    {
+		ccsSetAction (setting, action);
+		status = TRUE;
+	    }
+	}
+	break;
     case TypeList:
-{
-    CCSSettingValueList value;
-
-    if (ccsIniGetList (data->iniFile, setting->parent->name,
-		       keyName, &value, setting) )
-    {
-	ccsSetList (setting, value);
-	ccsSettingValueListFree (value, TRUE);
-	status = TRUE;
-    }
-}
-
-break;
-
+	{
+	    CCSSettingValueList value;
+	    if (ccsIniGetList (data->iniFile, setting->parent->name,
+			       keyName, &value, setting))
+	    {
+		ccsSetList (setting, value);
+		ccsSettingValueListFree (value, TRUE);
+		status = TRUE;
+	    }
+	}
+	break;
     default:
 	break;
     }
@@ -371,10 +357,13 @@ break;
 	free (keyName);
 }
 
-static void readDone (CCSContext * context)
-{}
+static void
+readDone (CCSContext * context)
+{
+}
 
-static Bool writeInit (CCSContext * context)
+static Bool
+writeInit (CCSContext * context)
 {
     char *currentProfile;
     IniPrivData *data;
@@ -386,12 +375,12 @@ static Bool writeInit (CCSContext * context)
 
     currentProfile = ccsGetProfile (context);
 
-    if (!currentProfile || !strlen (currentProfile) )
+    if (!currentProfile || !strlen (currentProfile))
 	currentProfile = strdup (DEFAULTPROF);
     else
 	currentProfile = strdup (currentProfile);
 
-    if (!data->lastProfile || (strcmp (data->lastProfile, currentProfile) != 0) )
+    if (!data->lastProfile || (strcmp (data->lastProfile, currentProfile) != 0))
 	setProfile (data, currentProfile);
 
     if (data->lastProfile)
@@ -404,13 +393,14 @@ static Bool writeInit (CCSContext * context)
     return (data->iniFile != NULL);
 }
 
-static void writeSetting (CCSContext * context, CCSSetting * setting)
+static void
+writeSetting (CCSContext *context,
+	      CCSSetting *setting)
 {
-    char *keyName;
+    char        *keyName;
     IniPrivData *data;
 
     data = findPrivFromContext (context);
-
     if (!data)
 	return;
 
@@ -428,95 +418,70 @@ static void writeSetting (CCSContext * context, CCSSetting * setting)
 
     switch (setting->type)
     {
-
     case TypeString:
-{
-    char *value;
-
-    if (ccsGetString (setting, &value) )
-	ccsIniSetString (data->iniFile, setting->parent->name,
-			 keyName, value);
-}
-
-break;
-
+	{
+	    char *value;
+	    if (ccsGetString (setting, &value))
+		ccsIniSetString (data->iniFile, setting->parent->name,
+				 keyName, value);
+	}
+	break;
     case TypeMatch:
-{
-    char *value;
-
-    if (ccsGetMatch (setting, &value) )
-	ccsIniSetString (data->iniFile, setting->parent->name,
-			 keyName, value);
-}
-
-break;
-
+	{
+	    char *value;
+	    if (ccsGetMatch (setting, &value))
+		ccsIniSetString (data->iniFile, setting->parent->name,
+				 keyName, value);
+	}
+	break;
     case TypeInt:
-{
-    int value;
-
-    if (ccsGetInt (setting, &value) )
-	ccsIniSetInt (data->iniFile, setting->parent->name,
-		      keyName, value);
-}
-
-break;
-
+	{
+	    int value;
+	    if (ccsGetInt (setting, &value))
+		ccsIniSetInt (data->iniFile, setting->parent->name,
+			      keyName, value);
+	}
+	break;
     case TypeFloat:
-{
-    float value;
-
-    if (ccsGetFloat (setting, &value) )
-	ccsIniSetFloat (data->iniFile, setting->parent->name,
-			keyName, value);
-}
-
-break;
-
+	{
+	    float value;
+	    if (ccsGetFloat (setting, &value))
+		ccsIniSetFloat (data->iniFile, setting->parent->name,
+				keyName, value);
+	}
+	break;
     case TypeBool:
-{
-    Bool value;
-
-    if (ccsGetBool (setting, &value) )
-	ccsIniSetBool (data->iniFile, setting->parent->name,
-		       keyName, value);
-}
-
-break;
-
+	{
+	    Bool value;
+	    if (ccsGetBool (setting, &value))
+		ccsIniSetBool (data->iniFile, setting->parent->name,
+			       keyName, value);
+	}
+	break;
     case TypeColor:
-{
-    CCSSettingColorValue value;
-
-    if (ccsGetColor (setting, &value) )
-	ccsIniSetColor (data->iniFile, setting->parent->name,
-			keyName, value);
-}
-
-break;
-
+	{
+	    CCSSettingColorValue value;
+	    if (ccsGetColor (setting, &value))
+		ccsIniSetColor (data->iniFile, setting->parent->name,
+				keyName, value);
+	}
+	break;
     case TypeAction:
-{
-    CCSSettingActionValue value;
-
-    if (ccsGetAction (setting, &value) )
-	ccsIniSetAction (data->iniFile, setting->parent->name,
-			 keyName, value);
-}
-
-break;
-
+	{
+	    CCSSettingActionValue value;
+	    if (ccsGetAction (setting, &value))
+		ccsIniSetAction (data->iniFile, setting->parent->name,
+				 keyName, value);
+	}
+	break;
     case TypeList:
-{
-    CCSSettingValueList value;
-
-    if (ccsGetList (setting, &value) )
-	ccsIniSetList (data->iniFile, setting->parent->name,
-		       keyName, value, setting->info.forList.listType);
-}
-
-break;
-
+	{
+	    CCSSettingValueList value;
+	    if (ccsGetList (setting, &value))
+		ccsIniSetList (data->iniFile, setting->parent->name,
+			       keyName, value, setting->info.forList.listType);
+	}
+	break;
     default:
 	break;
     }
@@ -525,21 +490,21 @@ break;
 	free (keyName);
 }
 
-static void writeDone (CCSContext * context)
+static void
+writeDone (CCSContext * context)
 {
     /* export the data to ensure the changes are on disk */
-    char *fileName;
-    char *currentProfile;
+    char        *fileName;
+    char        *currentProfile;
     IniPrivData *data;
 
     data = findPrivFromContext (context);
-
     if (!data)
 	return;
 
     currentProfile = ccsGetProfile (context);
 
-    if (!currentProfile || !strlen (currentProfile) )
+    if (!currentProfile || !strlen (currentProfile))
 	currentProfile = strdup (DEFAULTPROF);
     else
 	currentProfile = strdup (currentProfile);
@@ -555,13 +520,15 @@ static void writeDone (CCSContext * context)
     free (fileName);
 }
 
-static Bool getSettingIsReadOnly (CCSSetting * setting)
+static Bool
+getSettingIsReadOnly (CCSSetting * setting)
 {
     /* FIXME */
     return FALSE;
 }
 
-static int profileNameFilter (const struct dirent *name)
+static int
+profileNameFilter (const struct dirent *name)
 {
     int length = strlen (name->d_name);
 
@@ -571,54 +538,50 @@ static int profileNameFilter (const struct dirent *name)
     return 1;
 }
 
-static CCSStringList getExistingProfiles (CCSContext * context)
+static CCSStringList
+getExistingProfiles (CCSContext * context)
 {
     CCSStringList  ret = NULL;
-
-    struct dirent **nameList;
-    char          *homeDir = NULL;
-    char          *filePath = NULL;
-    char          *pos;
-    int           nFile, i;
+    struct dirent  **nameList;
+    char           *homeDir = NULL;
+    char           *filePath = NULL;
+    char           *pos;
+    int            nFile, i;
 
     homeDir = getenv ("HOME");
-
     if (!homeDir)
 	return NULL;
 
     asprintf (&filePath, "%s/%s", homeDir, SETTINGPATH);
-
     if (!filePath)
 	return NULL;
 
     nFile = scandir (filePath, &nameList, profileNameFilter, NULL);
-
     if (nFile <= 0)
 	return NULL;
 
     for (i = 0; i < nFile; i++)
     {
 	pos = strrchr (nameList[i]->d_name, '.');
-
 	if (pos)
 	{
 	    *pos = 0;
 
 	    if (strcmp (nameList[i]->d_name, DEFAULTPROF) != 0)
-		ret = ccsStringListAppend (ret, strdup (nameList[i]->d_name) );
+		ret = ccsStringListAppend (ret, strdup (nameList[i]->d_name));
 	}
 
 	free (nameList[i]);
     }
 
     free (filePath);
-
     free (nameList);
 
     return ret;
 }
 
-static Bool deleteProfile (CCSContext * context, char * profile)
+static Bool
+deleteProfile (CCSContext * context, char * profile)
 {
     char *fileName;
 
@@ -628,34 +591,32 @@ static Bool deleteProfile (CCSContext * context, char * profile)
 	return FALSE;
 
     remove (fileName);
-
     free (fileName);
 
     return TRUE;
 }
 
 
-static CCSBackendVTable iniVTable =
-    {
-	"ini",
-	"Flat-file Configuration Backend",
-	"Flat file Configuration Backend for libccs",
-	FALSE,
-	TRUE,
-	NULL,
-	initBackend,
-	finiBackend,
-	readInit,
-	readSetting,
-	readDone,
-	writeInit,
-	writeSetting,
-	writeDone,
-	NULL,
-	getSettingIsReadOnly,
-	getExistingProfiles,
-	deleteProfile
-    };
+static CCSBackendVTable iniVTable = {
+    "ini",
+    "Flat-file Configuration Backend",
+    "Flat file Configuration Backend for libccs",
+    FALSE,
+    TRUE,
+    NULL,
+    initBackend,
+    finiBackend,
+    readInit,
+    readSetting,
+    readDone,
+    writeInit,
+    writeSetting,
+    writeDone,
+    NULL,
+    getSettingIsReadOnly,
+    getExistingProfiles,
+    deleteProfile
+};
 
 CCSBackendVTable *
 getBackendInfo (void)
