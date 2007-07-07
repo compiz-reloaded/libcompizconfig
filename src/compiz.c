@@ -1498,7 +1498,6 @@ pluginNameFilter (const struct dirent *name)
 }
 
 static int
-
 pluginXMLFilter (const struct dirent *name)
 {
     int length = strlen (name->d_name);
