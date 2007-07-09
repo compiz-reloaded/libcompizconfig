@@ -403,8 +403,13 @@ struct _CCSPluginCategory
 void ccsSetBasicMetadata (Bool value);
 CCSContext* ccsContextNew (unsigned int *screens,
 			   unsigned int numScreens);
+CCSContext* ccsEmptyContextNew (unsigned int *screens,
+				unsigned int numScreens);
 void ccsContextDestroy (CCSContext * context);
 CCSBackendVTable* getBackendInfo (void);
+
+Bool ccsLoadPlugin (CCSContext *context,
+		    char       *name);
 
 CCSPlugin* ccsFindPlugin (CCSContext *context,
 			  char       *name);
