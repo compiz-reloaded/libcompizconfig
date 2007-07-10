@@ -36,6 +36,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <sys/file.h>
 
 #include "iniparser.h"
 
@@ -54,7 +55,7 @@ ini_file_lock (const char *fileName)
     FileLock     *lock;
     struct flock lockinfo;
 
-    fd = open (fileName, O_RDONLY | O_CREAT);
+    fd = open (fileName, O_WRONLY | O_CREAT);
     if (fd < 0)
 	return NULL;
 
