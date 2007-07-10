@@ -53,15 +53,19 @@ ini_file_lock (const char *fileName)
 {
     int          fd;
     FileLock     *lock;
+    struct flock lockinfo;
 
-    fd = open (fileName, O_RDONLY | O_CREAT);
+    fd = open (fileName, O_WRONLY | O_CREAT);
     if (fd < 0)
 	return NULL;
 
     lock = malloc (sizeof (FileLock));
     lock ->fd = fd;
+    memset (&lockinfo, 0, sizeof (struct flock));
 
-    flock (fd, LOCK_EX);
+    lockinfo.l_type = F_WRLCK;
+    lockinfo.l_pid = getpid();
+    fcntl (fd, F_SETLKW, &lockinfo);
 
     return lock;
 }
@@ -69,7 +73,13 @@ ini_file_lock (const char *fileName)
 static void
 ini_file_unlock (FileLock *lock)
 {
-    flock (lock->fd, LOCK_UN);
+    struct flock lockinfo;
+
+    memset (&lockinfo, 0, sizeof (struct flock));
+    lockinfo.l_type = F_UNLCK;
+    lockinfo.l_pid = getpid();
+
+    fcntl (lock ->fd, F_SETLKW, &lockinfo);
     close (lock ->fd);
     free (lock );
 }
