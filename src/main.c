@@ -81,7 +81,7 @@ configChangeNotify (unsigned int watchId, void *closure)
 }
 
 CCSContext *
-ccsContextNew (unsigned int *screens, unsigned int numScreens)
+ccsEmptyContextNew (unsigned int *screens, unsigned int numScreens)
 {
     NEW (CCSContext, context);
 
@@ -102,8 +102,6 @@ ccsContextNew (unsigned int *screens, unsigned int numScreens)
 	context->numScreens = 1;
     }
 
-    ccsLoadPlugins (context);
-
     initGeneralOptions (context);
     context->configWatchId = ccsAddConfigWatch (context, configChangeNotify);
 
@@ -113,6 +111,16 @@ ccsContextNew (unsigned int *screens, unsigned int numScreens)
     printf ("Profile     : %s\n",
 	    (context->profile && strlen (context->profile)) ?
 	    context->profile : "default");
+
+    return context;
+}
+
+CCSContext *
+ccsContextNew (unsigned int *screens, unsigned int numScreens)
+{
+    CCSContext *context = ccsEmptyContextNew (screens, numScreens);
+
+    ccsLoadPlugins (context);
 
     return context;
 }

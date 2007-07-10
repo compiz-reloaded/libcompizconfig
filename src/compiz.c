@@ -1512,14 +1512,28 @@ pluginXMLFilter (const struct dirent *name)
 }
 
 static void
+loadPluginsFromXMLFile (CCSContext * context, char *name)
+{
+    xmlDoc *doc = NULL;
+    FILE *fp = fopen (name, "r");
+
+    if (fp)
+    {
+	fclose (fp);
+	doc = xmlReadFile (name, NULL, 0);
+	if (doc)
+	    loadPluginsFromXML (context, doc, name);
+	xmlFreeDoc (doc);
+    }
+}
+
+static void
 loadPluginsFromXMLFiles (CCSContext * context, char *path)
 {
 
     struct dirent **nameList;
     char *name;
     int nFile, i;
-    FILE *fp;
-    xmlDoc *doc = NULL;
 
     if (!path)
 	return;
@@ -1534,16 +1548,8 @@ loadPluginsFromXMLFiles (CCSContext * context, char *path)
 	asprintf (&name, "%s/%s", path, nameList[i]->d_name);
 	free (nameList[i]);
 
-	fp = fopen (name, "r");
+	loadPluginsFromXMLFile (context, name);
 
-	if (fp)
-	{
-	    fclose (fp);
-	    doc = xmlReadFile (name, NULL, 0);
-	    if (doc)
-		loadPluginsFromXML (context, doc, name);
-	    xmlFreeDoc (doc);
-	}
 	free (name);
     }
     free (nameList);
@@ -1640,6 +1646,25 @@ loadPluginsFromName (CCSContext * context, char *path)
 	addPluginNamed (context, name);
     }
     free (nameList);
+}
+
+Bool
+ccsLoadPlugin (CCSContext * context, char *name)
+{
+    char *path = NULL;
+    char *home = getenv ("HOME");
+    if (home && strlen (home))
+    {
+	asprintf (&path, "%s/.compiz/metadata/%s.xml", home, name);
+	loadPluginsFromXMLFile (context, path);
+	free (path);
+    }
+
+    asprintf (&path, "%s/%s.xml", METADATADIR, name);
+    loadPluginsFromXMLFile (context, path);
+    free (path);
+
+    return (ccsFindPlugin (context, name) != NULL);
 }
 
 void
