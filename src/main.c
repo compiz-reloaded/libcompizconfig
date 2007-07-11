@@ -965,6 +965,7 @@ ccsCopyList (CCSSettingValueList l1, CCSSetting * setting)
 		    sizeof (CCSSettingColorValue));
 	    break;
 	default:
+	    free (value);
 	    return FALSE;
 	    break;
 	}

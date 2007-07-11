@@ -83,17 +83,24 @@ getGenericNodePath (xmlNode * base)
     if (!parent)
 	return NULL;
     if (!base->name)
+    {
+	free (parent);
 	return strdup ("");
+    }
 
     if (!xmlStrcmp (base->name, BAD_CAST "option"))
     {
 	name = xmlGetProp (base, BAD_CAST "name");
 	if (!name)
+	{
+	    free (parent);
 	    return NULL;
+	}
 
 	if (!strlen ((char *) name))
 	{
 	    xmlFree (name);
+	    free (parent);
 	    return NULL;
 	}
 
@@ -101,6 +108,7 @@ getGenericNodePath (xmlNode * base)
 	if (!type)
 	{
 	    xmlFree (name);
+	    free (parent);
 	    return NULL;
 	}
 
@@ -108,6 +116,7 @@ getGenericNodePath (xmlNode * base)
 	{
 	    xmlFree (name);
 	    xmlFree (type);
+	    free (parent);
 	    return NULL;
 	}
 
@@ -123,11 +132,15 @@ getGenericNodePath (xmlNode * base)
     {
 	name = xmlGetProp (base, BAD_CAST "name");
 	if (!name)
+	{
+	    free (parent);
 	    return NULL;
+	}
 
 	if (!strlen ((char *) name))
 	{
 	    xmlFree (name);
+	    free (parent);
 	    return NULL;
 	}
 
@@ -1106,7 +1119,7 @@ addOptionForPlugin (CCSPlugin * plugin,
 		    xmlNode * node)
 {
     xmlNode **nodes;
-    int num;
+    int num = 0;
 
     if (ccsFindSetting (plugin, name, isScreen, screen))
     {
@@ -1200,7 +1213,6 @@ addOptionForPlugin (CCSPlugin * plugin,
 	default:
 	    break;
 	}
-	free (nodes);
     }
     else
     {
@@ -1218,6 +1230,9 @@ addOptionForPlugin (CCSPlugin * plugin,
 	    break;
 	}
     }
+
+    if (nodes)
+	free (nodes);
 
     //	printSetting (setting);
     PLUGIN_PRIV (plugin);
