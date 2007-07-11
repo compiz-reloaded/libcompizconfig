@@ -183,9 +183,10 @@ ccsPluginIsActive (CCSContext * context, char *name)
     if (!setting)
 	return FALSE;
 
-    ccsGetBool (setting, &ret);
-
-    return ret;
+    if (ccsGetBool (setting, &ret))
+    	return ret;
+    else
+	return FALSE;
 }
 
 
