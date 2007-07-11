@@ -49,13 +49,16 @@ extern "C"
 /* lock INI file access against concurrent access */
 
 static FileLock*
-ini_file_lock (const char *fileName)
+ini_file_lock (const char *fileName, Bool exclusive)
 {
     int          fd;
     FileLock     *lock;
     struct flock lockinfo;
 
-    fd = open (fileName, O_WRONLY | O_CREAT);
+    if (exclusive)
+	fd = open (fileName, O_WRONLY | O_CREAT);
+    else
+	fd = open (fileName, O_RDONLY | O_CREAT);
     if (fd < 0)
 	return NULL;
 
@@ -63,7 +66,10 @@ ini_file_lock (const char *fileName)
     lock ->fd = fd;
     memset (&lockinfo, 0, sizeof (struct flock));
 
-    lockinfo.l_type = F_WRLCK;
+    if (exclusive)
+	lockinfo.l_type = F_WRLCK;
+    else
+	lockinfo.l_type = F_RDLCK;
     lockinfo.l_pid = getpid();
     fcntl (fd, F_SETLKW, &lockinfo);
 
@@ -633,7 +639,7 @@ iniparser_dump_ini (dictionary * d, const char * file_name)
     if (!d)
     	return;
 
-    lock = ini_file_lock (file_name);
+    lock = ini_file_lock (file_name, TRUE);
     if (!lock)
 	return;
 
@@ -806,7 +812,7 @@ iniparser_new (char *ininame)
     int         lineno;
     FileLock *  lock;
 
-    lock = ini_file_lock (ininame);
+    lock = ini_file_lock (ininame, FALSE);
     if (!lock)
 	return NULL;
 
