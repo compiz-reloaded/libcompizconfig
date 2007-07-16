@@ -941,10 +941,6 @@ CompPluginVTable ccpVTable = {
     0, /* SetDisplayOption */
     0, /* GetScreenOptions */
     0, /* SetScreenOption */
-    0,
-    0,
-    0, /* Features */
-    0  /* nFeatures */
 };
 
 CompPluginVTable *
