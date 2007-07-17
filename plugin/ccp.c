@@ -361,6 +361,44 @@ ccpUpdateActivePlugins (CompDisplay *d, CompOption *o)
     }
 }
 
+static Bool
+ccpSameType (CCSSettingType st, CompOptionType ot)
+{
+    if (st == TypeBool && ot == CompOptionTypeBool)
+	return TRUE;
+    if (st == TypeInt && ot == CompOptionTypeInt)
+	return TRUE;
+    if (st == TypeFloat && ot == CompOptionTypeFloat)
+	return TRUE;
+    if (st == TypeColor && ot == CompOptionTypeColor)
+	return TRUE;
+    if (st == TypeString && ot == CompOptionTypeString)
+	return TRUE;
+    if (st == TypeMatch && ot == CompOptionTypeMatch)
+	return TRUE;
+    if (st == TypeAction && ot == CompOptionTypeAction)
+	return TRUE;
+    if (st == TypeList && ot == CompOptionTypeList)
+	return TRUE;
+    return FALSE;
+}
+
+static Bool
+ccpTypeCheck (CCSSetting *s, CompOption *o)
+{
+    switch (s->type)
+    {
+    case TypeList:
+	return ccpSameType (s->type, o->type) &&
+	       ccpSameType (s->info.forList.listType, o->value.list.type);
+	break;
+    default:
+	return ccpSameType (s->type, o->type);
+	break;
+    }
+    return FALSE;
+}
+
 static void
 ccpSetOptionFromContext ( CompDisplay *d,
 			  char *plugin,
@@ -444,6 +482,9 @@ ccpSetOptionFromContext ( CompDisplay *d,
 
     setting = ccsFindSetting (bsp, name, screen, screenNum);
     if (!setting)
+	return;
+
+    if (!ccpTypeCheck (setting, o))
 	return;
 
     value = o->value;
@@ -549,6 +590,9 @@ ccpSetContextFromOption ( CompDisplay *d,
 
     setting = ccsFindSetting (bsp, name, screen, screenNum);
     if (!setting)
+	return;
+
+    if (!ccpTypeCheck (setting, o))
 	return;
 
     ccpValueToSetting (d, setting, &o->value);
