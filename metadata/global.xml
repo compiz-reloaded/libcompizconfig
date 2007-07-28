@@ -254,6 +254,10 @@
 		<category>Effects</category>
 		<autoenable>true</autoenable>
 	</plugin>
+	<!-- workarounds metadata -->
+	<plugin name="workarounds">
+		<autoenable>true</autoenable>
+	</plugin>
 	<!-- zoom metadata -->
 	<plugin name="zoom">
 		<category>Accessibility</category>
