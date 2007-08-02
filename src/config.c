@@ -38,18 +38,18 @@ getConfigFileName (void)
     char *settingPath;
 
     configDir = getenv ("XDG_CONFIG_HOME");
-    if (!configDir)
+    if (!configDir || !strlen (configDir))
     {
 	configDir = getenv ("HOME");
+	if (!configDir || !strlen (configDir))
+	    return NULL;
+
 	settingPath = SETTINGPATH;
     }
     else
     {
 	settingPath = XDG_SETTINGPATH;
     }
-
-    if (!configDir)
-	return NULL;
 
     asprintf (&fileName, "%s/%s/config", configDir, settingPath);
 
