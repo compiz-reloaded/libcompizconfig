@@ -385,6 +385,9 @@ ccsIniGetList (IniDictionary       *dictionary,
     case TypeMatch:
 	{
 	    char **array = malloc (nItems * sizeof (char*));
+	    if (!array)
+		break;
+
 	    while (token)
 	    {
 		array[i++] = strdup (token);
@@ -403,6 +406,9 @@ ccsIniGetList (IniDictionary       *dictionary,
 	{
 	    CCSSettingColorValue *array;
 	    array = malloc (nItems * sizeof (CCSSettingColorValue));
+	    if (!array)
+		break;
+
 	    while (token)
 	    {
 		memset (&array[i], 0, sizeof (CCSSettingColorValue));
@@ -419,6 +425,9 @@ ccsIniGetList (IniDictionary       *dictionary,
 	{
 	    Bool *array = malloc (nItems * sizeof (Bool));
 	    Bool isTrue;
+	    if (!array)
+		break;
+
 	    while (token)
 	    {
 		isTrue = (token[0] == 'y' || token[0] == 'Y' || 
@@ -435,6 +444,9 @@ ccsIniGetList (IniDictionary       *dictionary,
     case TypeInt:
 	{
 	    int *array = malloc (nItems * sizeof (int));
+	    if (!array)
+		break;
+
 	    while (token)
 	    {
 		array[i++] = strtoul (token, NULL, 10);
@@ -448,6 +460,9 @@ ccsIniGetList (IniDictionary       *dictionary,
     case TypeFloat:
 	{
 	    float *array = malloc (nItems * sizeof (float));
+	    if (!array)
+		break;
+
 	    while (token)
 	    {
 		array[i++] = strtod (token, NULL);
@@ -462,6 +477,9 @@ ccsIniGetList (IniDictionary       *dictionary,
 	{
 	    CCSSettingActionValue *array;
 	    array = malloc (nItems * sizeof (CCSSettingActionValue));
+	    if (!array)
+		break;
+
 	    while (token)
 	    {
 		parseActionString (token, &array[i++]);

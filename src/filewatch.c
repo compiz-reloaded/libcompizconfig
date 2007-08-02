@@ -111,6 +111,12 @@ unsigned int ccsAddFileWatch (const char            *fileName,
 #endif
 
     fwData = realloc (fwData, (fwDataSize + 1) * sizeof (FilewatchData));
+    if (!fwData)
+    {
+	fwDataSize = 0;
+	return 0;
+    }
+
     fwData[fwDataSize].fileName  = strdup (fileName);
 
 #if HAVE_SYS_INOTIFY_H
@@ -163,7 +169,11 @@ ccsRemoveFileWatch (unsigned int watchId)
     fwDataSize--;
 
     if (fwDataSize > 0)
+    {
 	fwData = realloc (fwData, fwDataSize * sizeof (FilewatchData));
+	if (!fwData)
+	    fwDataSize = 0;
+    }
     else
     {
 	free (fwData);

@@ -83,13 +83,23 @@ configChangeNotify (unsigned int watchId, void *closure)
 CCSContext *
 ccsEmptyContextNew (unsigned int *screens, unsigned int numScreens)
 {
-    NEW (CCSContext, context);
+    CCSContext *context;
+
+    context = calloc (1, sizeof (CCSContext));
+    if (!context)
+	return NULL;
 
     if (numScreens > 0 && screens)
     {
 	int i;
 
 	context->screens = calloc (1, sizeof (unsigned int) * numScreens);
+	if (!context->screens)
+	{
+	    free (context);
+	    return NULL;
+	}
+
 	context->numScreens = numScreens;
 
 	for (i = 0; i < numScreens; i++)
@@ -98,6 +108,11 @@ ccsEmptyContextNew (unsigned int *screens, unsigned int numScreens)
     else
     {
 	context->screens = calloc (1, sizeof (unsigned int));
+	if (!context->screens)
+	{
+	    free (context);
+	    return NULL;
+	}
 	context->screens[0] = 0;
 	context->numScreens = 1;
     }
@@ -194,6 +209,7 @@ static void
 subGroupAdd (CCSSetting * setting, CCSGroup * group)
 {
     CCSSubGroupList l = group->subGroups;
+    CCSSubGroup     *subGroup;
 
     while (l)
     {
@@ -207,17 +223,20 @@ subGroupAdd (CCSSetting * setting, CCSGroup * group)
 	l = l->next;
     }
 
-    NEW (CCSSubGroup, subGroup);
-
-    group->subGroups = ccsSubGroupListAppend (group->subGroups, subGroup);
-    subGroup->name = strdup (setting->subGroup);
-    subGroup->settings = ccsSettingListAppend (subGroup->settings, setting);
+    subGroup = malloc (sizeof (CCSSubGroup));
+    if (subGroup)
+    {
+	group->subGroups = ccsSubGroupListAppend (group->subGroups, subGroup);
+	subGroup->name = strdup (setting->subGroup);
+	subGroup->settings = ccsSettingListAppend (subGroup->settings, setting);
+    }
 }
 
 static void
 groupAdd (CCSSetting * setting, CCSPluginPrivate * p)
 {
     CCSGroupList l = p->groups;
+    CCSGroup     *group;
 
     while (l)
     {
@@ -230,11 +249,13 @@ groupAdd (CCSSetting * setting, CCSPluginPrivate * p)
 	l = l->next;
     }
 
-    NEW (CCSGroup, group);
-
-    p->groups = ccsGroupListAppend (p->groups, group);
-    group->name = strdup (setting->group);
-    subGroupAdd (setting, group);
+    group = malloc (sizeof (CCSGroup));
+    if (group)
+    {
+    	p->groups = ccsGroupListAppend (p->groups, group);
+	group->name = strdup (setting->group);
+	subGroupAdd (setting, group);
+    }
 }
 
 void
@@ -527,6 +548,11 @@ ccsSetBackend (CCSContext * context, char *name)
     }
 
     context->backend = malloc (sizeof (CCSBackend));
+    if (!context->backend)
+    {
+	dlclose (dlhand);
+	return FALSE;
+    }
     context->backend->dlhand = dlhand;
     context->backend->vTable = vt;
 
@@ -562,7 +588,10 @@ copyValue (CCSSettingValue * from, CCSSettingValue * to)
 	CCSSettingValueList l = from->value.asList;
 	while (l)
 	{
-	    NEW (CCSSettingValue, value);
+	    CCSSettingValue *value = malloc (sizeof (CCSSettingValue));
+	    if (!value)
+		break;
+
 	    copyValue (l->data, value);
 	    to->value.asList = ccsSettingValueListAppend (to->value.asList,
 							  value);
@@ -577,10 +606,18 @@ copyValue (CCSSettingValue * from, CCSSettingValue * to)
 static void
 copyFromDefault (CCSSetting * setting)
 {
+    CCSSettingValue *value;
+
     if (setting->value != &setting->defaultValue)
 	ccsFreeSettingValue (setting->value);
 
-    NEW (CCSSettingValue, value);
+    value = malloc (sizeof (CCSSettingValue));
+    if (!value)
+    {
+	setting->value = &setting->defaultValue;
+	setting->isDefault = TRUE;
+	return;
+    }
 
     copyValue (&setting->defaultValue, value);
     setting->value = value;
@@ -935,7 +972,10 @@ ccsCopyList (CCSSettingValueList l1, CCSSetting * setting)
 
     while (l1)
     {
-	NEW (CCSSettingValue, value);
+	CCSSettingValue *value = malloc (sizeof (CCSSettingValue));
+	if (!value)
+	    return l2;
+
 	value->parent = setting;
 	value->isListChild = TRUE;
 
@@ -1207,6 +1247,9 @@ ccsGetSortedPluginStringList (CCSContext * context)
     /* TODO: conflict handling */
 
     PluginSortHelper *plugins = malloc (len * sizeof (PluginSortHelper));
+    if (!plugins)
+	return NULL;
+
     for (i = 0; i < len; i++, list = list->next)
     {
 	plugins[i].plugin = list->data;
@@ -1577,22 +1620,28 @@ ccsCanEnablePlugin (CCSContext * context, CCSPlugin * plugin)
     {
 	if (!ccsFindPlugin (context, sl->data))
 	{
-	    NEW (CCSPluginConflict, conflict);
-	    conflict->value = strdup (sl->data);
-	    conflict->type = ConflictPluginError;
-	    conflict->plugins = NULL;
-	    list = ccsPluginConflictListAppend (list, conflict);
+	    CCSPluginConflict *conflict = malloc (sizeof (CCSPluginConflict));
+	    if (conflict)
+	    {
+		conflict->value = strdup (sl->data);
+		conflict->type = ConflictPluginError;
+		conflict->plugins = NULL;
+		list = ccsPluginConflictListAppend (list, conflict);
+	    }
 	}
 	else if (!ccsPluginIsActive (context, sl->data))
 	{
 	    /* we've not seen a matching plugin */
-	    NEW (CCSPluginConflict, conflict);
-	    conflict->value = strdup (sl->data);
-	    conflict->type = ConflictRequiresPlugin;
-	    conflict->plugins =
-		ccsPluginListAppend (conflict->plugins,
-				     ccsFindPlugin (context, sl->data));
-	    list = ccsPluginConflictListAppend (list, conflict);
+	    CCSPluginConflict *conflict = malloc (sizeof (CCSPluginConflict));
+	    if (conflict)
+	    {
+		conflict->value = strdup (sl->data);
+		conflict->type = ConflictRequiresPlugin;
+		conflict->plugins =
+		    ccsPluginListAppend (conflict->plugins,
+			    		 ccsFindPlugin (context, sl->data));
+		list = ccsPluginConflictListAppend (list, conflict);
+	    }
 	}
 
 	sl = sl->next;
@@ -1638,13 +1687,16 @@ ccsCanEnablePlugin (CCSContext * context, CCSPlugin * plugin)
 	if (!pl)
 	{
 	    /* no plugin provides that feature */
-	    NEW (CCSPluginConflict, conflict);
+	    CCSPluginConflict *conflict = malloc (sizeof (CCSPluginConflict));
 
-	    conflict->value = strdup (sl->data);
-	    conflict->type = ConflictRequiresFeature;
-	    conflict->plugins = pl2;
+	    if (conflict)
+	    {
+		conflict->value = strdup (sl->data);
+		conflict->type = ConflictRequiresFeature;
+		conflict->plugins = pl2;
 
-	    list = ccsPluginConflictListAppend (list, conflict);
+		list = ccsPluginConflictListAppend (list, conflict);
+	    }
 	}
 
 	sl = sl->next;
@@ -1670,11 +1722,16 @@ ccsCanEnablePlugin (CCSContext * context, CCSPlugin * plugin)
 			if (!conflict)
 			{
 			    conflict = calloc (1, sizeof (CCSPluginConflict));
-			    conflict->value = strdup (sl->data);
-			    conflict->type = ConflictFeature;
+			    if (conflict)
+			    {
+				conflict->value = strdup (sl->data);
+				conflict->type = ConflictFeature;
+			    }
 			}
-			conflict->plugins =
-			    ccsPluginListAppend (conflict->plugins, pl->data);
+			if (conflict)
+			    conflict->plugins =
+				ccsPluginListAppend (conflict->plugins,
+						     pl->data);
 		    }
 		    featureList = featureList->next;
 		}
@@ -1707,11 +1764,16 @@ ccsCanEnablePlugin (CCSContext * context, CCSPlugin * plugin)
 			if (!conflict)
 			{
 			    conflict = calloc (1, sizeof (CCSPluginConflict));
-			    conflict->value = strdup (sl->data);
-			    conflict->type = ConflictFeature;
+			    if (conflict)
+			    {
+				conflict->value = strdup (sl->data);
+				conflict->type = ConflictFeature;
+			    }
 			}
-			conflict->plugins =
-			    ccsPluginListAppend (conflict->plugins, pl->data);
+			if (conflict)
+			    conflict->plugins =
+				ccsPluginListAppend (conflict->plugins,
+						     pl->data);
 		    }
 		    featureList = featureList->next;
 		}
@@ -1732,13 +1794,16 @@ ccsCanEnablePlugin (CCSContext * context, CCSPlugin * plugin)
     {
 	if (ccsPluginIsActive (context, sl->data))
 	{
-	    NEW (CCSPluginConflict, conflict);
-	    conflict->value = strdup (sl->data);
-	    conflict->type = ConflictPlugin;
-	    conflict->plugins =
-		ccsPluginListAppend (conflict->plugins,
-				     ccsFindPlugin (context, sl->data));
-	    list = ccsPluginConflictListAppend (list, conflict);
+	    CCSPluginConflict *conflict = malloc (sizeof (CCSPluginConflict));
+	    if (conflict)
+	    {
+		conflict->value = strdup (sl->data);
+		conflict->type = ConflictPlugin;
+		conflict->plugins =
+		    ccsPluginListAppend (conflict->plugins,
+			    		 ccsFindPlugin (context, sl->data));
+		list = ccsPluginConflictListAppend (list, conflict);
+	    }
 	}
 
 	sl = sl->next;
@@ -1777,11 +1842,16 @@ ccsCanDisablePlugin (CCSContext * context, CCSPlugin * plugin)
 		if (!conflict)
 		{
 		    conflict = calloc (1, sizeof (CCSPluginConflict));
-		    conflict->value = strdup (plugin->name);
-		    conflict->type = ConflictPluginNeeded;
+		    if (conflict)
+		    {
+			conflict->value = strdup (plugin->name);
+			conflict->type = ConflictPluginNeeded;
+		    }
 		}
-		conflict->plugins =
-		    ccsPluginListAppend (conflict->plugins, pl->data);
+
+		if (conflict)
+		    conflict->plugins =
+			ccsPluginListAppend (conflict->plugins, pl->data);
 		break;
 	    }
 	    pluginList = pluginList->next;
@@ -1819,11 +1889,15 @@ ccsCanDisablePlugin (CCSContext * context, CCSPlugin * plugin)
 		    {
 			conflict = calloc (1, sizeof (CCSPluginConflict));
 
-			conflict->value = strdup (sl->data);
-			conflict->type = ConflictPluginNeeded;
+			if (conflict)
+			{
+			    conflict->value = strdup (sl->data);
+			    conflict->type = ConflictPluginNeeded;
+			}
 		    }
-		    conflict->plugins =
-			ccsPluginListAppend (conflict->plugins, pl->data);
+		    if (conflict)
+			conflict->plugins =
+			    ccsPluginListAppend (conflict->plugins, pl->data);
 		}
 		pluginList = pluginList->next;
 	    }
@@ -1868,9 +1942,26 @@ CCSActionConflictList
 ccsCanSetAction (CCSContext * context, CCSSettingActionValue action)
 {
     CCSActionConflictList rv = NULL;
-    NEW (CCSActionConflict, keyC);
-    NEW (CCSActionConflict, buttonC);
-    NEW (CCSActionConflict, edgeC);
+    CCSActionConflict *keyC, *buttonC, *edgeC;
+
+    keyC = malloc (sizeof (CCSActionConflict));
+    if (!keyC)
+	return NULL;
+
+    buttonC = malloc (sizeof (CCSActionConflict));
+    if (!buttonC)
+    {
+	free (keyC);
+	return NULL;
+    }
+
+    edgeC = malloc (sizeof (CCSActionConflict));
+    if (!edgeC)
+    {
+	free (keyC);
+	free (buttonC);
+	return NULL;
+    }
 
     keyC->type = ConflictKey;
     buttonC->type = ConflictButton;
@@ -1988,6 +2079,8 @@ addBackendInfo (CCSBackendInfoList * bl, char *file)
     void *dlhand = NULL;
     char *err = NULL;
     Bool found = FALSE;
+    CCSBackendInfo *info;
+
     dlerror ();
 
     dlhand = dlopen (file, RTLD_LAZY);
@@ -2027,7 +2120,12 @@ addBackendInfo (CCSBackendInfoList * bl, char *file)
 	return;
     }
 
-    NEW (CCSBackendInfo, info);
+    info = malloc (sizeof (CCSBackendInfo));
+    if (!info)
+    {
+	dlclose (dlhand);
+	return;
+    }
 
     info->name = strdup (vt->name);
     info->shortDesc = (vt->shortDesc) ? strdup (vt->shortDesc) : strdup ("");
