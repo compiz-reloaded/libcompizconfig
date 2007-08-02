@@ -1259,7 +1259,6 @@ addOptionFromXMLNode (CCSPlugin * plugin, xmlNode * node)
     readonly = getStringFromXPath (node->doc, node, "@read_only");
 
     if (!name || !strlen (name) || !type || !strlen (type) ||
-	(!strcmp (plugin->name, "core") && !strcmp (name, "active_plugins")) ||
 	(readonly && !strcmp (readonly, "true")) )
     {
 	if (name)
