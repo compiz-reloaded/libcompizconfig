@@ -1228,6 +1228,10 @@ ccsGetSortedPluginStringList (CCSContext * context)
     int i, j;
     /* TODO: conflict handling */
 
+    /* FIXME: adding ccp here will break usage with other config plugins,
+       but this is unsupported anyway */
+    rv = ccsStringListAppend (rv, strdup ("ccp"));
+
     PluginSortHelper *plugins = malloc (len * sizeof (PluginSortHelper));
     for (i = 0; i < len; i++, list = list->next)
     {
