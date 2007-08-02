@@ -82,9 +82,9 @@ getIniFileName (char *profile)
     configDir = getenv ("XDG_CONFIG_HOME");
     if (!configDir)
     {
-    homeDir = getenv ("HOME");
-    if (!homeDir)
-	return NULL;
+	homeDir = getenv ("HOME");
+	if (!homeDir)
+	    return NULL;
 	asprintf (&configDir, "%s/%s", homeDir, XDG_CONFIG_DEFAULT);
     }
 

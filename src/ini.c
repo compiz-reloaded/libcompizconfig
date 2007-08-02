@@ -35,32 +35,35 @@
  * @return: True if the parent directory of the file now exists
 **/
 
-static Bool ccsCreateDirFor(const char *fileName)
+static Bool
+ccsCreateDirFor (const char *fileName)
 {
     char *path, *delim;
     Bool success;
 
     delim = strrchr (fileName, '/');
     if (!delim)
-    	return FALSE;	/* Input string is not a valid absolue path! */
+	return FALSE;	/* Input string is not a valid absolue path! */
 
     path = malloc (delim - fileName + 1);
     if (!path)
-    	return FALSE;
+	return FALSE;
 
     strncpy (path, fileName, delim - fileName);
     path[delim - fileName] = '\0';
 
     success = !mkdir (path, 0700);	/* Mkdir returns 0 on success */
     success |= (errno == EEXIST);
+
     if (!success && (errno == ENOENT))	/* ENOENT means we must recursively */
     {					/* create the parent's parent */
-	if (ccsCreateDirFor (path));
+	if (ccsCreateDirFor (path))
 	    success = !mkdir (path, 0700);
     }
+
     free (path);
     return success;
-}    
+}
 
 IniDictionary * ccsIniOpen (const char * fileName)
 {
