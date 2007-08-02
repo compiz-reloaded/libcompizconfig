@@ -92,7 +92,6 @@ struct _CCSContext
     Bool	      deIntegration;
 
     CCSSettingList    changedSettings;
-    Bool 	      pluginsChanged;
 
     unsigned int      configWatchId;
 
@@ -177,6 +176,8 @@ struct _CCSPlugin
     char *longDesc;		/* in current locale */
     char *hints;
     char *category;		/* simple name */
+
+    Bool active;
 
     CCSStringList loadAfter;
     CCSStringList loadBefore;

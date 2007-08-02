@@ -300,67 +300,6 @@ ccpFreeCompValue (CCSSetting      *s,
     }
 }
 
-static void
-ccpUpdatePluginList (CompDisplay *d)
-{
-    CompOption      *option;
-    int	            nOption;
-    CompOptionValue value;
-    CompOption      *o;
-    int             len, i;
-    CCSStringList   list, l;
-
-    CCP_DISPLAY (d);
-
-    option = compGetDisplayOptions (d, &nOption);
-    o = compFindOption (option, nOption, "active_plugins", 0);
-    if (!o)
-	return;
-
-    list = l = ccsGetSortedPluginStringList (cd->context);
-    len = ccsStringListLength (list) + 1;
-
-    value.list.nValue = len;
-    value.list.value = malloc (len * sizeof (CompOptionValue));
-    value.list.value[0].s = "ccp";
-
-    i = 1;
-
-    while (l)
-    {
-	value.list.value[i].s = l->data;
-	i++;
-	l = l->next;
-    }
-
-    (*d->setDisplayOption) (d, "active_plugins", &value);
-
-    free (value.list.value);
-    ccsStringListFree (list, TRUE);
-}
-
-static void
-ccpUpdateActivePlugins (CompDisplay *d, CompOption *o)
-{
-    CCP_DISPLAY (d);
-
-    CCSPluginList l = cd->context->plugins;
-
-    while (l)
-    {
-	Bool found = FALSE;
-	int i;
-
-	for (i = 0; i < o->value.list.nValue; i++)
-	    if (!strcmp (l->data->name, o->value.list.value[i].s))
-		found = TRUE;
-
-	ccsPluginSetActive (l->data, found);
-
-	l = l->next;
-    }
-}
-
 static Bool
 ccpSameType (CCSSettingType st, CompOptionType ot)
 {
@@ -426,12 +365,6 @@ ccpSetOptionFromContext ( CompDisplay *d,
 
     if (!name)
 	return;
-
-    if (!p && !strcmp (name, "active_plugins"))
-    {
-	ccpUpdatePluginList (d);
-	return;
-    }
 
     if (screen)
     {
@@ -577,12 +510,6 @@ ccpSetContextFromOption ( CompDisplay *d,
     o = compFindOption (option, nOption, name, 0);
     if (!o)
 	return;
-
-    if (!p && !strcmp (name, "active_plugins"))
-    {
-	ccpUpdateActivePlugins (d, o);
-	return;
-    }
 
     bsp = ccsFindPlugin (cd->context, (plugin) ? plugin : CORE_VTABLE_NAME);
     if (!bsp)
@@ -786,15 +713,6 @@ ccpTimeout (void *closure)
 	ccsSettingListFree (list, FALSE);
 	cd->context->changedSettings =
 	    ccsSettingListFree (cd->context->changedSettings, FALSE);
-    }
-
-    if (cd->context->pluginsChanged)
-    {
-	cd->applyingSettings = TRUE;
-	ccpUpdatePluginList (d);
-	cd->applyingSettings = FALSE;
-	printf ("Active Plugin List update\n");
-	cd->context->pluginsChanged = FALSE;
     }
 
     return TRUE;

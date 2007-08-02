@@ -149,10 +149,10 @@ ccsFindSetting (CCSPlugin * plugin, char *name,
 {
     PLUGIN_PRIV (plugin);
 
-    if (!pPrivate->loaded && strcmp (name, "____plugin_enabled"))
-	ccsLoadPluginSettings (plugin);
-
     CCSSettingList l = pPrivate->settings;
+
+    if (!pPrivate->loaded)
+	ccsLoadPluginSettings (plugin);
 
     while (l)
     {
@@ -172,21 +172,14 @@ Bool
 ccsPluginIsActive (CCSContext * context, char *name)
 {
     CCSPlugin *plugin;
-    CCSSetting *setting;
-    Bool ret;
 
     plugin = ccsFindPlugin (context, name);
     if (!plugin)
 	return FALSE;
 
-    setting = ccsFindSetting (plugin, "____plugin_enabled", FALSE, 0);
-    if (!setting)
-	return FALSE;
+    PLUGIN_PRIV (plugin);
 
-    if (ccsGetBool (setting, &ret))
-    	return ret;
-    else
-	return FALSE;
+    return pPrivate->active;
 }
 
 
@@ -594,12 +587,9 @@ ccsResetToDefault (CCSSetting * setting)
     {
 	ccsFreeSettingValue (setting->value);
 
-	if (!strcmp (setting->name, "____plugin_enabled"))
-	    setting->parent->context->pluginsChanged = TRUE;
-	else
-	    setting->parent->context->changedSettings =
-		ccsSettingListAppend (setting->parent->context->
-				      changedSettings, setting);
+    	setting->parent->context->changedSettings =
+	    ccsSettingListAppend (setting->parent->context->changedSettings,
+				  setting);
     }
 
     setting->value = &setting->defaultValue;
@@ -704,12 +694,9 @@ ccsSetBool (CCSSetting * setting, Bool data)
 
     setting->value->value.asBool = data;
 
-    if (!strcmp (setting->name, "____plugin_enabled"))
-	setting->parent->context->pluginsChanged = TRUE;
-    else
-	setting->parent->context->changedSettings =
-	    ccsSettingListAppend (setting->parent->context->changedSettings,
-				  setting);
+    setting->parent->context->changedSettings =
+	ccsSettingListAppend (setting->parent->context->changedSettings,
+			      setting);
 
     return TRUE;
 }
@@ -977,6 +964,31 @@ ccsCopyList (CCSSettingValueList l1, CCSSetting * setting)
     return l2;
 }
 
+static void
+ccsSetActivePluginList (CCSContext * context, CCSStringList list)
+{
+    CCSPluginList l;
+
+    for (l = context->plugins; l; l = l->next)
+    {
+	PLUGIN_PRIV (l->data);
+	pPrivate->active = FALSE;
+    }
+
+    for (; list; list = list->next)
+    {
+	CCSPlugin *plugin;
+	plugin = ccsFindPlugin (context, list->data);
+
+	if (plugin)
+	{
+	    PLUGIN_PRIV (plugin);
+	    pPrivate->active = TRUE;
+	}
+    }
+}
+
+
 Bool
 ccsSetList (CCSSetting * setting, CCSSettingValueList data)
 {
@@ -1005,6 +1017,16 @@ ccsSetList (CCSSetting * setting, CCSSettingValueList data)
     ccsSettingValueListFree (setting->value->value.asList, TRUE);
 
     setting->value->value.asList = ccsCopyList (data, setting);
+
+    if ((strcmp (setting->name, "active_plugins") == 0) &&
+	(strcmp (setting->parent->name, "core") == 0))
+    {
+	CCSStringList list;
+
+	list = ccsGetStringListFromValueList (setting->value->value.asList);
+	ccsSetActivePluginList (setting->parent->context, list);
+	ccsStringListFree (list, TRUE);
+    }
 
     setting->parent->context->changedSettings =
 	ccsSettingListAppend (setting->parent->context->changedSettings,
@@ -1152,16 +1174,11 @@ ccsGetActivePluginList (CCSContext * context)
 {
     CCSPluginList rv = NULL;
     CCSPluginList l = context->plugins;
-    Bool active;
 
     while (l)
     {
-	CCSSetting *setting;
-	setting = ccsFindSetting (l->data, "____plugin_enabled",
-    				  FALSE, 0);
-
-	if (setting && ccsGetBool (setting, &active) && active &&
-	    strcmp (l->data->name, "ccp"))
+	PLUGIN_PRIV (l->data);
+	if (pPrivate->active && strcmp (l->data->name, "ccp"))
 	    rv = ccsPluginListAppend (rv, l->data);
 
 	l = l->next;
@@ -1461,8 +1478,6 @@ ccsWriteSettings (CCSContext * context)
     if (context->backend->vTable->writeDone)
 	(*context->backend->vTable->writeDone) (context);
 
-    context->pluginsChanged = FALSE;
-
     context->changedSettings =
 	ccsSettingListFree (context->changedSettings, FALSE);
 }
@@ -1480,22 +1495,6 @@ ccsWriteChangedSettings (CCSContext * context)
 	if (! (*context->backend->vTable->writeInit) (context))
 	    return;
 
-    if (context->pluginsChanged)
-    {
-	CCSPluginList pl = context->plugins;
-
-	while (pl)
-	{
-	    CCSSetting *s =
-		ccsFindSetting (pl->data, "____plugin_enabled", FALSE, 0);
-
-	    if (s)
-		(*context->backend->vTable->writeSetting) (context, s);
-
-	    pl = pl->next;
-	}
-    }
-
     if (ccsSettingListLength (context->changedSettings))
     {
 	CCSSettingList l = context->changedSettings;
@@ -1509,8 +1508,6 @@ ccsWriteChangedSettings (CCSContext * context)
 
     if (context->backend->vTable->writeDone)
 	(*context->backend->vTable->writeDone) (context);
-
-    context->pluginsChanged = FALSE;
 
     context->changedSettings =
 	ccsSettingListFree (context->changedSettings, FALSE);
@@ -1551,14 +1548,32 @@ ccsIsEqualAction (CCSSettingActionValue c1, CCSSettingActionValue c2)
 Bool
 ccsPluginSetActive (CCSPlugin * plugin, Bool value)
 {
+    CCSStringList list;
+    CCSPlugin     *p;
+    CCSSetting    *s;
+    
     if (!plugin)
 	return FALSE;
 
-    CCSSetting *s = ccsFindSetting (plugin, "____plugin_enabled", FALSE, 0);
-    if (!s)
-	return FALSE;
+    PLUGIN_PRIV (plugin);
+    pPrivate->active = value;
 
-    ccsSetBool (s, value);
+    list = ccsGetSortedPluginStringList (plugin->context);
+    p    = ccsFindPlugin (plugin->context, "core");
+    if (p)
+    {
+    	s = ccsFindSetting (p, "active_plugins", FALSE, 0);
+	if (s)
+	{
+	    CCSSettingValueList vl;
+
+	    vl = ccsGetValueListFromStringList (list, s);
+	    ccsSetList (s, vl);
+	    ccsSettingValueListFree (vl, TRUE);
+	    ccsWriteChangedSettings (plugin->context);
+	}
+    }
+    ccsStringListFree (list, TRUE);
 
     return TRUE;
 }
