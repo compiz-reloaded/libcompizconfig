@@ -27,23 +27,50 @@
 #include <ccs.h>
 #include "iniparser.h"
 
-IniDictionary*
-ccsIniOpen (const char *fileName)
+/** 
+ * Creates the parent directory for @fileName, recursively creating a directory
+ * tree if necessary.
+ *
+ * @param fileName: The absolute path to the desired file
+ * @return: True if the parent directory of the file now exists
+**/
+
+static Bool
+ccsCreateDirFor (const char *fileName)
 {
     char *path, *delim;
+    Bool success;
+
+    delim = strrchr (fileName, '/');
+    if (!delim)
+	return FALSE;	/* Input string is not a valid absolue path! */
+
+    path = malloc (delim - fileName + 1);
+    if (!path)
+	return FALSE;
+
+    strncpy (path, fileName, delim - fileName);
+    path[delim - fileName] = '\0';
+
+    success = !mkdir (path, 0700);	/* Mkdir returns 0 on success */
+    success |= (errno == EEXIST);
+
+    if (!success && (errno == ENOENT))	/* ENOENT means we must recursively */
+    {					/* create the parent's parent */
+	if (ccsCreateDirFor (path))
+	    success = !mkdir (path, 0700);
+    }
+
+    free (path);
+    return success;
+}
+
+IniDictionary * ccsIniOpen (const char * fileName)
+{
     FILE *file;
 
-    path = strdup (fileName);
-    delim = strrchr (path, '/');
-    if (delim)
-	*delim = 0;
-
-    if (!mkdir (path, 0777) && (errno != EEXIST))
-    {
-	free (path);
+    if (!ccsCreateDirFor(fileName))
 	return NULL;
-    }
-    free (path);
 
     /* create file if it doesn't exist or is desired */
     file = fopen (fileName, "a+");
@@ -69,19 +96,8 @@ void
 ccsIniSave (IniDictionary *dictionary,
 	    const char    *fileName)
 {
-    char *path, *delim;
-
-    path = strdup (fileName);
-    delim = strrchr (path, '/');
-    if (delim)
-	*delim = 0;
-
-    if (!mkdir (path, 0777) && (errno != EEXIST))
-    {
-	free (path);
+    if (!ccsCreateDirFor (fileName))
 	return;
-    }
-    free (path);
 
     iniparser_dump_ini (dictionary, fileName);
 }
@@ -369,6 +385,9 @@ ccsIniGetList (IniDictionary       *dictionary,
     case TypeMatch:
 	{
 	    char **array = malloc (nItems * sizeof (char*));
+	    if (!array)
+		break;
+
 	    while (token)
 	    {
 		array[i++] = strdup (token);
@@ -387,6 +406,9 @@ ccsIniGetList (IniDictionary       *dictionary,
 	{
 	    CCSSettingColorValue *array;
 	    array = malloc (nItems * sizeof (CCSSettingColorValue));
+	    if (!array)
+		break;
+
 	    while (token)
 	    {
 		memset (&array[i], 0, sizeof (CCSSettingColorValue));
@@ -403,6 +425,9 @@ ccsIniGetList (IniDictionary       *dictionary,
 	{
 	    Bool *array = malloc (nItems * sizeof (Bool));
 	    Bool isTrue;
+	    if (!array)
+		break;
+
 	    while (token)
 	    {
 		isTrue = (token[0] == 'y' || token[0] == 'Y' || 
@@ -419,6 +444,9 @@ ccsIniGetList (IniDictionary       *dictionary,
     case TypeInt:
 	{
 	    int *array = malloc (nItems * sizeof (int));
+	    if (!array)
+		break;
+
 	    while (token)
 	    {
 		array[i++] = strtoul (token, NULL, 10);
@@ -432,6 +460,9 @@ ccsIniGetList (IniDictionary       *dictionary,
     case TypeFloat:
 	{
 	    float *array = malloc (nItems * sizeof (float));
+	    if (!array)
+		break;
+
 	    while (token)
 	    {
 		array[i++] = strtod (token, NULL);
@@ -446,6 +477,9 @@ ccsIniGetList (IniDictionary       *dictionary,
 	{
 	    CCSSettingActionValue *array;
 	    array = malloc (nItems * sizeof (CCSSettingActionValue));
+	    if (!array)
+		break;
+
 	    while (token)
 	    {
 		parseActionString (token, &array[i++]);

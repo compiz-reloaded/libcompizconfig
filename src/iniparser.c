@@ -63,7 +63,10 @@ ini_file_lock (const char *fileName, Bool exclusive)
 	return NULL;
 
     lock = malloc (sizeof (FileLock));
-    lock ->fd = fd;
+    if (!lock)
+	return NULL;
+
+    lock->fd = fd;
     memset (&lockinfo, 0, sizeof (struct flock));
 
     if (exclusive)
@@ -212,6 +215,9 @@ mem_double (void * ptr, int size)
     void *newptr;
 
     newptr = calloc (2 * size, 1);
+    if (!newptr)
+	return NULL;
+
     memcpy (newptr, ptr, size);
     free (ptr);
     return newptr;
@@ -276,11 +282,33 @@ dictionary_new (int size)
 	size = DICTMINSZ;
 
     d = (dictionary *) calloc (1, sizeof (dictionary));
+    if (!d)
+	return NULL;
 
     d->size = size;
     d->val  = (char **) calloc (size, sizeof (char*));
+    if (!d->val)
+    {
+	free (d);
+	return NULL;
+    }
+
     d->key  = (char **) calloc (size, sizeof (char*));
+    if (!d->key)
+    {
+	free (d->val);
+	free (d);
+	return NULL;
+    }
+
     d->hash = (unsigned int *) calloc (size, sizeof (unsigned));
+    if (!d->hash)
+    {
+	free (d->key);
+	free (d->val);
+	free (d);
+	return NULL;
+    }
 
     return d;
 }

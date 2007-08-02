@@ -232,6 +232,8 @@ getNodesFromXPath (xmlDoc * doc, xmlNode * base, char *path, int *num)
 
     *num = size;
     rv = malloc (size * sizeof (xmlNode *));
+    if (!rv)
+	return NULL;
 
     for (i = 0; i < size; i++)
 	rv[i] = xpathObj->nodesetval->nodeTab[i];
@@ -701,7 +703,11 @@ initListValue (CCSSettingValue * v, CCSSettingInfo * i, xmlNode * node)
     {
 	for (j = 0; j < num; j++)
 	{
-	    NEW (CCSSettingValue, val);
+	    CCSSettingValue *val;
+	    val = malloc (sizeof (CCSSettingValue));
+	    if (!val)
+		continue;
+
 	    val->parent = v->parent;
 	    val->isListChild = TRUE;
 
@@ -783,12 +789,18 @@ initIntInfo (CCSSettingInfo * i, xmlNode * node)
 							NULL);
 			if (value)
 			{
-			    NEW (CCSIntDesc, intDesc);
-			    intDesc->name = strdup (value);
-			    intDesc->value = val;
-			    i->forInt.desc =
-				ccsIntDescListAppend (i->forInt.desc, intDesc);
-			    free (value);
+			    CCSIntDesc *intDesc;
+
+			    intDesc = malloc (sizeof (CCSIntDesc));
+			    if (intDesc)
+			    {
+				intDesc->name = strdup (value);
+				intDesc->value = val;
+				i->forInt.desc =
+				    ccsIntDescListAppend (i->forInt.desc,
+							  intDesc);
+				free (value);
+			    }
 			}
 		    }
 		}
@@ -896,6 +908,7 @@ static void
 initListInfo (CCSSettingInfo * i, xmlNode * node)
 {
     char *value;
+    CCSSettingInfo *info;
 
     i->forList.listType = TypeBool;
     i->forList.listInfo = NULL;
@@ -913,22 +926,25 @@ initListInfo (CCSSettingInfo * i, xmlNode * node)
     {
     case TypeInt:
 	{
-	    NEW (CCSSettingInfo, info);
-	    initIntInfo (info, node);
+	    info = malloc (sizeof (CCSSettingInfo));
+	    if (info)
+		initIntInfo (info, node);
 	    i->forList.listInfo = info;
 	}
 	break;
     case TypeFloat:
 	{
-	    NEW (CCSSettingInfo, info);
-	    initFloatInfo (info, node);
+	    info = malloc (sizeof (CCSSettingInfo));
+	    if (info)
+		initFloatInfo (info, node);
 	    i->forList.listInfo = info;
 	}
 	break;
     case TypeAction:
 	{
-	    NEW (CCSSettingInfo, info);
-	    initActionInfo (info, node);
+	    info = malloc (sizeof (CCSSettingInfo));
+	    if (info)
+		initActionInfo (info, node);
 	    i->forList.listInfo = info;
 	}
 	break;
@@ -1120,6 +1136,7 @@ addOptionForPlugin (CCSPlugin * plugin,
 {
     xmlNode **nodes;
     int num = 0;
+    CCSSetting *setting;
 
     if (ccsFindSetting (plugin, name, isScreen, screen))
     {
@@ -1127,7 +1144,9 @@ addOptionForPlugin (CCSPlugin * plugin,
 	return;
     }
 
-    NEW (CCSSetting, setting);
+    setting = malloc (sizeof (CCSSetting));
+    if (!setting)
+	return;
 
     setting->parent = plugin;
     setting->isScreen = isScreen;
@@ -1351,6 +1370,8 @@ static void
 addPluginFromXMLNode (CCSContext * context, xmlNode * node, char *file)
 {
     char *name;
+    CCSPlugin *plugin;
+    CCSPluginPrivate *pPrivate;
 
     if (!node)
 	return;
@@ -1376,9 +1397,17 @@ addPluginFromXMLNode (CCSContext * context, xmlNode * node, char *file)
 	return;
     }
 
+    plugin = malloc (sizeof (CCSPlugin));
+    if (!plugin)
+	return;
 
-    NEW (CCSPlugin, plugin);
-    NEW (CCSPluginPrivate, pPrivate);
+    pPrivate = malloc (sizeof (CCSPluginPrivate));
+    if (!pPrivate)
+    {
+	free (plugin);
+	return;
+    }
+
     plugin->ccsPrivate = (void *) pPrivate;
 
     if (file)
@@ -1419,14 +1448,26 @@ addPluginFromXMLNode (CCSContext * context, xmlNode * node, char *file)
 static void
 addCoreSettingsFromXMLNode (CCSContext * context, xmlNode * node, char *file)
 {
+    CCSPlugin *plugin;
+    CCSPluginPrivate *pPrivate;
+
     if (!node)
 	return;
 
     if (ccsFindPlugin (context, "core"))
 	return;
 
-    NEW (CCSPlugin, plugin);
-    NEW (CCSPluginPrivate, pPrivate);
+    plugin = malloc (sizeof (CCSPlugin));
+    if (!plugin)
+	return;
+
+    pPrivate = malloc (sizeof (CCSPluginPrivate));
+    if (!pPrivate)
+    {
+	free (plugin);
+	return;
+    }
+
     plugin->ccsPrivate = (void *) pPrivate;
 
     if (file)
@@ -1556,6 +1597,9 @@ loadPluginsFromXMLFiles (CCSContext * context, char *path)
 static void
 addPluginNamed (CCSContext * context, char *name)
 {
+    CCSPlugin *plugin;
+    CCSPluginPrivate *pPrivate;
+    CCSSetting *setting;
 
     if (ccsFindPlugin (context, name))
 	return;
@@ -1584,8 +1628,17 @@ addPluginNamed (CCSContext * context, char *name)
 	}
     }
 
-    NEW (CCSPlugin, plugin);
-    NEW (CCSPluginPrivate, pPrivate);
+    plugin = malloc (sizeof (CCSPlugin));
+    if (!plugin)
+	return;
+
+    pPrivate = malloc (sizeof (CCSPluginPrivate));
+    if (!pPrivate)
+    {
+	free (plugin);
+	return;
+    }
+
     plugin->ccsPrivate = (void *) pPrivate;
 
     plugin->context = context;
