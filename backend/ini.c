@@ -79,7 +79,7 @@ getIniFileName (char *profile)
     char *configDir = NULL, *homeDir = NULL;
     char *fileName = NULL;
 
-    configDir = getenv ("XDG_CONFIG_HOaME");
+    configDir = getenv ("XDG_CONFIG_HOME");
     if (!configDir)
     {
     homeDir = getenv ("HOME");
