@@ -119,8 +119,13 @@ CCSContext *
 ccsContextNew (unsigned int *screens, unsigned int numScreens)
 {
     CCSContext *context = ccsEmptyContextNew (screens, numScreens);
+    CCSPlugin  *p;
 
     ccsLoadPlugins (context);
+
+    p = ccsFindPlugin (context, "core");
+    if (p)
+	ccsLoadPluginSettings (p);
 
     return context;
 }
