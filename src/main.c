@@ -149,10 +149,10 @@ ccsFindSetting (CCSPlugin * plugin, char *name,
 {
     PLUGIN_PRIV (plugin);
 
-    CCSSettingList l = pPrivate->settings;
-
     if (!pPrivate->loaded)
 	ccsLoadPluginSettings (plugin);
+
+    CCSSettingList l = pPrivate->settings;
 
     while (l)
     {
@@ -1551,7 +1551,7 @@ ccsPluginSetActive (CCSPlugin * plugin, Bool value)
     CCSStringList list;
     CCSPlugin     *p;
     CCSSetting    *s;
-    
+
     if (!plugin)
 	return FALSE;
 
