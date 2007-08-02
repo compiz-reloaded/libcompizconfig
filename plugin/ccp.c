@@ -155,7 +155,7 @@ ccpSettingToValue (CompDisplay     *d,
 	ccsGetList (s, &list);
 
 	v->list.nValue = ccsSettingValueListLength (list);
-	v->list.value  = malloc (v->list.nValue * sizeof (CompOptionValue));
+	v->list.value  = calloc (v->list.nValue, sizeof (CompOptionValue));
 
 	while (list)
 	{
@@ -243,7 +243,7 @@ ccpValueToSetting (CompDisplay     *d,
 {
     CCSSettingValue *value;
 
-    value = malloc (sizeof (CCSSettingValue));
+    value = calloc (1, sizeof (CCSSettingValue));
     if (!value)
 	return;
 
@@ -257,7 +257,7 @@ ccpValueToSetting (CompDisplay     *d,
 	{
 	    CCSSettingValue *val;
 
-	    val = malloc (sizeof (CCSSettingValue));
+	    val = calloc (1, sizeof (CCSSettingValue));
 	    if (val)
 	    {
 		val->parent = s;

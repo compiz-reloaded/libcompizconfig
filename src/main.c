@@ -221,7 +221,7 @@ subGroupAdd (CCSSetting * setting, CCSGroup * group)
 	l = l->next;
     }
 
-    subGroup = malloc (sizeof (CCSSubGroup));
+    subGroup = calloc (1, sizeof (CCSSubGroup));
     if (subGroup)
     {
 	group->subGroups = ccsSubGroupListAppend (group->subGroups, subGroup);
@@ -247,7 +247,7 @@ groupAdd (CCSSetting * setting, CCSPluginPrivate * p)
 	l = l->next;
     }
 
-    group = malloc (sizeof (CCSGroup));
+    group = calloc (1, sizeof (CCSGroup));
     if (group)
     {
     	p->groups = ccsGroupListAppend (p->groups, group);
@@ -545,7 +545,7 @@ ccsSetBackend (CCSContext * context, char *name)
 	return FALSE;
     }
 
-    context->backend = malloc (sizeof (CCSBackend));
+    context->backend = calloc (1, sizeof (CCSBackend));
     if (!context->backend)
     {
 	dlclose (dlhand);
@@ -586,7 +586,7 @@ copyValue (CCSSettingValue * from, CCSSettingValue * to)
 	CCSSettingValueList l = from->value.asList;
 	while (l)
 	{
-	    CCSSettingValue *value = malloc (sizeof (CCSSettingValue));
+	    CCSSettingValue *value = calloc (1, sizeof (CCSSettingValue));
 	    if (!value)
 		break;
 
@@ -609,7 +609,7 @@ copyFromDefault (CCSSetting * setting)
     if (setting->value != &setting->defaultValue)
 	ccsFreeSettingValue (setting->value);
 
-    value = malloc (sizeof (CCSSettingValue));
+    value = calloc (1, sizeof (CCSSettingValue));
     if (!value)
     {
 	setting->value = &setting->defaultValue;
@@ -964,7 +964,7 @@ ccsCopyList (CCSSettingValueList l1, CCSSetting * setting)
 
     while (l1)
     {
-	CCSSettingValue *value = malloc (sizeof (CCSSettingValue));
+	CCSSettingValue *value = calloc (1, sizeof (CCSSettingValue));
 	if (!value)
 	    return l2;
 
@@ -1268,13 +1268,13 @@ ccsGetSortedPluginStringList (CCSContext * context)
     int i, j;
     /* TODO: conflict handling */
 
+    PluginSortHelper *plugins = calloc (1, len * sizeof (PluginSortHelper));
+    if (!plugins)
+	return NULL;
+
     /* FIXME: adding ccp here will break usage with other config plugins,
        but this is unsupported anyway */
     rv = ccsStringListAppend (rv, strdup ("ccp"));
-
-    PluginSortHelper *plugins = malloc (len * sizeof (PluginSortHelper));
-    if (!plugins)
-	return NULL;
 
     for (i = 0; i < len; i++, list = list->next)
     {
@@ -1644,7 +1644,8 @@ ccsCanEnablePlugin (CCSContext * context, CCSPlugin * plugin)
     {
 	if (!ccsFindPlugin (context, sl->data))
 	{
-	    CCSPluginConflict *conflict = malloc (sizeof (CCSPluginConflict));
+	    CCSPluginConflict *conflict = calloc (1,
+						  sizeof (CCSPluginConflict));
 	    if (conflict)
 	    {
 		conflict->value = strdup (sl->data);
@@ -1656,7 +1657,8 @@ ccsCanEnablePlugin (CCSContext * context, CCSPlugin * plugin)
 	else if (!ccsPluginIsActive (context, sl->data))
 	{
 	    /* we've not seen a matching plugin */
-	    CCSPluginConflict *conflict = malloc (sizeof (CCSPluginConflict));
+	    CCSPluginConflict *conflict = calloc (1,
+						  sizeof (CCSPluginConflict));
 	    if (conflict)
 	    {
 		conflict->value = strdup (sl->data);
@@ -1711,7 +1713,8 @@ ccsCanEnablePlugin (CCSContext * context, CCSPlugin * plugin)
 	if (!pl)
 	{
 	    /* no plugin provides that feature */
-	    CCSPluginConflict *conflict = malloc (sizeof (CCSPluginConflict));
+	    CCSPluginConflict *conflict = calloc (1,
+						  sizeof (CCSPluginConflict));
 
 	    if (conflict)
 	    {
@@ -1818,7 +1821,8 @@ ccsCanEnablePlugin (CCSContext * context, CCSPlugin * plugin)
     {
 	if (ccsPluginIsActive (context, sl->data))
 	{
-	    CCSPluginConflict *conflict = malloc (sizeof (CCSPluginConflict));
+	    CCSPluginConflict *conflict = calloc (1,
+						  sizeof (CCSPluginConflict));
 	    if (conflict)
 	    {
 		conflict->value = strdup (sl->data);
@@ -1968,18 +1972,18 @@ ccsCanSetAction (CCSContext * context, CCSSettingActionValue action)
     CCSActionConflictList rv = NULL;
     CCSActionConflict *keyC, *buttonC, *edgeC;
 
-    keyC = malloc (sizeof (CCSActionConflict));
+    keyC = calloc (1, sizeof (CCSActionConflict));
     if (!keyC)
 	return NULL;
 
-    buttonC = malloc (sizeof (CCSActionConflict));
+    buttonC = calloc (1, sizeof (CCSActionConflict));
     if (!buttonC)
     {
 	free (keyC);
 	return NULL;
     }
 
-    edgeC = malloc (sizeof (CCSActionConflict));
+    edgeC = calloc (1, sizeof (CCSActionConflict));
     if (!edgeC)
     {
 	free (keyC);
@@ -2144,7 +2148,7 @@ addBackendInfo (CCSBackendInfoList * bl, char *file)
 	return;
     }
 
-    info = malloc (sizeof (CCSBackendInfo));
+    info = calloc (1, sizeof (CCSBackendInfo));
     if (!info)
     {
 	dlclose (dlhand);
