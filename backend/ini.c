@@ -37,7 +37,8 @@
 #include <X11/Xlib.h>
 
 #define DEFAULTPROF "Default"
-#define SETTINGPATH ".compizconfig/"
+#define XDG_CONFIG_DEFAULT ".config"
+#define SETTINGPATH "compiz/compizconfig"
 
 typedef struct _IniPrivData
 {
@@ -75,15 +76,22 @@ findPrivFromContext (CCSContext *context)
 static char*
 getIniFileName (char *profile)
 {
-    char *homeDir = NULL;
+    char *configDir = NULL, *homeDir = NULL;
     char *fileName = NULL;
 
+    configDir = getenv ("XDG_CONFIG_HOaME");
+    if (!configDir)
+    {
     homeDir = getenv ("HOME");
-
     if (!homeDir)
 	return NULL;
+	asprintf (&configDir, "%s/%s", homeDir, XDG_CONFIG_DEFAULT);
+    }
 
-    asprintf (&fileName, "%s/%s%s.ini", homeDir, SETTINGPATH, profile);
+    if (!configDir)
+	return NULL;
+
+    asprintf (&fileName, "%s/%s/%s.ini", configDir, SETTINGPATH, profile);
 
     return fileName;
 }

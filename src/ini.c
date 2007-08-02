@@ -27,23 +27,47 @@
 #include <ccs.h>
 #include "iniparser.h"
 
-IniDictionary*
-ccsIniOpen (const char *fileName)
+/** 
+ * Creates the parent directory for @fileName, recursively creating a directory
+ * tree if necessary.
+ *
+ * @param fileName: The absolute path to the desired file
+ * @return: True if the parent directory of the file now exists
+**/
+
+static Bool ccsCreateDirFor(const char *fileName)
 {
     char *path, *delim;
-    FILE *file;
+    Bool success;
 
-    path = strdup (fileName);
-    delim = strrchr (path, '/');
-    if (delim)
-	*delim = 0;
+    delim = strrchr (fileName, '/');
+    if (!delim)
+    	return FALSE;	/* Input string is not a valid absolue path! */
 
-    if (!mkdir (path, 0777) && (errno != EEXIST))
-    {
-	free (path);
-	return NULL;
+    path = malloc (delim - fileName + 1);
+    if (!path)
+    	return FALSE;
+
+    strncpy (path, fileName, delim - fileName);
+    path[delim - fileName] = '\0';
+
+    success = !mkdir (path, 0700);	/* Mkdir returns 0 on success */
+    success |= (errno == EEXIST);
+    if (!success && (errno == ENOENT))	/* ENOENT means we must recursively */
+    {					/* create the parent's parent */
+	if (ccsCreateDirFor (path));
+	    success = !mkdir (path, 0700);
     }
     free (path);
+    return success;
+}    
+
+IniDictionary * ccsIniOpen (const char * fileName)
+{
+    FILE *file;
+
+    if (!ccsCreateDirFor(fileName))
+	return NULL;
 
     /* create file if it doesn't exist or is desired */
     file = fopen (fileName, "a+");
@@ -69,19 +93,8 @@ void
 ccsIniSave (IniDictionary *dictionary,
 	    const char    *fileName)
 {
-    char *path, *delim;
-
-    path = strdup (fileName);
-    delim = strrchr (path, '/');
-    if (delim)
-	*delim = 0;
-
-    if (!mkdir (path, 0777) && (errno != EEXIST))
-    {
-	free (path);
+    if (!ccsCreateDirFor (fileName))
 	return;
-    }
-    free (path);
 
     iniparser_dump_ini (dictionary, fileName);
 }
