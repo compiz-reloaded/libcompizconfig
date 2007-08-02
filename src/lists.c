@@ -189,7 +189,7 @@ CCSSettingValueList ccsGetValueListFromStringList (CCSStringList list,
 
     while (list)
     {
-	CCSSettingValue *value = malloc (sizeof (CCSSettingValue));
+	CCSSettingValue *value = calloc (1, sizeof (CCSSettingValue));
 	if (!value)
 	    return rv;
 
@@ -224,7 +224,7 @@ char ** ccsGetStringArrayFromList (CCSStringList list, int *num)
 
     if (length)
     {
-	rv = malloc (length * sizeof (char *));
+	rv = calloc (length, sizeof (char *));
 	if (!rv)
 	    return NULL;
     }
@@ -256,7 +256,7 @@ char ** ccsGetStringArrayFromValueList (CCSSettingValueList list, int *num)
 
     if (length)
     {
-	rv = malloc (length * sizeof (int));
+	rv = calloc (length, sizeof (int));
 	if (!rv)
 	    return NULL;
     }
@@ -277,7 +277,7 @@ char ** ccsGetMatchArrayFromValueList (CCSSettingValueList list, int *num)
 
     if (length)
     {
-	rv = malloc (length * sizeof (int));
+	rv = calloc (length, sizeof (int));
 	if (!rv)
 	    return NULL;
     }
@@ -298,7 +298,7 @@ int * ccsGetIntArrayFromValueList (CCSSettingValueList list, int *num)
 
     if (length)
     {
-	rv = malloc (length * sizeof (int));
+	rv = calloc (length, sizeof (int));
 	if (!rv)
 	    return NULL;
     }
@@ -319,7 +319,7 @@ float * ccsGetFloatArrayFromValueList (CCSSettingValueList list, int *num)
 
     if (length)
     {
-	rv = malloc (length * sizeof (float));
+	rv = calloc (length, sizeof (float));
 	if (!rv)
 	    return NULL;
     }
@@ -340,7 +340,7 @@ Bool * ccsGetBoolArrayFromValueList (CCSSettingValueList list, int *num)
 
     if (length)
     {
-	rv = malloc (length * sizeof (Bool));
+	rv = calloc (length, sizeof (Bool));
 	if (!rv)
 	    return NULL;
     }
@@ -362,7 +362,7 @@ CCSSettingColorValue * ccsGetColorArrayFromValueList (CCSSettingValueList list,
 
     if (length)
     {
-	rv = malloc (length * sizeof (CCSSettingColorValue));
+	rv = calloc (length, sizeof (CCSSettingColorValue));
 	if (!rv)
 	    return NULL;
     }
@@ -385,7 +385,7 @@ CCSSettingActionValue * ccsGetActionArrayFromValueList (CCSSettingValueList list
 
     if (length)
     {
-	rv = malloc (length * sizeof (CCSSettingActionValue));
+	rv = calloc (length, sizeof (CCSSettingActionValue));
 	if (!rv)
 	    return NULL;
     }
@@ -407,7 +407,7 @@ CCSSettingValueList ccsGetValueListFromStringArray (char ** array, int num,
 
     for (i = 0; i < num; i++)
     {
-	CCSSettingValue *value = malloc (sizeof (CCSSettingValue));
+	CCSSettingValue *value = calloc (1, sizeof (CCSSettingValue));
 	if (!value)
 	    return l;
 
@@ -428,7 +428,7 @@ CCSSettingValueList ccsGetValueListFromMatchArray (char ** array, int num,
 
     for (i = 0; i < num; i++)
     {
-	CCSSettingValue *value = malloc (sizeof (CCSSettingValue));
+	CCSSettingValue *value = calloc (1, sizeof (CCSSettingValue));
 	if (!value)
 	    return l;
 
@@ -449,7 +449,7 @@ CCSSettingValueList ccsGetValueListFromIntArray (int * array, int num,
 
     for (i = 0; i < num; i++)
     {
-	CCSSettingValue *value = malloc (sizeof (CCSSettingValue));
+	CCSSettingValue *value = calloc (1, sizeof (CCSSettingValue));
 	if (!value)
 	    return l;
 
@@ -470,7 +470,7 @@ CCSSettingValueList ccsGetValueListFromFloatArray (float * array, int num,
 
     for (i = 0; i < num; i++)
     {
-	CCSSettingValue *value = malloc (sizeof (CCSSettingValue));
+	CCSSettingValue *value = calloc (1, sizeof (CCSSettingValue));
 	if (!value)
 	    return l;
 
@@ -491,7 +491,7 @@ CCSSettingValueList ccsGetValueListFromBoolArray (Bool * array, int num,
 
     for (i = 0; i < num; i++)
     {
-	CCSSettingValue *value = malloc (sizeof (CCSSettingValue));
+	CCSSettingValue *value = calloc (1, sizeof (CCSSettingValue));
 	if (!value)
 	    return l;
 
@@ -512,7 +512,7 @@ CCSSettingValueList ccsGetValueListFromColorArray (CCSSettingColorValue * array,
 
     for (i = 0; i < num; i++)
     {
-	CCSSettingValue *value = malloc (sizeof (CCSSettingValue));
+	CCSSettingValue *value = calloc (1, sizeof (CCSSettingValue));
 	if (!value)
 	    return l;
 
@@ -533,7 +533,7 @@ CCSSettingValueList ccsGetValueListFromActionArray (CCSSettingActionValue * arra
 
     for (i = 0; i < num; i++)
     {
-	CCSSettingValue *value = malloc (sizeof (CCSSettingValue));
+	CCSSettingValue *value = calloc (1, sizeof (CCSSettingValue));
 	if (!value)
 	    return l;
 
