@@ -27,18 +27,31 @@
 
 #include "ccs-private.h"
 
+#define SETTINGPATH ".compizconfig"
+#define XDG_SETTINGPATH "compiz/compizconfig"
+
 static char*
 getConfigFileName (void)
 {
-    char *home;
+    char *configDir = NULL;
     char *fileName = NULL;
+    char *settingPath;
 
-    home = getenv ("HOME");
+    configDir = getenv ("XDG_CONFIG_HOME");
+    if (!configDir || !strlen (configDir))
+    {
+	configDir = getenv ("HOME");
+	if (!configDir || !strlen (configDir))
+	    return NULL;
 
-    if (!home || !strlen (home))
-	return NULL;
+	settingPath = SETTINGPATH;
+    }
+    else
+    {
+	settingPath = XDG_SETTINGPATH;
+    }
 
-    asprintf (&fileName, "%s/.compizconfig/config", home);
+    asprintf (&fileName, "%s/%s/config", configDir, settingPath);
 
     return fileName;
 }

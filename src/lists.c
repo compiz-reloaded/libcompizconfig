@@ -36,6 +36,8 @@ typedef void (*freeFunc) (void *ptr);
     { \
 	CCS##type##List l = list; \
 	CCS##type##List ne = malloc(sizeof(struct _CCS##type##List)); \
+	if (!ne) \
+	    return list; \
 	ne->data = data; \
 	ne->next = NULL; \
 	if (!list) \
@@ -48,6 +50,8 @@ typedef void (*freeFunc) (void *ptr);
     CCS##type##List ccs##type##ListPrepend (CCS##type##List list, dtype *data) \
     { \
 	CCS##type##List ne = malloc(sizeof(struct _CCS##type##List)); \
+	if (!ne) \
+	    return list; \
 	ne->data = data; \
 	ne->next = list; \
 	return ne; \
@@ -57,6 +61,8 @@ typedef void (*freeFunc) (void *ptr);
     { \
 	CCS##type##List l = list; \
 	CCS##type##List ne = malloc(sizeof(struct _CCS##type##List)); \
+	if (!ne) \
+	    return list; \
 	ne->data = data; \
 	ne->next = list; \
 	if (!list || !position) \
@@ -76,6 +82,8 @@ typedef void (*freeFunc) (void *ptr);
     { \
 	CCS##type##List l = list; \
 	CCS##type##List ne = malloc(sizeof(struct _CCS##type##List)); \
+	if (!ne) \
+	    return list; \
 	while (l && (l != sibling)) l = l->next; \
 	ne->data = data; \
 	ne->next = l; \
@@ -181,7 +189,10 @@ CCSSettingValueList ccsGetValueListFromStringList (CCSStringList list,
 
     while (list)
     {
-	NEW (CCSSettingValue, value);
+	CCSSettingValue *value = malloc (sizeof (CCSSettingValue));
+	if (!value)
+	    return rv;
+
 	value->isListChild = TRUE;
 	value->parent = parent;
 	value->value.asString = strdup (list->data);
@@ -212,7 +223,11 @@ char ** ccsGetStringArrayFromList (CCSStringList list, int *num)
     int i;
 
     if (length)
-	rv = malloc (length * sizeof (char *) );
+    {
+	rv = malloc (length * sizeof (char *));
+	if (!rv)
+	    return NULL;
+    }
 
     for (i = 0; i < length; i++, list = list->next)
 	rv[i] = strdup (list->data);
@@ -240,7 +255,11 @@ char ** ccsGetStringArrayFromValueList (CCSSettingValueList list, int *num)
     int i;
 
     if (length)
-	rv = malloc (length * sizeof (int) );
+    {
+	rv = malloc (length * sizeof (int));
+	if (!rv)
+	    return NULL;
+    }
 
     for (i = 0; i < length; i++, list = list->next)
 	rv[i] = strdup (list->data->value.asString);
@@ -257,7 +276,11 @@ char ** ccsGetMatchArrayFromValueList (CCSSettingValueList list, int *num)
     int i;
 
     if (length)
-	rv = malloc (length * sizeof (int) );
+    {
+	rv = malloc (length * sizeof (int));
+	if (!rv)
+	    return NULL;
+    }
 
     for (i = 0; i < length; i++, list = list->next)
 	rv[i] = strdup (list->data->value.asMatch);
@@ -274,7 +297,11 @@ int * ccsGetIntArrayFromValueList (CCSSettingValueList list, int *num)
     int i;
 
     if (length)
-	rv = malloc (length * sizeof (int) );
+    {
+	rv = malloc (length * sizeof (int));
+	if (!rv)
+	    return NULL;
+    }
 
     for (i = 0; i < length; i++, list = list->next)
 	rv[i] = list->data->value.asInt;
@@ -291,7 +318,11 @@ float * ccsGetFloatArrayFromValueList (CCSSettingValueList list, int *num)
     int i;
 
     if (length)
-	rv = malloc (length * sizeof (float) );
+    {
+	rv = malloc (length * sizeof (float));
+	if (!rv)
+	    return NULL;
+    }
 
     for (i = 0; i < length; i++, list = list->next)
 	rv[i] = list->data->value.asFloat;
@@ -308,7 +339,11 @@ Bool * ccsGetBoolArrayFromValueList (CCSSettingValueList list, int *num)
     int i;
 
     if (length)
-	rv = malloc (length * sizeof (Bool) );
+    {
+	rv = malloc (length * sizeof (Bool));
+	if (!rv)
+	    return NULL;
+    }
 
     for (i = 0; i < length; i++, list = list->next)
 	rv[i] = list->data->value.asBool;
@@ -326,10 +361,15 @@ CCSSettingColorValue * ccsGetColorArrayFromValueList (CCSSettingValueList list,
     int i;
 
     if (length)
-	rv = malloc (length * sizeof (CCSSettingColorValue) );
+    {
+	rv = malloc (length * sizeof (CCSSettingColorValue));
+	if (!rv)
+	    return NULL;
+    }
 
     for (i = 0; i < length; i++, list = list->next)
-	memcpy (&rv[i], &list->data->value.asColor, sizeof (CCSSettingColorValue) );
+	memcpy (&rv[i], &list->data->value.asColor,
+		sizeof (CCSSettingColorValue));
 
     *num = length;
 
@@ -344,11 +384,15 @@ CCSSettingActionValue * ccsGetActionArrayFromValueList (CCSSettingValueList list
     int i;
 
     if (length)
-	rv = malloc (length * sizeof (CCSSettingActionValue) );
+    {
+	rv = malloc (length * sizeof (CCSSettingActionValue));
+	if (!rv)
+	    return NULL;
+    }
 
     for (i = 0; i < length; i++, list = list->next)
 	memcpy (&rv[i], &list->data->value.asAction,
-		sizeof (CCSSettingActionValue) );
+		sizeof (CCSSettingActionValue));
 
     *num = length;
 
@@ -363,7 +407,10 @@ CCSSettingValueList ccsGetValueListFromStringArray (char ** array, int num,
 
     for (i = 0; i < num; i++)
     {
-	NEW (CCSSettingValue, value);
+	CCSSettingValue *value = malloc (sizeof (CCSSettingValue));
+	if (!value)
+	    return l;
+
 	value->isListChild = TRUE;
 	value->parent = parent;
 	value->value.asString = strdup (array[i]);
@@ -381,7 +428,10 @@ CCSSettingValueList ccsGetValueListFromMatchArray (char ** array, int num,
 
     for (i = 0; i < num; i++)
     {
-	NEW (CCSSettingValue, value);
+	CCSSettingValue *value = malloc (sizeof (CCSSettingValue));
+	if (!value)
+	    return l;
+
 	value->isListChild = TRUE;
 	value->parent = parent;
 	value->value.asMatch = strdup (array[i]);
@@ -399,7 +449,10 @@ CCSSettingValueList ccsGetValueListFromIntArray (int * array, int num,
 
     for (i = 0; i < num; i++)
     {
-	NEW (CCSSettingValue, value);
+	CCSSettingValue *value = malloc (sizeof (CCSSettingValue));
+	if (!value)
+	    return l;
+
 	value->isListChild = TRUE;
 	value->parent = parent;
 	value->value.asInt = array[i];
@@ -417,7 +470,10 @@ CCSSettingValueList ccsGetValueListFromFloatArray (float * array, int num,
 
     for (i = 0; i < num; i++)
     {
-	NEW (CCSSettingValue, value);
+	CCSSettingValue *value = malloc (sizeof (CCSSettingValue));
+	if (!value)
+	    return l;
+
 	value->isListChild = TRUE;
 	value->parent = parent;
 	value->value.asFloat = array[i];
@@ -435,7 +491,10 @@ CCSSettingValueList ccsGetValueListFromBoolArray (Bool * array, int num,
 
     for (i = 0; i < num; i++)
     {
-	NEW (CCSSettingValue, value);
+	CCSSettingValue *value = malloc (sizeof (CCSSettingValue));
+	if (!value)
+	    return l;
+
 	value->isListChild = TRUE;
 	value->parent = parent;
 	value->value.asBool = array[i];
@@ -453,7 +512,10 @@ CCSSettingValueList ccsGetValueListFromColorArray (CCSSettingColorValue * array,
 
     for (i = 0; i < num; i++)
     {
-	NEW (CCSSettingValue, value);
+	CCSSettingValue *value = malloc (sizeof (CCSSettingValue));
+	if (!value)
+	    return l;
+
 	value->isListChild = TRUE;
 	value->parent = parent;
 	value->value.asColor = array[i];
@@ -471,7 +533,10 @@ CCSSettingValueList ccsGetValueListFromActionArray (CCSSettingActionValue * arra
 
     for (i = 0; i < num; i++)
     {
-	NEW (CCSSettingValue, value);
+	CCSSettingValue *value = malloc (sizeof (CCSSettingValue));
+	if (!value)
+	    return l;
+
 	value->isListChild = TRUE;
 	value->parent = parent;
 	value->value.asAction = array[i];

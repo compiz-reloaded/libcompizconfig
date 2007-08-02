@@ -241,7 +241,12 @@ ccpValueToSetting (CompDisplay     *d,
 		   CCSSetting      *s,
 		   CompOptionValue *v)
 {
-    NEW (CCSSettingValue, value);
+    CCSSettingValue *value;
+
+    value = malloc (sizeof (CCSSettingValue));
+    if (!value)
+	return;
+
     value->parent = s;
 
     if (s->type == TypeList)
@@ -250,13 +255,18 @@ ccpValueToSetting (CompDisplay     *d,
 
 	for (i = 0; i < v->list.nValue; i++)
 	{
-	    NEW (CCSSettingValue, val);
-	    val->parent = s;
-	    val->isListChild = TRUE;
-	    ccpInitValue (d, val, &v->list.value[i],
-			  s->info.forList.listType);
-	    value->value.asList =
-		ccsSettingValueListAppend (value->value.asList, val);
+	    CCSSettingValue *val;
+
+	    val = malloc (sizeof (CCSSettingValue));
+	    if (val)
+	    {
+		val->parent = s;
+		val->isListChild = TRUE;
+		ccpInitValue (d, val, &v->list.value[i],
+			      s->info.forList.listType);
+		value->value.asList =
+		    ccsSettingValueListAppend (value->value.asList, val);
+	    }
 	}
     }
     else
