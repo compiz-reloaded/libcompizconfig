@@ -35,9 +35,6 @@
 #define FALSE 0
 #endif
 
-#define NEW(a,b) \
-    a * b = malloc(sizeof(a)); memset((b),0,sizeof(a))
-
 #define CCSLIST_HDR(type,dtype)		\
     typedef struct _CCS##type##List *	CCS##type##List;\
     struct _CCS##type##List	\
