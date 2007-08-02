@@ -30,15 +30,22 @@
 static char*
 getConfigFileName (void)
 {
-    char *home;
+    char *configDir = NULL, *homeDir = NULL;
     char *fileName = NULL;
 
-    home = getenv ("HOME");
+    configDir = getenv ("XDG_CONFIG_HOME");
+    if (!configDir)
+    {
+	homeDir = getenv ("HOME");
+	if (!homeDir)
+	    return NULL;
+	asprintf (&configDir, "%s/%s", homeDir, ".config");
+    }
 
-    if (!home || !strlen (home))
+    if (!configDir)
 	return NULL;
 
-    asprintf (&fileName, "%s/.compizconfig/config", home);
+    asprintf (&fileName, "%s/%s/config", configDir, "compiz/compizconfig");
 
     return fileName;
 }
