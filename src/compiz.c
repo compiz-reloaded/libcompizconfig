@@ -704,7 +704,7 @@ initListValue (CCSSettingValue * v, CCSSettingInfo * i, xmlNode * node)
 	for (j = 0; j < num; j++)
 	{
 	    CCSSettingValue *val;
-	    val = malloc (sizeof (CCSSettingValue));
+	    val = calloc (1, sizeof (CCSSettingValue));
 	    if (!val)
 		continue;
 
@@ -791,7 +791,7 @@ initIntInfo (CCSSettingInfo * i, xmlNode * node)
 			{
 			    CCSIntDesc *intDesc;
 
-			    intDesc = malloc (sizeof (CCSIntDesc));
+			    intDesc = calloc (1, sizeof (CCSIntDesc));
 			    if (intDesc)
 			    {
 				intDesc->name = strdup (value);
@@ -926,7 +926,7 @@ initListInfo (CCSSettingInfo * i, xmlNode * node)
     {
     case TypeInt:
 	{
-	    info = malloc (sizeof (CCSSettingInfo));
+	    info = calloc (1, sizeof (CCSSettingInfo));
 	    if (info)
 		initIntInfo (info, node);
 	    i->forList.listInfo = info;
@@ -934,7 +934,7 @@ initListInfo (CCSSettingInfo * i, xmlNode * node)
 	break;
     case TypeFloat:
 	{
-	    info = malloc (sizeof (CCSSettingInfo));
+	    info = calloc (1, sizeof (CCSSettingInfo));
 	    if (info)
 		initFloatInfo (info, node);
 	    i->forList.listInfo = info;
@@ -942,7 +942,7 @@ initListInfo (CCSSettingInfo * i, xmlNode * node)
 	break;
     case TypeAction:
 	{
-	    info = malloc (sizeof (CCSSettingInfo));
+	    info = calloc (1, sizeof (CCSSettingInfo));
 	    if (info)
 		initActionInfo (info, node);
 	    i->forList.listInfo = info;
@@ -1144,7 +1144,7 @@ addOptionForPlugin (CCSPlugin * plugin,
 	return;
     }
 
-    setting = malloc (sizeof (CCSSetting));
+    setting = calloc (1, sizeof (CCSSetting));
     if (!setting)
 	return;
 
@@ -1398,11 +1398,11 @@ addPluginFromXMLNode (CCSContext * context, xmlNode * node, char *file)
 	return;
     }
 
-    plugin = malloc (sizeof (CCSPlugin));
+    plugin = calloc (1, sizeof (CCSPlugin));
     if (!plugin)
 	return;
 
-    pPrivate = malloc (sizeof (CCSPluginPrivate));
+    pPrivate = calloc (1, sizeof (CCSPluginPrivate));
     if (!pPrivate)
     {
 	free (plugin);
@@ -1440,7 +1440,7 @@ addPluginFromXMLNode (CCSContext * context, xmlNode * node, char *file)
     char *def = NULL;
     CCSSetting *setting;
 
-    setting = malloc (sizeof (CCSSetting));
+    setting = calloc (1, sizeof (CCSSetting));
     if (setting)
     {
     	setting->parent = plugin;
@@ -1480,11 +1480,11 @@ addCoreSettingsFromXMLNode (CCSContext * context, xmlNode * node, char *file)
     if (ccsFindPlugin (context, "core"))
 	return;
 
-    plugin = malloc (sizeof (CCSPlugin));
+    plugin = calloc (1, sizeof (CCSPlugin));
     if (!plugin)
 	return;
 
-    pPrivate = malloc (sizeof (CCSPluginPrivate));
+    pPrivate = calloc (1, sizeof (CCSPluginPrivate));
     if (!pPrivate)
     {
 	free (plugin);
@@ -1651,11 +1651,11 @@ addPluginNamed (CCSContext * context, char *name)
 	}
     }
 
-    plugin = malloc (sizeof (CCSPlugin));
+    plugin = calloc (1, sizeof (CCSPlugin));
     if (!plugin)
 	return;
 
-    pPrivate = malloc (sizeof (CCSPluginPrivate));
+    pPrivate = calloc (1, sizeof (CCSPluginPrivate));
     if (!pPrivate)
     {
 	free (plugin);
@@ -1676,7 +1676,7 @@ addPluginNamed (CCSContext * context, char *name)
     if (!plugin->category)
 	plugin->category = strdup ("");
 
-    setting = malloc (sizeof (CCSSetting));
+    setting = calloc (1, sizeof (CCSSetting));
     if (setting)
     {
     	setting->parent = plugin;
