@@ -1409,26 +1409,10 @@ addPluginFromXMLNode (CCSContext * context, xmlNode * node, char *file)
     printf ("Adding plugin %s (%s)\n", name, plugin->shortDesc);
 
     char *def = NULL;
-    NEW (CCSSetting, setting);
-
-    setting->parent = plugin;
-    setting->isScreen = FALSE;
-    setting->screenNum = 0;
-    setting->isDefault = TRUE;
-    setting->name = strdup ("____plugin_enabled");
-    setting->shortDesc = strdup ("enabled");
-    setting->longDesc = strdup ("enabled");
-    setting->group = strdup ("");
-    setting->subGroup = strdup ("");
-    setting->type = TypeBool;
-    setting->defaultValue.parent = setting;
     def = stringFromNodeDef (node, "autoenable/child::text()", "false");
-    setting->defaultValue.value.asBool = (strcmp (def, "true")) ? FALSE : TRUE;
+    pPrivate->autoEnable = (strcmp (def, "true")) ? FALSE : TRUE;
     free (def);
 
-    setting->value = &setting->defaultValue;
-
-    pPrivate->settings = ccsSettingListAppend (pPrivate->settings, setting);
     context->plugins = ccsPluginListAppend (context->plugins, plugin);
     free (name);
 }
@@ -1617,22 +1601,6 @@ addPluginNamed (CCSContext * context, char *name)
     if (!plugin->category)
 	plugin->category = strdup ("");
 
-    NEW (CCSSetting, setting);
-
-    setting->parent = plugin;
-    setting->isScreen = FALSE;
-    setting->screenNum = 0;
-    setting->isDefault = TRUE;
-    setting->name = strdup ("____plugin_enabled");
-    setting->shortDesc = strdup ("enabled");
-    setting->longDesc = strdup ("enabled");
-    setting->group = strdup ("");
-    setting->subGroup = strdup ("");
-    setting->type = TypeBool;
-    setting->defaultValue.parent = setting;
-    setting->defaultValue.value.asBool = FALSE;
-    setting->value = &setting->defaultValue;
-    pPrivate->settings = ccsSettingListAppend (pPrivate->settings, setting);
     pPrivate->loaded = TRUE;
     collateGroups (pPrivate);
     context->plugins = ccsPluginListAppend (context->plugins, plugin);
