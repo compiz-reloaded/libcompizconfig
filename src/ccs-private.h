@@ -24,10 +24,26 @@
 
 #include <ccs.h>
 
+#define CONTEXT_PRIV(c) \
+    CCSContextPrivate *cPrivate = (CCSContextPrivate *) c->ccsPrivate;
 #define PLUGIN_PRIV(p) \
     CCSPluginPrivate *pPrivate = (CCSPluginPrivate *) p->ccsPrivate;
 
 extern Bool basicMetadata;
+
+typedef struct _CCSContextPrivate
+{
+    CCSBackend        *backend;
+
+    char              *profile;
+    Bool	      deIntegration;
+    Bool              pluginListAutoSort;
+
+    unsigned int      configWatchId;
+
+    unsigned int      *screens;
+    unsigned int      numScreens;
+} CCSContextPrivate;
 
 typedef struct _CCSPluginPrivate
 {
