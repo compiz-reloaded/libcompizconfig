@@ -808,8 +808,6 @@ ccpInitDisplay (CompPlugin  *p,
 
     d->privates[displayPrivateIndex].ptr = cd;
 
-    cd->applyingSettings = FALSE;
-
     for (s = d->screens, i = 0; s; s = s->next, i++);
     screens = calloc (i, sizeof (unsigned int));
     if (!screens)
@@ -840,8 +838,10 @@ ccpInitDisplay (CompPlugin  *p,
 
     option = compGetDisplayOptions (d, &nOption);
 
+    cd->applyingSettings = TRUE;
     for (i = 0; i < nOption; i++)
 	ccpSetOptionFromContext ( d, NULL, option[i].name, FALSE, 0);
+    cd->applyingSettings = FALSE;
 
     cd->timeoutHandle = compAddTimeout (CCP_UPDATE_TIMEOUT, 
 					ccpTimeout, (void *) d);
@@ -877,7 +877,6 @@ ccpInitScreen (CompPlugin *p,
     CCPScreen *cs;
     int i;
 
-
     CCP_DISPLAY (s->display);
 
     cs = malloc (sizeof (CCPScreen));
@@ -893,9 +892,11 @@ ccpInitScreen (CompPlugin *p,
 
     option = compGetScreenOptions (s, &nOption);
 
+    cd->applyingSettings = TRUE;
     for (i = 0; i < nOption; i++)
 	ccpSetOptionFromContext (s->display, NULL, option[i].name,
 				 TRUE, s->screenNum);
+    cd->applyingSettings = FALSE;
 
     return TRUE;
 }

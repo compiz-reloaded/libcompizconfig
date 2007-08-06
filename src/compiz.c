@@ -1455,11 +1455,6 @@ addPluginFromXMLNode (CCSContext * context, xmlNode * node, char *file)
     initRulesFromRootNode (plugin, node);
     printf ("Adding plugin %s (%s)\n", name, plugin->shortDesc);
 
-    char *def = NULL;
-    def = stringFromNodeDef (node, "autoenable/child::text()", "false");
-    pPrivate->autoEnable = (strcmp (def, "true")) ? FALSE : TRUE;
-    free (def);
-
     context->plugins = ccsPluginListAppend (context->plugins, plugin);
     free (name);
 }

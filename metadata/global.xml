@@ -1,6 +1,27 @@
 <compiz>
 	<core>
 		<display>
+			<option name="active_plugins" type="list">
+				<type>string</type>
+				<default>
+					<value>dbus</value>
+					<value>place</value>
+					<value>move</value>
+					<value>resize</value>
+					<value>decoration</value>
+					<value>png</value>
+					<value>wobbly</value>
+					<value>cube</value>
+					<value>fade</value>
+					<value>minimize</value>
+					<value>rotate</value>
+					<value>scale</value>
+					<value>switcher</value>
+					<value>regex</value>
+					<value>workarounds</value>
+					<value>zoom</value>
+				</default>
+			</option>
 			<group>
 				<short>Focus &amp; Raise Behaviour</short>
 				<option name="click_to_focus" type="bool"/>
@@ -87,12 +108,10 @@
 	<!-- decoration metadata -->
 	<plugin name="decoration">
 		<category>Effects</category>
-		<autoenable>true</autoenable>
 	</plugin>
 	<!-- cube metadata -->
 	<plugin name="cube">
 		<category>Desktop</category>
-		<autoenable>true</autoenable>
 		<screen>
 			<group>
 				<short>Behaviour</short>
@@ -136,7 +155,6 @@
 	<!-- fade metadata -->
 	<plugin name="fade">
 		<category>Effects</category>
-		<autoenable>true</autoenable>
 	</plugin>
 	<!-- glib metadata -->
 	<plugin name="glib">
@@ -149,7 +167,6 @@
 	<!-- minimize metadata -->
 	<plugin name="minimize">
 		<category>Effects</category>
-		<autoenable>true</autoenable>
 	</plugin>
 	<!-- notification metadata -->
 	<plugin name="notification">
@@ -162,17 +179,14 @@
 	<!-- rotate metadata -->
 	<plugin name="rotate">
 		<category>Desktop</category>
-		<autoenable>true</autoenable>
 	</plugin>
 	<!-- scale metadata -->
 	<plugin name="scale">
 		<category>Window Management</category>
-		<autoenable>true</autoenable>
 	</plugin>
 	<!-- png metadata -->
 	<plugin name="png">
 		<category>Image Loading</category>
-		<autoenable>true</autoenable>
 	</plugin>
 	<!-- annotate metadata -->
 	<plugin name="annotate">
@@ -181,7 +195,6 @@
 	<!-- dbus metadata -->
 	<plugin name="dbus">
 		<category>Utility</category>
-		<autoenable>true</autoenable>
 	</plugin>
 	<!-- screenshot metadata -->
 	<plugin name="screenshot">
@@ -190,7 +203,6 @@
 	<!-- place metadata -->
 	<plugin name="place">
 		<category>Window Management</category>
-		<autoenable>true</autoenable>
 		<screen>
 			<group>
 				<short>Fixed Window Placement</short>
@@ -212,17 +224,14 @@
 	<!-- move metadata -->
 	<plugin name="move">
 		<category>Window Management</category>
-		<autoenable>true</autoenable>
 	</plugin>
 	<!-- resize metadata -->
 	<plugin name="resize">
 		<category>Window Management</category>
-		<autoenable>true</autoenable>
 	</plugin>
 	<!-- switcher metadata -->
 	<plugin name="switcher">
 		<category>Window Management</category>
-		<autoenable>true</autoenable>
 	</plugin>
 	<!-- clone metadata -->
 	<plugin name="clone">
@@ -239,7 +248,6 @@
 	<!-- regex metadata -->
 	<plugin name="regex">
 		<category>Utility</category>
-		<autoenable>true</autoenable>
 	</plugin>
 	<!-- video metadata -->
 	<plugin name="video">
@@ -252,15 +260,9 @@
 	<!-- wobbly metadata -->
 	<plugin name="wobbly">
 		<category>Effects</category>
-		<autoenable>true</autoenable>
-	</plugin>
-	<!-- workarounds metadata -->
-	<plugin name="workarounds">
-		<autoenable>true</autoenable>
 	</plugin>
 	<!-- zoom metadata -->
 	<plugin name="zoom">
 		<category>Accessibility</category>
-		<autoenable>true</autoenable>
 	</plugin>
 </compiz>
