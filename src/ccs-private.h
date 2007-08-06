@@ -34,7 +34,6 @@ typedef struct _CCSPluginPrivate
     CCSSettingList settings;
     CCSGroupList   groups;
     Bool 	   loaded;
-    Bool           autoEnable;
     Bool           active;
     char *	   xmlFile;
     char *	   xmlPath;

@@ -130,6 +130,30 @@ ccsEmptyContextNew (unsigned int *screens, unsigned int numScreens)
     return context;
 }
 
+static void
+ccsSetActivePluginList (CCSContext * context, CCSStringList list)
+{
+    CCSPluginList l;
+
+    for (l = context->plugins; l; l = l->next)
+    {
+	PLUGIN_PRIV (l->data);
+	pPrivate->active = FALSE;
+    }
+
+    for (; list; list = list->next)
+    {
+	CCSPlugin *plugin;
+	plugin = ccsFindPlugin (context, list->data);
+
+	if (plugin)
+	{
+	    PLUGIN_PRIV (plugin);
+	    pPrivate->active = TRUE;
+	}
+    }
+}
+
 CCSContext *
 ccsContextNew (unsigned int *screens, unsigned int numScreens)
 {
@@ -142,7 +166,24 @@ ccsContextNew (unsigned int *screens, unsigned int numScreens)
 
     p = ccsFindPlugin (context, "core");
     if (p)
+    {
+	CCSSetting    *s;
+
 	ccsLoadPluginSettings (p);
+
+	/* initialize plugin->active values */
+	s = ccsFindSetting (p, "active_plugins", FALSE, 0);
+	if (s)
+	{
+	    CCSStringList       list;
+	    CCSSettingValueList vl;
+
+	    ccsGetList (s, &vl);
+	    list = ccsGetStringListFromValueList (vl);
+	    ccsSetActivePluginList (context, list);
+	    ccsStringListFree (list, TRUE);
+	}
+    }
 
     return context;
 }
@@ -1010,31 +1051,6 @@ ccsCopyList (CCSSettingValueList l1, CCSSetting * setting)
 
     return l2;
 }
-
-static void
-ccsSetActivePluginList (CCSContext * context, CCSStringList list)
-{
-    CCSPluginList l;
-
-    for (l = context->plugins; l; l = l->next)
-    {
-	PLUGIN_PRIV (l->data);
-	pPrivate->active = FALSE;
-    }
-
-    for (; list; list = list->next)
-    {
-	CCSPlugin *plugin;
-	plugin = ccsFindPlugin (context, list->data);
-
-	if (plugin)
-	{
-	    PLUGIN_PRIV (plugin);
-	    pPrivate->active = TRUE;
-	}
-    }
-}
-
 
 Bool
 ccsSetList (CCSSetting * setting, CCSSettingValueList data)
