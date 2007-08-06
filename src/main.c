@@ -1274,10 +1274,6 @@ ccsGetSortedPluginStringList (CCSContext * context)
     if (!plugins)
 	return NULL;
 
-    /* FIXME: adding ccp here will break usage with other config plugins,
-       but this is unsupported anyway */
-    rv = ccsStringListAppend (rv, strdup ("ccp"));
-
     for (i = 0; i < len; i++, list = list->next)
     {
 	plugins[i].plugin = list->data;
