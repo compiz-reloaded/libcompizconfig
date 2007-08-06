@@ -23,6 +23,7 @@
 #define CSS_PRIVATE_H
 
 #include <ccs.h>
+#include <ccs-backend.h>
 
 #define CONTEXT_PRIV(c) \
     CCSContextPrivate *cPrivate = (CCSContextPrivate *) c->ccsPrivate;
