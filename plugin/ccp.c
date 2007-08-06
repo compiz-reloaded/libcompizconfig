@@ -759,26 +759,16 @@ ccpInitDisplay (CompPlugin  *p,
 
     cd->applyingSettings = FALSE;
 
-    s = d->screens;
-    i = 0;
-
-    while (s)
+    for (s = d->screens, i = 0; s; s = s->next, i++);
+    screens = calloc (i, sizeof (unsigned int));
+    if (!screens)
     {
-	i++;
-	s = s->next;
+	free (cd);
+	return FALSE;
     }
 
-    screens = calloc (1, sizeof (unsigned int) * i);
-
-    s = d->screens;
-    i = 0;
-
-    while (s)
-    {
-	screens[i] = s->screenNum;
-	i++;
-	s = s->next;
-    }
+    for (s = d->screens, i = 0; s; s = s->next)
+	screens[i++] = s->screenNum;
 
     ccsSetBasicMetadata (TRUE);
 
