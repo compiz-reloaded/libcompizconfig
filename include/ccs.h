@@ -83,6 +83,9 @@ struct _CCSContext
     void              *ccsPrivate;
 
     CCSSettingList    changedSettings;
+
+    unsigned int      *screens;
+    unsigned int      numScreens;
 };
 
 struct _CCSBackendInfo
