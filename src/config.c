@@ -144,6 +144,9 @@ ccsReadGlobalConfig (ConfigOption option,
     case OptionIntegration:
 	entry = "integration";
 	break;
+    case OptionAutoSort:
+	entry = "plugin_list_autosort";
+	break;
     default:
 	break;
     }
@@ -187,6 +190,9 @@ ccsReadConfig (ConfigOption option,
 	break;
     case OptionIntegration:
 	entry = "integration";
+	break;
+    case OptionAutoSort:
+	entry = "plugin_list_autosort";
 	break;
     default:
 	break;
@@ -238,6 +244,9 @@ ccsWriteConfig (ConfigOption option,
 	break;
     case OptionIntegration:
 	entry = "integration";
+	break;
+    case OptionAutoSort:
+	entry = "plugin_list_autosort";
 	break;
     default:
 	break;
