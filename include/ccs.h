@@ -175,8 +175,6 @@ struct _CCSPlugin
     char *hints;
     char *category;		/* simple name */
 
-    Bool active;
-
     CCSStringList loadAfter;
     CCSStringList loadBefore;
     CCSStringList requiresPlugin;
