@@ -82,19 +82,9 @@ struct _CCSContext
     CCSPluginList     plugins;
     CCSPluginCategory *categories;
     void              *privatePtr;
-
-    CCSBackend        *backend;
-
-    char              *profile;
-    Bool	      deIntegration;
-    Bool              pluginListAutoSort;
+    void              *ccsPrivate;
 
     CCSSettingList    changedSettings;
-
-    unsigned int      configWatchId;
-
-    unsigned int      *screens;
-    unsigned int      numScreens;
 };
 
 struct _CCSBackend
@@ -529,6 +519,7 @@ CCSStringList ccsGetSortedPluginStringList (CCSContext *context);
 
 Bool ccsSetBackend (CCSContext *context,
 		    char       *name);
+char * ccsGetBackend (CCSContext *context);
 void ccsSetIntegrationEnabled (CCSContext *context,
 			       Bool       value);
 void ccsSetProfile (CCSContext *context,

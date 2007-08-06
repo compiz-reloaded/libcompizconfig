@@ -97,43 +97,54 @@ ccsEmptyContextNew (unsigned int *screens, unsigned int numScreens)
     if (!context)
 	return NULL;
 
+    context->ccsPrivate = calloc (1, sizeof (CCSContextPrivate));
+    if (!context->ccsPrivate)
+    {
+	free (context);
+	return NULL;
+    }
+
+    CONTEXT_PRIV (context);
+
     if (numScreens > 0 && screens)
     {
 	int i;
 
-	context->screens = calloc (1, sizeof (unsigned int) * numScreens);
-	if (!context->screens)
+	cPrivate->screens = calloc (1, sizeof (unsigned int) * numScreens);
+	if (!cPrivate->screens)
 	{
+	    free (cPrivate);
 	    free (context);
 	    return NULL;
 	}
 
-	context->numScreens = numScreens;
+	cPrivate->numScreens = numScreens;
 
 	for (i = 0; i < numScreens; i++)
-	    context->screens[i] = screens[i];
+	    cPrivate->screens[i] = screens[i];
     }
     else
     {
-	context->screens = calloc (1, sizeof (unsigned int));
-	if (!context->screens)
+	cPrivate->screens = calloc (1, sizeof (unsigned int));
+	if (!cPrivate->screens)
 	{
+	    free (cPrivate);
 	    free (context);
 	    return NULL;
 	}
-	context->screens[0] = 0;
-	context->numScreens = 1;
+	cPrivate->screens[0] = 0;
+	cPrivate->numScreens = 1;
     }
 
     initGeneralOptions (context);
-    context->configWatchId = ccsAddConfigWatch (context, configChangeNotify);
+    cPrivate->configWatchId = ccsAddConfigWatch (context, configChangeNotify);
 
-    if (context->backend)
-	printf ("Backend     : %s\n", context->backend->vTable->name);
-    printf ("Integration : %s\n", context->deIntegration ? "true" : "false");
+    if (cPrivate->backend)
+	printf ("Backend     : %s\n", cPrivate->backend->vTable->name);
+    printf ("Integration : %s\n", cPrivate->deIntegration ? "true" : "false");
     printf ("Profile     : %s\n",
-	    (context->profile && strlen (context->profile)) ?
-	    context->profile : "default");
+	    (cPrivate->profile && strlen (cPrivate->profile)) ?
+	    cPrivate->profile : "default");
 
     return context;
 }
@@ -326,17 +337,22 @@ ccsFreeContext (CCSContext * c)
     if (!c)
 	return;
 
-    if (c->profile)
-	free (c->profile);
+    CONTEXT_PRIV (c);
 
-    if (c->configWatchId)
-	ccsRemoveFileWatch (c->configWatchId);
+    if (cPrivate->profile)
+	free (cPrivate->profile);
+
+    if (cPrivate->configWatchId)
+	ccsRemoveFileWatch (cPrivate->configWatchId);
 
     if (c->changedSettings)
 	ccsSettingListFree (c->changedSettings, FALSE);
 
-    if (c->screens)
-	free (c->screens);
+    if (cPrivate->screens)
+	free (cPrivate->screens);
+
+    if (c->ccsPrivate)
+	free (c->ccsPrivate);
 
     ccsPluginListFree (c->plugins, TRUE);
 
@@ -557,19 +573,21 @@ openBackend (char *backend)
 Bool
 ccsSetBackend (CCSContext * context, char *name)
 {
-    if (context->backend)
+    CONTEXT_PRIV (context);
+
+    if (cPrivate->backend)
     {
 	/* no action needed if the backend is the same */
 
-	if (strcmp (context->backend->vTable->name, name) == 0)
+	if (strcmp (cPrivate->backend->vTable->name, name) == 0)
 	    return TRUE;
 
-	if (context->backend->vTable->backendFini)
-	    context->backend->vTable->backendFini (context);
+	if (cPrivate->backend->vTable->backendFini)
+	    cPrivate->backend->vTable->backendFini (context);
 
-	dlclose (context->backend->dlhand);
-	free (context->backend);
-	context->backend = NULL;
+	dlclose (cPrivate->backend->dlhand);
+	free (cPrivate->backend);
+	cPrivate->backend = NULL;
     }
 
     void *dlhand = openBackend (name);
@@ -596,21 +614,21 @@ ccsSetBackend (CCSContext * context, char *name)
 	return FALSE;
     }
 
-    context->backend = calloc (1, sizeof (CCSBackend));
-    if (!context->backend)
+    cPrivate->backend = calloc (1, sizeof (CCSBackend));
+    if (!cPrivate->backend)
     {
 	dlclose (dlhand);
 	return FALSE;
     }
-    context->backend->dlhand = dlhand;
-    context->backend->vTable = vt;
+    cPrivate->backend->dlhand = dlhand;
+    cPrivate->backend->vTable = vt;
 
-    if (context->backend->vTable->backendInit)
-	context->backend->vTable->backendInit (context);
+    if (cPrivate->backend->vTable->backendInit)
+	cPrivate->backend->vTable->backendInit (context);
 
-    ccsDisableFileWatch (context->configWatchId);
+    ccsDisableFileWatch (cPrivate->configWatchId);
     ccsWriteConfig (OptionBackend, name);
-    ccsEnableFileWatch (context->configWatchId);
+    ccsEnableFileWatch (cPrivate->configWatchId);
 
     return TRUE;
 }
@@ -1227,14 +1245,16 @@ ccsContextDestroy (CCSContext * context)
     if (!context)
 	return;
 
-    if (context->backend)
-    {
-	if (context->backend->vTable->backendFini)
-	    context->backend->vTable->backendFini (context);
+    CONTEXT_PRIV (context);
 
-	dlclose (context->backend->dlhand);
-	free (context->backend);
-	context->backend = NULL;
+    if (cPrivate->backend)
+    {
+	if (cPrivate->backend->vTable->backendFini)
+	    cPrivate->backend->vTable->backendFini (context);
+
+	dlclose (cPrivate->backend->dlhand);
+	free (cPrivate->backend);
+	cPrivate->backend = NULL;
     }
 
     ccsFreeContext (context);
@@ -1392,13 +1412,29 @@ ccsGetSortedPluginStringList (CCSContext * context)
     return rv;
 }
 
+char *
+ccsGetBackend (CCSContext * context)
+{
+    if (!context)
+	return NULL;
+
+    CONTEXT_PRIV (context);
+
+    if (!cPrivate->backend)
+	return NULL;
+
+    return cPrivate->backend->vTable->name;
+}
+
 Bool
 ccsGetIntegrationEnabled (CCSContext * context)
 {
     if (!context)
 	return FALSE;
 
-    return context->deIntegration;
+    CONTEXT_PRIV (context);
+
+    return cPrivate->deIntegration;
 }
 
 char *
@@ -1407,7 +1443,9 @@ ccsGetProfile (CCSContext * context)
     if (!context)
 	return NULL;
 
-    return context->profile;
+    CONTEXT_PRIV (context);
+
+    return cPrivate->profile;
 }
 
 Bool
@@ -1416,22 +1454,26 @@ ccsGetPluginListAutoSort (CCSContext * context)
     if (!context)
 	return FALSE;
 
-    return context->pluginListAutoSort;
+    CONTEXT_PRIV (context);
+
+    return cPrivate->pluginListAutoSort;
 }
 
 void
 ccsSetIntegrationEnabled (CCSContext * context, Bool value)
 {
+    CONTEXT_PRIV (context);
+
     /* no action required if nothing changed */
-    if ((!context->deIntegration && !value) ||
-	 (context->deIntegration && value))
+    if ((!cPrivate->deIntegration && !value) ||
+	 (cPrivate->deIntegration && value))
 	return;
 
-    context->deIntegration = value;
+    cPrivate->deIntegration = value;
 
-    ccsDisableFileWatch (context->configWatchId);
+    ccsDisableFileWatch (cPrivate->configWatchId);
     ccsWriteConfig (OptionIntegration, (value) ? "true" : "false");
-    ccsEnableFileWatch (context->configWatchId);
+    ccsEnableFileWatch (cPrivate->configWatchId);
 }
 
 static void
@@ -1463,16 +1505,18 @@ ccsWriteAutoSortedPluginList (CCSContext *context)
 void
 ccsSetPluginListAutoSort (CCSContext * context, Bool value)
 {
+    CONTEXT_PRIV (context);
+
     /* no action required if nothing changed */
-    if ((!context->pluginListAutoSort && !value) ||
-	 (context->pluginListAutoSort && value))
+    if ((!cPrivate->pluginListAutoSort && !value) ||
+	 (cPrivate->pluginListAutoSort && value))
 	return;
 
-    context->pluginListAutoSort = value;
+    cPrivate->pluginListAutoSort = value;
 
-    ccsDisableFileWatch (context->configWatchId);
+    ccsDisableFileWatch (cPrivate->configWatchId);
     ccsWriteConfig (OptionAutoSort, (value) ? "true" : "false");
-    ccsEnableFileWatch (context->configWatchId);
+    ccsEnableFileWatch (cPrivate->configWatchId);
 
     if (value)
 	ccsWriteAutoSortedPluginList (context);
@@ -1484,18 +1528,20 @@ ccsSetProfile (CCSContext * context, char *name)
     if (!name)
 	name = "";
 
+    CONTEXT_PRIV (context);
+
     /* no action required if profile stays the same */
-    if (context->profile && (strcmp (context->profile, name) == 0))
+    if (cPrivate->profile && (strcmp (cPrivate->profile, name) == 0))
 	return;
 
-    if (context->profile)
-	free (context->profile);
+    if (cPrivate->profile)
+	free (cPrivate->profile);
 
-    context->profile = strdup (name);
+    cPrivate->profile = strdup (name);
 
-    ccsDisableFileWatch (context->configWatchId);
-    ccsWriteConfig (OptionProfile, context->profile);
-    ccsEnableFileWatch (context->configWatchId);
+    ccsDisableFileWatch (cPrivate->configWatchId);
+    ccsWriteConfig (OptionProfile, cPrivate->profile);
+    ccsEnableFileWatch (cPrivate->configWatchId);
 }
 
 void
@@ -1504,23 +1550,30 @@ ccsProcessEvents (CCSContext * context, unsigned int flags)
     if (!context)
 	return;
 
+    CONTEXT_PRIV (context);
+
     ccsCheckFileWatches ();
 
-    if (context->backend && context->backend->vTable->executeEvents)
-	(*context->backend->vTable->executeEvents) (flags);
+    if (cPrivate->backend && cPrivate->backend->vTable->executeEvents)
+	(*cPrivate->backend->vTable->executeEvents) (flags);
 }
 
 void
 ccsReadSettings (CCSContext * context)
 {
-    if (!context || !context->backend)
+    if (!context)
+	return;
+    
+    CONTEXT_PRIV (context);
+    
+    if (!cPrivate->backend)
 	return;
 
-    if (!context->backend->vTable->readSetting)
+    if (!cPrivate->backend->vTable->readSetting)
 	return;
 
-    if (context->backend->vTable->readInit)
-	if (! (*context->backend->vTable->readInit) (context))
+    if (cPrivate->backend->vTable->readInit)
+	if (!(*cPrivate->backend->vTable->readInit) (context))
 	    return;
 
     CCSPluginList pl = context->plugins;
@@ -1531,33 +1584,33 @@ ccsReadSettings (CCSContext * context)
 
 	while (sl)
 	{
-	    (*context->backend->vTable->readSetting) (context, sl->data);
+	    (*cPrivate->backend->vTable->readSetting) (context, sl->data);
 	    sl = sl->next;
 	}
 
 	pl = pl->next;
     }
 
-    if (context->backend->vTable->readDone)
-	(*context->backend->vTable->readDone) (context);
+    if (cPrivate->backend->vTable->readDone)
+	(*cPrivate->backend->vTable->readDone) (context);
 }
 
 void
 ccsReadPluginSettings (CCSPlugin * plugin)
 {
-    if (!plugin)
+    if (!plugin || !plugin->context)
 	return;
 
-    CCSContext *context = plugin->context;
+    CONTEXT_PRIV (plugin->context);
 
-    if (!context || !context->backend)
+    if (!cPrivate->backend)
 	return;
 
-    if (!context->backend->vTable->readSetting)
+    if (!cPrivate->backend->vTable->readSetting)
 	return;
 
-    if (context->backend->vTable->readInit)
-	if (! (*context->backend->vTable->readInit) (context))
+    if (cPrivate->backend->vTable->readInit)
+	if (!(*cPrivate->backend->vTable->readInit) (plugin->context))
 	    return;
 
     PLUGIN_PRIV (plugin);
@@ -1565,25 +1618,30 @@ ccsReadPluginSettings (CCSPlugin * plugin)
     CCSSettingList sl = pPrivate->settings;
     while (sl)
     {
-	(*context->backend->vTable->readSetting) (context, sl->data);
+	(*cPrivate->backend->vTable->readSetting) (plugin->context, sl->data);
 	sl = sl->next;
     }
 
-    if (context->backend->vTable->readDone)
-	(*context->backend->vTable->readDone) (context);
+    if (cPrivate->backend->vTable->readDone)
+	(*cPrivate->backend->vTable->readDone) (plugin->context);
 }
 
 void
 ccsWriteSettings (CCSContext * context)
 {
-    if (!context || !context->backend)
+    if (!context)
+	return;
+    
+    CONTEXT_PRIV (context);
+
+    if (!cPrivate->backend)
 	return;
 
-    if (!context->backend->vTable->writeSetting)
+    if (!cPrivate->backend->vTable->writeSetting)
 	return;
 
-    if (context->backend->vTable->writeInit)
-	if (! (*context->backend->vTable->writeInit) (context))
+    if (cPrivate->backend->vTable->writeInit)
+	if (!(*cPrivate->backend->vTable->writeInit) (context))
 	    return;
 
     CCSPluginList pl = context->plugins;
@@ -1594,15 +1652,15 @@ ccsWriteSettings (CCSContext * context)
 
 	while (sl)
 	{
-	    (*context->backend->vTable->writeSetting) (context, sl->data);
+	    (*cPrivate->backend->vTable->writeSetting) (context, sl->data);
 	    sl = sl->next;
 	}
 
 	pl = pl->next;
     }
 
-    if (context->backend->vTable->writeDone)
-	(*context->backend->vTable->writeDone) (context);
+    if (cPrivate->backend->vTable->writeDone)
+	(*cPrivate->backend->vTable->writeDone) (context);
 
     context->changedSettings =
 	ccsSettingListFree (context->changedSettings, FALSE);
@@ -1611,14 +1669,19 @@ ccsWriteSettings (CCSContext * context)
 void
 ccsWriteChangedSettings (CCSContext * context)
 {
-    if (!context || !context->backend)
+    if (!context)
+	return;
+    
+    CONTEXT_PRIV (context);
+    
+    if (!cPrivate->backend)
 	return;
 
-    if (!context->backend->vTable->writeSetting)
+    if (!cPrivate->backend->vTable->writeSetting)
 	return;
 
-    if (context->backend->vTable->writeInit)
-	if (! (*context->backend->vTable->writeInit) (context))
+    if (cPrivate->backend->vTable->writeInit)
+	if (!(*cPrivate->backend->vTable->writeInit) (context))
 	    return;
 
     if (ccsSettingListLength (context->changedSettings))
@@ -1627,13 +1690,13 @@ ccsWriteChangedSettings (CCSContext * context)
 
 	while (l)
 	{
-	    (*context->backend->vTable->writeSetting) (context, l->data);
+	    (*cPrivate->backend->vTable->writeSetting) (context, l->data);
 	    l = l->next;
 	}
     }
 
-    if (context->backend->vTable->writeDone)
-	(*context->backend->vTable->writeDone) (context);
+    if (cPrivate->backend->vTable->writeDone)
+	(*cPrivate->backend->vTable->writeDone) (context);
 
     context->changedSettings =
 	ccsSettingListFree (context->changedSettings, FALSE);
@@ -1677,9 +1740,11 @@ ccsPluginSetActive (CCSPlugin * plugin, Bool value)
 	return FALSE;
 
     PLUGIN_PRIV (plugin);
+    CONTEXT_PRIV (plugin->context);
+
     pPrivate->active = value;
 
-    if (plugin->context->pluginListAutoSort)
+    if (cPrivate->pluginListAutoSort)
 	ccsWriteAutoSortedPluginList (plugin->context);
 
     return TRUE;
@@ -2128,11 +2193,16 @@ ccsCanSetAction (CCSContext * context, CCSSettingActionValue action)
 CCSStringList
 ccsGetExistingProfiles (CCSContext * context)
 {
-    if (!context || !context->backend)
+    if (!context)
+	return NULL;
+    
+    CONTEXT_PRIV (context);
+    
+    if (!cPrivate->backend)
 	return NULL;
 
-    if (context->backend->vTable->getExistingProfiles)
-	return context->backend->vTable->getExistingProfiles (context);
+    if (cPrivate->backend->vTable->getExistingProfiles)
+	return (*cPrivate->backend->vTable->getExistingProfiles) (context);
 
     return NULL;
 }
@@ -2140,7 +2210,12 @@ ccsGetExistingProfiles (CCSContext * context)
 void
 ccsDeleteProfile (CCSContext * context, char *name)
 {
-    if (!context || !context->backend)
+    if (!context)
+	return;
+    
+    CONTEXT_PRIV (context);
+    
+    if (!cPrivate->backend)
 	return;
 
     /* never ever delete default profile */
@@ -2149,11 +2224,11 @@ ccsDeleteProfile (CCSContext * context, char *name)
 
     /* if the current profile should be deleted,
        switch to default profile first */
-    if (strcmp (context->profile, name) == 0)
+    if (strcmp (cPrivate->profile, name) == 0)
 	ccsSetProfile (context, "");
 
-    if (context->backend->vTable->deleteProfile)
-	context->backend->vTable->deleteProfile (context, name);
+    if (cPrivate->backend->vTable->deleteProfile)
+	(*cPrivate->backend->vTable->deleteProfile) (context, name);
 }
 
 static void
@@ -2495,30 +2570,32 @@ CCSGroupList ccsGetPluginGroups (CCSPlugin *plugin)
 
 Bool ccsSettingIsIntegrated (CCSSetting *setting)
 {
-    CCSBackend *b;
-
     if (!setting)
 	return FALSE;
 
-    b = setting->parent->context->backend;
+    CONTEXT_PRIV (setting->parent->context);
 
-    if (b && b->vTable->getSettingIsIntegrated)
-	return b->vTable->getSettingIsIntegrated (setting);
+    if (!cPrivate->backend)
+	return FALSE;
+
+    if (cPrivate->backend->vTable->getSettingIsIntegrated)
+	return (*cPrivate->backend->vTable->getSettingIsIntegrated) (setting);
 
     return FALSE;
 }
 
 Bool ccsSettingIsReadOnly (CCSSetting *setting)
 {
-    CCSBackend *b;
-
     if (!setting)
 	return FALSE;
 
-    b = setting->parent->context->backend;
+    CONTEXT_PRIV (setting->parent->context);
 
-    if (b && b->vTable->getSettingIsReadOnly)
-	return b->vTable->getSettingIsReadOnly (setting);
+    if (!cPrivate->backend)
+	return FALSE;
+
+    if (cPrivate->backend->vTable->getSettingIsReadOnly)
+	return (*cPrivate->backend->vTable->getSettingIsReadOnly) (setting);
 
     return FALSE;
 }

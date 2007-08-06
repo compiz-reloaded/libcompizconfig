@@ -1312,9 +1312,11 @@ addOptionFromXMLNode (CCSPlugin * plugin, xmlNode * node)
     screen = nodeExists (node, "ancestor::screen");
     if (screen)
     {
-	for (i = 0; i < plugin->context->numScreens; i++)
+	CONTEXT_PRIV (plugin->context);
+
+	for (i = 0; i < cPrivate->numScreens; i++)
 	    addOptionForPlugin (plugin, name, type, TRUE,
-				plugin->context->screens[i], node);
+				cPrivate->screens[i], node);
     }
     else
 	addOptionForPlugin (plugin, name, type, FALSE, 0, node);
@@ -1615,7 +1617,6 @@ addPluginNamed (CCSContext * context, char *name)
 {
     CCSPlugin *plugin;
     CCSPluginPrivate *pPrivate;
-    CCSSetting *setting;
 
     if (ccsFindPlugin (context, name))
 	return;
