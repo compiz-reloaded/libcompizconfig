@@ -110,30 +110,30 @@ ccsEmptyContextNew (unsigned int *screens, unsigned int numScreens)
     {
 	int i;
 
-	cPrivate->screens = calloc (1, sizeof (unsigned int) * numScreens);
-	if (!cPrivate->screens)
+	context->screens = calloc (1, sizeof (unsigned int) * numScreens);
+	if (!context->screens)
 	{
 	    free (cPrivate);
 	    free (context);
 	    return NULL;
 	}
 
-	cPrivate->numScreens = numScreens;
+	context->numScreens = numScreens;
 
 	for (i = 0; i < numScreens; i++)
-	    cPrivate->screens[i] = screens[i];
+	    context->screens[i] = screens[i];
     }
     else
     {
-	cPrivate->screens = calloc (1, sizeof (unsigned int));
-	if (!cPrivate->screens)
+	context->screens = calloc (1, sizeof (unsigned int));
+	if (!context->screens)
 	{
 	    free (cPrivate);
 	    free (context);
 	    return NULL;
 	}
-	cPrivate->screens[0] = 0;
-	cPrivate->numScreens = 1;
+	context->screens[0] = 0;
+	context->numScreens = 1;
     }
 
     initGeneralOptions (context);
@@ -348,8 +348,8 @@ ccsFreeContext (CCSContext * c)
     if (c->changedSettings)
 	ccsSettingListFree (c->changedSettings, FALSE);
 
-    if (cPrivate->screens)
-	free (cPrivate->screens);
+    if (c->screens)
+	free (c->screens);
 
     if (c->ccsPrivate)
 	free (c->ccsPrivate);

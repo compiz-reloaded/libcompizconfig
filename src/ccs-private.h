@@ -41,9 +41,6 @@ typedef struct _CCSContextPrivate
     Bool              pluginListAutoSort;
 
     unsigned int      configWatchId;
-
-    unsigned int      *screens;
-    unsigned int      numScreens;
 } CCSContextPrivate;
 
 typedef struct _CCSPluginPrivate
