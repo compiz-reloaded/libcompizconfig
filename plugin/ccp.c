@@ -141,6 +141,48 @@ ccpSetValueToValue (CompDisplay     *d,
 }
 
 static void
+ccpConvertPluginList (CompDisplay         *d,
+		      CCSSetting          *s,
+		      CCSSettingValueList list,
+		      CompOptionValue     *v)
+{
+    CCSStringList       sl, l;
+    Bool                ccpSeen = FALSE;
+    int                 i;
+
+    sl = l = ccsGetStringListFromValueList (list);
+    while (l)
+    {
+	if (strcmp (l->data, "ccp") == 0)
+	{
+	    ccpSeen = TRUE;
+	    break;
+	}
+	l = l->next;
+    }
+
+    if (!ccpSeen)
+	sl = ccsStringListPrepend (sl, strdup ("ccp"));
+
+    v->list.nValue = ccsStringListLength (sl);
+    v->list.value  = calloc (v->list.nValue, sizeof (CompOptionValue));
+    if (!v->list.value)
+    {
+	v->list.nValue = 0;
+	return;
+    }
+
+    for (l = sl, i = 0; l; l = l->next)
+    {
+	if (l->data)
+	    v->list.value[i].s = strdup (l->data);
+	i++;
+    }
+
+    ccsStringListFree (sl, TRUE);
+}
+
+static void
 ccpSettingToValue (CompDisplay     *d,
 		   CCSSetting      *s,
 		   CompOptionValue *v)
@@ -154,15 +196,24 @@ ccpSettingToValue (CompDisplay     *d,
 
 	ccsGetList (s, &list);
 
-	v->list.nValue = ccsSettingValueListLength (list);
-	v->list.value  = calloc (v->list.nValue, sizeof (CompOptionValue));
-
-	while (list)
+	if ((strcmp (s->name, "active_plugins") == 0) &&
+	    (strcmp (s->parent->name, CORE_VTABLE_NAME) == 0))
 	{
-	    ccpSetValueToValue (d, list->data,
-				&v->list.value[i], s->info.forList.listType);
-	    list = list->next;
-	    i++;
+	    ccpConvertPluginList (d, s, list, v);
+	}
+	else
+	{
+    	    v->list.nValue = ccsSettingValueListLength (list);
+    	    v->list.value  = calloc (v->list.nValue, sizeof (CompOptionValue));
+
+    	    while (list)
+    	    {
+    		ccpSetValueToValue (d, list->data,
+    				    &v->list.value[i],
+				    s->info.forList.listType);
+		list = list->next;
+		i++;
+	    }
 	}
     }
 }
