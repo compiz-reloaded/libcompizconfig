@@ -57,8 +57,6 @@ typedef struct _CCSPlugin	  CCSPlugin;
 typedef struct _CCSSetting	  CCSSetting;
 typedef struct _CCSGroup	  CCSGroup;
 typedef struct _CCSSubGroup	  CCSSubGroup;
-typedef struct _CCSBackend	  CCSBackend;
-typedef struct _CCSBackendVTable  CCSBackendVTable;
 typedef struct _CCSPluginCategory CCSPluginCategory;
 typedef struct _CCSSettingValue	  CCSSettingValue;
 typedef struct _CCSPluginConflict CCSPluginConflict;
@@ -85,67 +83,6 @@ struct _CCSContext
     void              *ccsPrivate;
 
     CCSSettingList    changedSettings;
-};
-
-struct _CCSBackend
-{
-    void             *dlhand;
-    CCSBackendVTable *vTable;
-};
-
-typedef CCSBackendVTable * (*BackendGetInfoProc) (void);
-
-typedef void (*CCSExecuteEventsFunc) (unsigned int flags);
-
-typedef Bool (*CCSInitBackendFunc) (CCSContext * context);
-typedef Bool (*CCSFiniBackendFunc) (CCSContext * context);
-
-typedef Bool (*CCSContextReadInitFunc) (CCSContext * context);
-typedef void (*CCSContextReadSettingFunc)
-(CCSContext * context, CCSSetting * setting);
-typedef void (*CCSContextReadDoneFunc) (CCSContext * context);
-
-typedef Bool (*CCSContextWriteInitFunc) (CCSContext * context);
-typedef void (*CCSContextWriteSettingFunc)
-(CCSContext * context, CCSSetting * setting);
-typedef void (*CCSContextWriteDoneFunc) (CCSContext * context);
-
-typedef Bool (*CCSGetIsIntegratedFunc) (CCSSetting * setting);
-typedef Bool (*CCSGetIsReadOnlyFunc) (CCSSetting * setting);
-
-typedef CCSStringList (*CCSGetExistingProfilesFunc) (CCSContext * context);
-typedef Bool (*CCSDeleteProfileFunc) (CCSContext * context, char * name);
-
-struct _CCSBackendVTable
-{
-    char *name;
-    char *shortDesc;
-    char *longDesc;
-    Bool integrationSupport;
-    Bool profileSupport;
-
-    /* something like a event loop call for the backend,
-       so it can check for file changes (gconf changes in the gconf backend)
-       no need for reload settings signals anymore */
-    CCSExecuteEventsFunc executeEvents;
-
-    CCSInitBackendFunc	       backendInit;
-    CCSFiniBackendFunc	       backendFini;
-
-    CCSContextReadInitFunc     readInit;
-    CCSContextReadSettingFunc  readSetting;
-    CCSContextReadDoneFunc     readDone;
-
-    CCSContextWriteInitFunc    writeInit;
-    CCSContextWriteSettingFunc writeSetting;
-    CCSContextWriteDoneFunc    writeDone;
-
-
-    CCSGetIsIntegratedFunc     getSettingIsIntegrated;
-    CCSGetIsReadOnlyFunc       getSettingIsReadOnly;
-
-    CCSGetExistingProfilesFunc getExistingProfiles;
-    CCSDeleteProfileFunc       deleteProfile;
 };
 
 struct _CCSBackendInfo
@@ -393,7 +330,6 @@ CCSContext* ccsContextNew (unsigned int *screens,
 CCSContext* ccsEmptyContextNew (unsigned int *screens,
 				unsigned int numScreens);
 void ccsContextDestroy (CCSContext * context);
-CCSBackendVTable* getBackendInfo (void);
 
 Bool ccsLoadPlugin (CCSContext *context,
 		    char       *name);
