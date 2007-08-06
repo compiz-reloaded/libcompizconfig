@@ -177,6 +177,8 @@ getStringFromXPath (xmlDoc * doc, xmlNode * base, char *path)
     char *rv = NULL;
 
     xpathCtx = xmlXPathNewContext (doc);
+    if (!xpathCtx)
+	return NULL;
 
     if (base)
 	xpathCtx->node = base;
@@ -184,7 +186,10 @@ getStringFromXPath (xmlDoc * doc, xmlNode * base, char *path)
     xpathObj = xmlXPathEvalExpression (BAD_CAST path, xpathCtx);
 
     if (!xpathObj)
+    {
+	xmlXPathFreeContext (xpathCtx);
 	return NULL;
+    }
 
     xpathObj = xmlXPathConvertString (xpathObj);
 
@@ -211,6 +216,8 @@ getNodesFromXPath (xmlDoc * doc, xmlNode * base, char *path, int *num)
     *num = 0;
 
     xpathCtx = xmlXPathNewContext (doc);
+    if (!xpathCtx)
+	return NULL;
 
     if (base)
 	xpathCtx->node = base;
@@ -233,7 +240,11 @@ getNodesFromXPath (xmlDoc * doc, xmlNode * base, char *path, int *num)
     *num = size;
     rv = malloc (size * sizeof (xmlNode *));
     if (!rv)
+    {
+	xmlXPathFreeObject (xpathObj);
+	xmlXPathFreeContext (xpathCtx);
 	return NULL;
+    }
 
     for (i = 0; i < size; i++)
 	rv[i] = xpathObj->nodesetval->nodeTab[i];
@@ -257,10 +268,13 @@ getStringFromPath (xmlDoc * doc, xmlNode * base, char *path)
 	    return NULL;
 
 	asprintf (&gPath, "%s/%s", bPath, path);
-	rv = getStringFromXPath (globalMetadata, NULL, gPath);
+	if (gPath)
+	{
+	    rv = getStringFromXPath (globalMetadata, NULL, gPath);
+	    free (gPath);
+	}
 
-	free (bPath);
-	free (gPath);
+     	free (bPath);
     }
     return rv;
 }
@@ -280,10 +294,13 @@ getNodesFromPath (xmlDoc * doc, xmlNode * base, char *path, int *num)
 	    return NULL;
 
 	asprintf (&gPath, "%s/%s", bPath, path);
-	rv = getNodesFromXPath (globalMetadata, NULL, gPath, num);
+	if (gPath)
+	{
+	    rv = getNodesFromXPath (globalMetadata, NULL, gPath, num);
+	    free (gPath);
+	}
 
 	free (bPath);
-	free (gPath);
     }
     return rv;
 }
@@ -302,10 +319,13 @@ getNodesFromPathGlobal (xmlDoc * doc, xmlNode * base, char *path, int *num)
 	    return NULL;
 
 	asprintf (&gPath, "%s/%s", bPath, path);
-	rv = getNodesFromXPath (globalMetadata, NULL, gPath, num);
+	if (gPath)
+	{
+	    rv = getNodesFromXPath (globalMetadata, NULL, gPath, num);
+	    free (gPath);
+	}
 
 	free (bPath);
-	free (gPath);
     }
 
     if (!*num)
@@ -367,22 +387,22 @@ stringFromNodeDefTrans (xmlNode * node, char *path, char *def)
     if (!lang || !strlen (lang))
 	return stringFromNodeDef (node, path, def);
 
-    sprintf (newPath, "%s[lang('%s')]", path, lang);
+    snprintf (newPath, 1023, "%s[lang('%s')]", path, lang);
     rv = stringFromNodeDef (node, newPath, NULL);
     if (rv)
 	return rv;
 
-    sprintf (newPath, "%s[lang(substring-before('%s','.'))]", path, lang);
+    snprintf (newPath, 1023, "%s[lang(substring-before('%s','.'))]", path, lang);
     rv = stringFromNodeDef (node, newPath, NULL);
     if (rv)
 	return rv;
 
-    sprintf (newPath, "%s[lang(substring-before('%s','_'))]", path, lang);
+    snprintf (newPath, 1023, "%s[lang(substring-before('%s','_'))]", path, lang);
     rv = stringFromNodeDef (node, newPath, NULL);
     if (rv)
 	return rv;
 
-    sprintf (newPath, "%s[lang('C')]", path);
+    snprintf (newPath, 1023, "%s[lang('C')]", path);
     rv = stringFromNodeDef (node, newPath, NULL);
     if (rv)
 	return rv;
@@ -457,8 +477,6 @@ initStringValue (CCSSettingValue * v, CCSSettingInfo * i, xmlNode * node)
 {
     char *value;
 
-    v->value.asString = strdup ("");
-
     value = getStringFromPath (node->doc, node, "child::text()");
 
     if (value)
@@ -467,6 +485,8 @@ initStringValue (CCSSettingValue * v, CCSSettingInfo * i, xmlNode * node)
 	v->value.asString = strdup (value);
 	free (value);
     }
+    else
+	v->value.asString = strdup ("");
 }
 
 static void
@@ -519,16 +539,15 @@ initMatchValue (CCSSettingValue * v, xmlNode * node)
 {
     char *value;
 
-    v->value.asMatch = strdup ("");
-
     value = getStringFromPath (node->doc, node, "child::text()");
     if (value)
     {
-
 	free (v->value.asMatch);
 	v->value.asMatch = strdup (value);
 	free (value);
     }
+    else
+	v->value.asMatch = strdup ("");
 }
 
 struct _Modifier
@@ -1587,9 +1606,11 @@ loadPluginsFromXMLFiles (CCSContext * context, char *path)
 	asprintf (&name, "%s/%s", path, nameList[i]->d_name);
 	free (nameList[i]);
 
-	loadPluginsFromXMLFile (context, name);
-
-	free (name);
+	if (name)
+	{
+	    loadPluginsFromXMLFile (context, name);
+    	    free (name);
+	}
     }
     free (nameList);
 }
@@ -1696,8 +1717,11 @@ ccsLoadPlugin (CCSContext * context, char *name)
     }
 
     asprintf (&path, "%s/%s.xml", METADATADIR, name);
-    loadPluginsFromXMLFile (context, path);
-    free (path);
+    if (path)
+    {
+	loadPluginsFromXMLFile (context, path);
+	free (path);
+    }
 
     return (ccsFindPlugin (context, name) != NULL);
 }
@@ -1718,8 +1742,11 @@ ccsLoadPlugins (CCSContext * context)
     {
 	char *homeplugins = NULL;
 	asprintf (&homeplugins, "%s/.compiz/metadata", home);
-	loadPluginsFromXMLFiles (context, homeplugins);
-	free (homeplugins);
+	if (homeplugins)
+	{
+	    loadPluginsFromXMLFiles (context, homeplugins);
+	    free (homeplugins);
+	}
     }
 
     loadPluginsFromXMLFiles (context, METADATADIR);
@@ -1727,8 +1754,11 @@ ccsLoadPlugins (CCSContext * context)
     {
 	char *homeplugins = NULL;
 	asprintf (&homeplugins, "%s/.compiz/plugins", home);
-	loadPluginsFromName (context, homeplugins);
-	free (homeplugins);
+	if (homeplugins)
+	{
+	    loadPluginsFromName (context, homeplugins);
+	    free (homeplugins);
+	}
     }
 
     loadPluginsFromName (context, PLUGINDIR);
