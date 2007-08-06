@@ -133,8 +133,10 @@ ccsEmptyContextNew (unsigned int *screens, unsigned int numScreens)
 CCSContext *
 ccsContextNew (unsigned int *screens, unsigned int numScreens)
 {
-    CCSContext *context = ccsEmptyContextNew (screens, numScreens);
     CCSPlugin  *p;
+    CCSContext *context = ccsEmptyContextNew (screens, numScreens);
+    if (!context)
+	return NULL;
 
     ccsLoadPlugins (context);
 
