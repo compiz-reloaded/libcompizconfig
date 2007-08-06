@@ -48,7 +48,8 @@ void ccsCheckFileWatches (void);
 typedef enum {
     OptionProfile,
     OptionBackend,
-    OptionIntegration
+    OptionIntegration,
+    OptionAutoSort
 } ConfigOption;
 
 Bool ccsReadConfig (ConfigOption option,

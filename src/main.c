@@ -69,6 +69,14 @@ initGeneralOptions (CCSContext * context)
     }
     else
 	ccsSetIntegrationEnabled (context, TRUE);
+
+    if (ccsReadConfig (OptionAutoSort, &val))
+    {
+	ccsSetPluginListAutoSort (context, !strcasecmp (val, "true"));
+	free (val);
+    }
+    else
+	ccsSetPluginListAutoSort (context, TRUE);
 }
 
 static void
@@ -1461,6 +1469,10 @@ ccsSetPluginListAutoSort (CCSContext * context, Bool value)
 	return;
 
     context->pluginListAutoSort = value;
+
+    ccsDisableFileWatch (context->configWatchId);
+    ccsWriteConfig (OptionAutoSort, (value) ? "true" : "false");
+    ccsEnableFileWatch (context->configWatchId);
 
     if (value)
 	ccsWriteAutoSortedPluginList (context);
