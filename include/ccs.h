@@ -87,6 +87,7 @@ struct _CCSContext
 
     char              *profile;
     Bool	      deIntegration;
+    Bool              pluginListAutoSort;
 
     CCSSettingList    changedSettings;
 
@@ -534,10 +535,13 @@ void ccsSetIntegrationEnabled (CCSContext *context,
 			       Bool       value);
 void ccsSetProfile (CCSContext *context,
 		    char       *name);
+void ccsSetPluginListAutoSort (CCSContext *context,
+			       Bool       value);
 char * ccsGetProfile (CCSContext *context);
 Bool ccsGetIntegrationEnabled (CCSContext *context);
 Bool ccsPluginSetActive (CCSPlugin *plugin,
 			 Bool      value);
+Bool ccsGetPluginListAutoSort (CCSContext *context);
 
 /* functions parsing/creating an action string -
    the returned strings must be free'd after usage! */

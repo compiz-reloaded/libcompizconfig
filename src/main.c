@@ -1402,11 +1402,19 @@ ccsGetProfile (CCSContext * context)
     return context->profile;
 }
 
+Bool
+ccsGetPluginListAutoSort (CCSContext * context)
+{
+    if (!context)
+	return FALSE;
+
+    return context->pluginListAutoSort;
+}
+
 void
 ccsSetIntegrationEnabled (CCSContext * context, Bool value)
 {
     /* no action required if nothing changed */
-
     if ((!context->deIntegration && !value) ||
 	 (context->deIntegration && value))
 	return;
@@ -1416,6 +1424,46 @@ ccsSetIntegrationEnabled (CCSContext * context, Bool value)
     ccsDisableFileWatch (context->configWatchId);
     ccsWriteConfig (OptionIntegration, (value) ? "true" : "false");
     ccsEnableFileWatch (context->configWatchId);
+}
+
+static void
+ccsWriteAutoSortedPluginList (CCSContext *context)
+{
+    CCSStringList list;
+    CCSPlugin     *p;
+
+    list = ccsGetSortedPluginStringList (context);
+    p    = ccsFindPlugin (context, "core");
+    if (p)
+    {
+	CCSSetting *s;
+
+	s = ccsFindSetting (p, "active_plugins", FALSE, 0);
+	if (s)
+	{
+	    CCSSettingValueList vl;
+
+	    vl = ccsGetValueListFromStringList (list, s);
+	    ccsSetList (s, vl);
+	    ccsSettingValueListFree (vl, TRUE);
+	    ccsWriteChangedSettings (context);
+	}
+    }
+    ccsStringListFree (list, TRUE);
+}
+
+void
+ccsSetPluginListAutoSort (CCSContext * context, Bool value)
+{
+    /* no action required if nothing changed */
+    if ((!context->pluginListAutoSort && !value) ||
+	 (context->pluginListAutoSort && value))
+	return;
+
+    context->pluginListAutoSort = value;
+
+    if (value)
+	ccsWriteAutoSortedPluginList (context);
 }
 
 void
@@ -1610,36 +1658,17 @@ ccsIsEqualAction (CCSSettingActionValue c1, CCSSettingActionValue c2)
     return FALSE;
 }
 
-
 Bool
 ccsPluginSetActive (CCSPlugin * plugin, Bool value)
 {
-    CCSStringList list;
-    CCSPlugin     *p;
-    CCSSetting    *s;
-
     if (!plugin)
 	return FALSE;
 
     PLUGIN_PRIV (plugin);
     pPrivate->active = value;
 
-    list = ccsGetSortedPluginStringList (plugin->context);
-    p    = ccsFindPlugin (plugin->context, "core");
-    if (p)
-    {
-    	s = ccsFindSetting (p, "active_plugins", FALSE, 0);
-	if (s)
-	{
-	    CCSSettingValueList vl;
-
-	    vl = ccsGetValueListFromStringList (list, s);
-	    ccsSetList (s, vl);
-	    ccsSettingValueListFree (vl, TRUE);
-	    ccsWriteChangedSettings (plugin->context);
-	}
-    }
-    ccsStringListFree (list, TRUE);
+    if (plugin->context->pluginListAutoSort)
+	ccsWriteAutoSortedPluginList (plugin->context);
 
     return TRUE;
 }
