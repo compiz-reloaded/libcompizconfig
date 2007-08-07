@@ -1337,6 +1337,26 @@ ccsGetSortedPluginStringList (CCSContext * context)
 	    l = l->next;
 	}
 
+	l = plugins[i].plugin->requiresPlugin;
+	while (l)
+	{
+	    Bool found = FALSE;
+	    p = findPluginInList (ap, l->data);
+
+	    CCSStringList l2 = plugins[i].plugin->loadBefore;
+	    while (l2)
+	    {
+		if (strcmp (l2->data, l->data) == 0)
+		    found = TRUE;
+		l2 = l2->next;
+	    }
+	    
+	    if (p && !ccsPluginListFind (plugins[i].after, p) && !found)
+		plugins[i].after = ccsPluginListAppend (plugins[i].after, p);
+
+	    l = l->next;
+	}
+
 	l = plugins[i].plugin->loadBefore;
 	while (l)
 	{
