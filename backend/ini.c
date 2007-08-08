@@ -548,22 +548,12 @@ profileNameFilter (const struct dirent *name)
 }
 
 static CCSStringList
-getExistingProfiles (CCSContext * context)
+scanConfigDir (char * filePath)
 {
     CCSStringList  ret = NULL;
     struct dirent  **nameList;
-    char           *homeDir = NULL;
-    char           *filePath = NULL;
     char           *pos;
     int            nFile, i;
-
-    homeDir = getenv ("HOME");
-    if (!homeDir)
-	return NULL;
-
-    asprintf (&filePath, "%s/%s", homeDir, SETTINGPATH);
-    if (!filePath)
-	return NULL;
 
     nFile = scandir (filePath, &nameList, profileNameFilter, NULL);
     if (nFile <= 0)
@@ -583,8 +573,41 @@ getExistingProfiles (CCSContext * context)
 	free (nameList[i]);
     }
 
-    free (filePath);
     free (nameList);
+    
+    return ret;
+}
+
+static CCSStringList
+getExistingProfiles (CCSContext * context)
+{
+    CCSStringList  ret = NULL;
+    char	   *filePath = NULL;
+    char           *homeDir = NULL;
+    char	   *configDir = NULL;
+    
+    configDir = getenv ("XDG_CONFIG_HOME");
+    if (configDir && strlen (configDir))
+    {
+	asprintf (&filePath, "%s/%s", configDir, SETTINGPATH);
+	
+	ret = scanConfigDir(filePath);
+	free(filePath);
+
+	if (ret)
+	    return ret;
+    }
+    
+    homeDir = getenv ("HOME");
+    if (!homeDir)
+	return NULL;
+
+    asprintf (&filePath, "%s/.config/%s", homeDir, SETTINGPATH);
+    if (!filePath)
+	return NULL;
+
+    ret = scanConfigDir(filePath);
+    free(filePath);
 
     return ret;
 }
