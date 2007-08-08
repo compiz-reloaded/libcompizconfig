@@ -12,5 +12,5 @@ intltoolize --automake --copy --force || exit 1
 
 cd $ORIGDIR || exit $?
 
-$srcdir/configure --enable-maintainer-mode "$@"
+$srcdir/configure --enable-debug=full --enable-maintainer-mode "$@"
 

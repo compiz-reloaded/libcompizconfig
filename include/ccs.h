@@ -23,6 +23,15 @@
 #ifndef _CSS_H
 #define _CSS_H
 
+#define D_NONE   0
+#define D_NORMAL 1
+#define D_FULL   2
+
+#ifndef DEBUGLEVEL
+# define DEBUGLEVEL D_NONE
+#endif
+#define D(x, fmt, args...)  { if (x <= DEBUGLEVEL) printf(fmt, ##args); }
+
 #ifndef Bool
 #define Bool int
 #endif

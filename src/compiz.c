@@ -18,6 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#ifdef HAVE_CONFIG_H
+#  include "../config.h"
+#endif
+
 #define _GNU_SOURCE
 #include <stdlib.h>
 #include <stdio.h>
@@ -972,6 +976,7 @@ initListInfo (CCSSettingInfo * i, xmlNode * node)
     }
 }
 
+#if 0
 static void
 printSetting (CCSSetting * s)
 {
@@ -1144,6 +1149,8 @@ printSetting (CCSSetting * s)
     }
     printf ("\n");
 }
+
+#endif
 
 static void
 addOptionForPlugin (CCSPlugin * plugin,
@@ -1453,7 +1460,7 @@ addPluginFromXMLNode (CCSContext * context, xmlNode * node, char *file)
     }
 
     initRulesFromRootNode (plugin, node);
-    printf ("Adding plugin %s (%s)\n", name, plugin->shortDesc);
+    D (D_FULL, "Adding plugin %s (%s)\n", name, plugin->shortDesc);
 
     context->plugins = ccsPluginListAppend (context->plugins, plugin);
     free (name);
@@ -1507,7 +1514,7 @@ addCoreSettingsFromXMLNode (CCSContext * context, xmlNode * node, char *file)
 	plugin->longDesc  = strdup ("General Compiz Options");
     }
 
-    printf ("Adding core settings (%s)\n", plugin->shortDesc);
+    D (D_FULL, "Adding core settings (%s)\n", plugin->shortDesc);
     context->plugins = ccsPluginListAppend (context->plugins, plugin);
 }
 
@@ -1659,7 +1666,7 @@ addPluginNamed (CCSContext * context, char *name)
     plugin->context = context;
     plugin->name = strdup (name);
 
-    printf ("Adding plugin named %s\n", name);
+    D (D_FULL, "Adding plugin named %s\n", name);
 
     if (!plugin->shortDesc)
 	plugin->shortDesc = strdup (name);
@@ -1776,7 +1783,7 @@ ccsLoadPluginSettings (CCSPlugin * plugin)
 	return;
 
     pPrivate->loaded = TRUE;
-    printf ("Initializing %s options...", plugin->name);
+    D (D_FULL, "Initializing %s options...", plugin->name);
 
     FILE *fp;
     fp = fopen (GLOBALMETADATA, "r");
@@ -1812,7 +1819,7 @@ ccsLoadPluginSettings (CCSPlugin * plugin)
 	globalMetadata = NULL;
     }
 
-    printf ("done\n");
+    D (D_FULL, "done\n");
 
     collateGroups (pPrivate);
     ccsReadPluginSettings (plugin);

@@ -98,6 +98,18 @@ AC_CHECK_HEADERS([sys/inotify.h], [have_inotify=yes], [have_inotify=no])
 globalmetadata=$datadir/compizconfig/global.xml
 AC_SUBST(globalmetadata)
 
+AC_ARG_ENABLE(debug,
+  [  --enable-debug[=none,normal,full]    Enable output of debug messages],
+  [enable_debug=$enableval], [enable_debug=none])
+
+if test "x$enable_debug" = "xnone"; then
+	AC_DEFINE(DEBUGLEVEL, 0, [Debug level])
+elif test "x$enable_debug" = "xfull"; then
+	AC_DEFINE(DEBUGLEVEL, 2, [Debug level])
+else
+	AC_DEFINE(DEBUGLEVEL, 1, [Debug level])
+fi
+
 AC_CONFIG_FILES([
 libcompizconfig.pc
 Makefile
