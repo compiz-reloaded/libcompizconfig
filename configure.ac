@@ -87,6 +87,9 @@ if test "$PKG_CONFIG" != "no" ; then
 	AC_SUBST(METADATADIR)
 fi
 
+plugindir=$libdir/compiz
+AC_SUBST(plugindir)
+
 PKG_CHECK_MODULES(LIBXML2, "libxml-2.0")
 AC_SUBST(LIBXML2_REQUIRES)
 
