@@ -19,6 +19,11 @@
  */
 
 #define _GNU_SOURCE
+
+#ifdef HAVE_CONFIG_H
+#  include "../config.h"
+#endif
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -765,7 +770,7 @@ ccpTimeout (void *closure)
 	    s = l->data;
 	    ccpSetOptionFromContext (d, s->parent->name, s->name,
 				     s->isScreen, s->screenNum);
-	    printf ("Setting Update \"%s\"\n", s->name);
+	    D (D_FULL, "Setting Update \"%s\"\n", s->name);
 	    l = l->next;
 	}
 
