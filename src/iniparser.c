@@ -671,10 +671,10 @@ iniparser_dump_ini (dictionary * d, const char * file_name)
     if (!lock)
 	return;
 
-    f = fopen (file_name, "w");
+    f = fdopen (lock->fd, "w");
     if (!f)
     {
-	ini_file_unlock (lock );
+	ini_file_unlock (lock);
 	return;
     }
 
