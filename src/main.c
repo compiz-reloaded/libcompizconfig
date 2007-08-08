@@ -546,7 +546,7 @@ openBackend (char *backend)
 	asprintf (&dlname, "%s/.compizconfig/backends/lib%s.so", 
 		  home, backend);
 	dlerror ();
-	dlhand = dlopen (dlname, RTLD_NOW);
+	dlhand = dlopen (dlname, RTLD_GLOBAL | RTLD_NODELETE);
 	err = dlerror ();
     }
 
@@ -555,7 +555,7 @@ openBackend (char *backend)
 	free (dlname);
 	asprintf (&dlname, "%s/compizconfig/backends/lib%s.so", 
 		  LIBDIR, backend);
-	dlhand = dlopen (dlname, RTLD_NOW);
+	dlhand = dlopen (dlname, RTLD_GLOBAL | RTLD_NODELETE);
 	err = dlerror ();
     }
 
