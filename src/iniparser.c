@@ -56,9 +56,9 @@ ini_file_lock (const char *fileName, Bool exclusive)
     struct flock lockinfo;
 
     if (exclusive)
-	fd = open (fileName, O_WRONLY | O_CREAT);
+	fd = open (fileName, O_WRONLY | O_CREAT, 0666);
     else
-	fd = open (fileName, O_RDONLY | O_CREAT);
+	fd = open (fileName, O_RDONLY | O_CREAT, 0666);
     if (fd < 0)
 	return NULL;
 
