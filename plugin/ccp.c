@@ -152,21 +152,14 @@ ccpConvertPluginList (CompDisplay         *d,
 		      CompOptionValue     *v)
 {
     CCSStringList       sl, l;
-    Bool                ccpSeen = FALSE;
     int                 i;
 
-    sl = l = ccsGetStringListFromValueList (list);
-    while (l)
-    {
+    sl = ccsGetStringListFromValueList (list);
+    for (l = sl; l; l = l->next)
 	if (strcmp (l->data, "ccp") == 0)
-	{
-	    ccpSeen = TRUE;
 	    break;
-	}
-	l = l->next;
-    }
 
-    if (!ccpSeen)
+    if (!l)
 	sl = ccsStringListPrepend (sl, strdup ("ccp"));
 
     v->list.nValue = ccsStringListLength (sl);
