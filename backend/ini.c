@@ -173,7 +173,6 @@ initBackend (CCSContext * context)
 {
     IniPrivData *newData;
 
-    printf("ini init, size %d\n", privDataSize);
     privData = realloc (privData, (privDataSize + 1) * sizeof (IniPrivData));
     newData = privData + privDataSize;
 
