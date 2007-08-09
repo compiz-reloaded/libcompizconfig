@@ -19,6 +19,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#ifdef HAVE_CONFIG_H
+#  include "../config.h"
+#endif
+
 #define _GNU_SOURCE
 #include <stdlib.h>
 #include <stdio.h>
@@ -140,9 +144,9 @@ ccsEmptyContextNew (unsigned int *screens, unsigned int numScreens)
     cPrivate->configWatchId = ccsAddConfigWatch (context, configChangeNotify);
 
     if (cPrivate->backend)
-	printf ("Backend     : %s\n", cPrivate->backend->vTable->name);
-    printf ("Integration : %s\n", cPrivate->deIntegration ? "true" : "false");
-    printf ("Profile     : %s\n",
+	D (D_NORMAL, "Backend     : %s\n", cPrivate->backend->vTable->name);
+	D (D_NORMAL, "Integration : %s\n", cPrivate->deIntegration ? "true" : "false");
+	D (D_NORMAL, "Profile     : %s\n",
 	    (cPrivate->profile && strlen (cPrivate->profile)) ?
 	    cPrivate->profile : "default");
 
