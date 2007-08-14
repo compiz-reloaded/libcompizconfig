@@ -119,6 +119,7 @@ plugin/Makefile
 include/Makefile
 metadata/Makefile
 po/Makefile.in
+config/Makefile
 ])
 
 AC_OUTPUT
