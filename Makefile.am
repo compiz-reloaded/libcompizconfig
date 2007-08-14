@@ -6,7 +6,8 @@ ALL_SUBDIRS = 	 \
     src	         \
     backend      \
     plugin       \
-    metadata
+    metadata	 \
+    config
 
 SUBDIRS = $(ALL_SUBDIRS)
 
