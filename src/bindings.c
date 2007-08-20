@@ -47,6 +47,15 @@
 #define CompNumLockMask    (1 << 21)
 #define CompScrollLockMask (1 << 22)
 
+#define SCREEN_EDGE_LEFT	0
+#define SCREEN_EDGE_RIGHT	1
+#define SCREEN_EDGE_TOP		2
+#define SCREEN_EDGE_BOTTOM	3
+#define SCREEN_EDGE_TOPLEFT	4
+#define SCREEN_EDGE_TOPRIGHT	5
+#define SCREEN_EDGE_BOTTOMLEFT	6
+#define SCREEN_EDGE_BOTTOMRIGHT 7
+
 struct _Modifier
 {
     char *name;
@@ -70,18 +79,23 @@ modifierList[] = {
 
 #define N_MODIFIERS (sizeof (modifierList) / sizeof (struct _Modifier))
 
-static char *edgeName[] = {
-    "Left",
-    "Right",
-    "Top",
-    "Bottom",
-    "TopLeft",
-    "TopRight",
-    "BottomLeft",
-    "BottomRight"
+struct _Edge {
+    char *name;
+    int  modifier;
+}
+
+edgeList[] = {
+    { "<LeftEdge>",	   SCREEN_EDGE_LEFT },
+    { "<RightEdge>",	   SCREEN_EDGE_RIGHT },
+    { "<TopEdge>",	   SCREEN_EDGE_TOP },
+    { "<BottomEdge>",	   SCREEN_EDGE_BOTTOM },
+    { "<TopLeftEdge>",	   SCREEN_EDGE_TOPLEFT },
+    { "<TopRightEdge>",	   SCREEN_EDGE_TOPRIGHT },
+    { "<BottomLeftEdge>",  SCREEN_EDGE_BOTTOMLEFT },
+    { "<BottomRightEdge>", SCREEN_EDGE_BOTTOMRIGHT }
 };
 
-#define N_EDGES (sizeof (edgeName) / sizeof (edgeName[0]))
+#define N_EDGES (sizeof (edgeList) / sizeof (edgeList[0]))
 
 static char *
 stringAppend (char *s,
@@ -131,17 +145,32 @@ ccsModifiersToString (unsigned int modMask)
 }
 
 char *
-ccsKeyBindingToString (CCSSettingActionValue *action)
+ccsEdgesToString (unsigned int edgeMask)
+{
+    char *binding = NULL;
+    int  i;
+
+    for (i = 0; i < N_EDGES; i++)
+    {
+	if (edgeMask & edgeList[i].modifier)
+	    binding = stringAppend (binding, edgeList[i].name);
+    }
+
+    return binding;
+}
+
+char *
+ccsKeyBindingToString (CCSSettingKeyValue *key)
 {
     char *binding;
 
-    binding = ccsModifiersToString (action->keyModMask);
+    binding = ccsModifiersToString (key->keyModMask);
 
-    if (action->keysym != NoSymbol)
+    if (key->keysym != NoSymbol)
     {
 	char *keyname;
 
-	keyname = XKeysymToString (action->keysym);
+	keyname = XKeysymToString (key->keysym);
 	if (keyname)
 	{
 	    binding = stringAppend (binding, keyname);
@@ -152,14 +181,16 @@ ccsKeyBindingToString (CCSSettingActionValue *action)
 }
 
 char *
-ccsButtonBindingToString (CCSSettingActionValue *action)
+ccsButtonBindingToString (CCSSettingButtonValue *button)
 {
     char *binding;
+    char *edges;
     char buttonStr[256];
 
-    binding = ccsModifiersToString (action->buttonModMask);
+    edges = ccsEdgesToString (button->edgeMask);
+    binding = stringAppend (edges, ccsModifiersToString (button->buttonModMask));
 
-    snprintf (buttonStr, 256, "Button%d", action->button);
+    snprintf (buttonStr, 256, "Button%d", button->button);
     binding = stringAppend (binding, buttonStr);
 
     return binding;
@@ -180,9 +211,24 @@ ccsStringToModifiers (const char *binding)
     return mods;
 }
 
+unsigned int
+ccsStringToEdges (const char *binding)
+{
+    unsigned int mods = 0;
+    int		 i;
+
+    for (i = 0; i < N_EDGES; i++)
+    {
+	if (strcasestr (binding, edgeList[i].name))
+	    mods |= edgeList[i].modifier;
+    }
+
+    return mods;
+}
+
 Bool
-ccsStringToKeyBinding (const char           *binding,
-		       CCSSettingActionValue *action)
+ccsStringToKeyBinding (const char         *binding,
+		       CCSSettingKeyValue *value)
 {
     char	  *ptr;
     unsigned int  mods;
@@ -202,8 +248,8 @@ ccsStringToKeyBinding (const char           *binding,
 
     if (keysym != NoSymbol)
     {
-	action->keysym     = keysym;
-	action->keyModMask = mods;
+	value->keysym     = keysym;
+	value->keyModMask = mods;
 
 	return TRUE;
     }
@@ -212,13 +258,15 @@ ccsStringToKeyBinding (const char           *binding,
 }
 
 Bool
-ccsStringToButtonBinding (const char           *binding,
-			  CCSSettingActionValue *action)
+ccsStringToButtonBinding (const char            *binding,
+			  CCSSettingButtonValue *value)
 {
     char	 *ptr;
     unsigned int mods;
+    unsigned int edges;
 
     mods = ccsStringToModifiers (binding);
+    edges = ccsStringToEdges (binding);
 
     ptr = strrchr (binding, '>');
 
@@ -234,46 +282,15 @@ ccsStringToButtonBinding (const char           *binding,
 
 	if (sscanf (binding + strlen ("Button"), "%d", &buttonNum) == 1)
 	{
-	    action->button        = buttonNum;
-	    action->buttonModMask = mods;
+	    value->button        = buttonNum;
+	    value->buttonModMask = mods;
+	    value->edgeMask      = edges;
 
 	    return TRUE;
 	}
     }
 
     return FALSE;
-}
-
-CCSStringList
-ccsEdgesToStringList (CCSSettingActionValue *action)
-{
-    CCSStringList ret = NULL;
-    int i;
-
-    for (i = 0; i < N_EDGES; i++)
-	if (action->edgeMask & (1 << i))
-	    ret = ccsStringListAppend (ret, strdup (edgeName[i]));
-
-    return ret;
-}
-
-void
-ccsStringListToEdges (CCSStringList         edges,
-		      CCSSettingActionValue *action)
-{
-    int i;
-    CCSStringList l;
-
-    action->edgeMask = 0;
-
-    for (l = edges; l; l = l->next)
-    {
-	for (i = 0; i < N_EDGES; i++)
-	{
-	    if (strcmp (l->data, edgeName[i]) == 0)
-		action->edgeMask |= (1 << i);
-	}
-    }
 }
 
 Bool
