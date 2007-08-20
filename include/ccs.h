@@ -466,7 +466,7 @@ Bool ccsGetPluginListAutoSort (CCSContext *context);
 
 char * ccsModifiersToString (unsigned int modMask);
 
-char * ccsEdgesToString (unsigned int *edge);
+char * ccsEdgesToString (unsigned int edge);
 
 char * ccsKeyBindingToString (CCSSettingKeyValue *key);
 
