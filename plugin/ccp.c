@@ -107,37 +107,47 @@ ccpSetValueToValue (CompDisplay     *d,
 	matchInit (&v->match);
 	matchAddFromString (&v->match, sv->value.asMatch);
 	break;
-    case TypeAction:
+    case TypeKey:
 	{
-	    v->action.button.button = sv->value.asAction.button;
-	    v->action.button.modifiers = sv->value.asAction.buttonModMask;
-
-	    if ((v->action.button.button || v->action.button.modifiers) &&
-		sv->parent->info.forAction.button)
-		v->action.type |= CompBindingTypeButton;
-	    else
-		v->action.type &= ~CompBindingTypeButton;
-
 	    v->action.key.keycode =
-		(sv->value.asAction.keysym != NoSymbol) ?
-		XKeysymToKeycode (d->display, sv->value.asAction.keysym) : 0;
+		(sv->value.asKey.keysym != NoSymbol) ?
+		XKeysymToKeycode (d->display, sv->value.asKey.keysym) : 0;
 
-	    v->action.key.modifiers = sv->value.asAction.keyModMask;
+	    v->action.key.modifiers = sv->value.asKey.keyModMask;
 
-	    if ((v->action.key.keycode || v->action.key.modifiers) &&
-		sv->parent->info.forAction.key)
-		v->action.type |= CompBindingTypeKey;
+	    if (v->action.key.keycode || v->action.key.modifiers)
+		v->action.type = CompBindingTypeKey;
 	    else
-		v->action.type &= ~CompBindingTypeKey;
+		v->action.type = CompBindingTypeNone;
+	}
+	break;
+    case TypeButton:
+	{
+	    v->action.button.button = sv->value.asButton.button;
+	    v->action.button.modifiers = sv->value.asButton.buttonModMask;
+	    v->action.edgeMask = sv->value.asButton.edgeMask;
 
-	    v->action.bell = sv->value.asAction.onBell;
-	    v->action.edgeMask = sv->value.asAction.edgeMask;
-	    v->action.edgeButton = sv->value.asAction.edgeButton;
-
-	    if (v->action.edgeButton)
-		v->action.type |= CompBindingTypeEdgeButton;
+	    if (v->action.button.button || v->action.button.modifiers)
+	    {
+		if (sv->value.asButton.edgeMask)
+		    v->action.type = CompBindingTypeEdgeButton;
+		else
+		    v->action.type = CompBindingTypeButton;
+	    }
 	    else
-		v->action.type &= ~CompBindingTypeEdgeButton;
+		v->action.type &= ~CompBindingTypeNone;
+
+
+	}
+	break;
+    case TypeEdge:
+	{
+	    v->action.edgeMask = sv->value.asEdge;
+	}
+	break;
+    case TypeBell:
+	{
+	    v->action.bell = sv->value.asBell;
 	}
 	break;
     default:
@@ -247,38 +257,45 @@ ccpInitValue (CompDisplay     *d,
     case TypeMatch:
 	value->value.asMatch = matchToString (&from->match);
 	break;
-    case TypeAction:
-	if (from->action.type & CompBindingTypeButton)
-	{
-	    value->value.asAction.button = from->action.button.button;
-	    value->value.asAction.buttonModMask =
-		from->action.button.modifiers;
-	}
-	else
-	{
-	    value->value.asAction.button = 0;
-	    value->value.asAction.buttonModMask = 0;
-	}
-
+    case TypeKey:
 	if (from->action.type & CompBindingTypeKey)
 	{
-	    value->value.asAction.keysym = 
+	    value->value.asKey.keysym =
 		XKeycodeToKeysym (d->display, from->action.key.keycode, 0);
-	    value->value.asAction.keyModMask = from->action.key.modifiers;
+	    value->value.asKey.keyModMask = from->action.key.modifiers;
 	}
 	else
 	{
-	    value->value.asAction.keysym = 0;
-	    value->value.asAction.keyModMask = 0;
+	    value->value.asKey.keysym = 0;
+	    value->value.asKey.keyModMask = 0;
 	}
-
-	value->value.asAction.onBell = from->action.bell;
-	value->value.asAction.edgeMask = from->action.edgeMask;
-
-	if (from->action.type & CompBindingTypeEdgeButton)
-	    value->value.asAction.edgeButton = from->action.edgeButton;
+    case TypeButton:
+	if (from->action.type & CompBindingTypeButton)
+	{
+	    value->value.asButton.button = from->action.button.button;
+	    value->value.asButton.buttonModMask =
+		from->action.button.modifiers;
+	    value->value.asButton.edgeMask = 0;
+	}
+	else if (from->action.type & CompBindingTypeEdgeButton)
+	{
+	    value->value.asButton.button = from->action.button.button;
+	    value->value.asButton.buttonModMask =
+		from->action.button.modifiers;
+	    value->value.asButton.edgeMask = from->action.edgeMask;
+	}
 	else
-	    value->value.asAction.edgeButton = 0;
+	{
+	    value->value.asButton.button = 0;
+	    value->value.asButton.buttonModMask = 0;
+	    value->value.asButton.edgeMask = 0;
+	}
+	break;
+    case TypeEdge:
+	value->value.asEdge = from->action.edgeMask;
+	break;
+    case TypeBell:
+	value->value.asBell = from->action.bell;
 	break;
     default:
 	break;
@@ -374,7 +391,13 @@ ccpSameType (CCSSettingType st, CompOptionType ot)
 	return TRUE;
     if (st == TypeMatch && ot == CompOptionTypeMatch)
 	return TRUE;
-    if (st == TypeAction && ot == CompOptionTypeAction)
+    if (st == TypeKey && ot == CompOptionTypeKey)
+	return TRUE;
+    if (st == TypeButton && ot == CompOptionTypeButton)
+	return TRUE;
+    if (st == TypeEdge && ot == CompOptionTypeEdge)
+	return TRUE;
+    if (st == TypeBell && ot == CompOptionTypeBell)
 	return TRUE;
     if (st == TypeList && ot == CompOptionTypeList)
 	return TRUE;
@@ -398,11 +421,11 @@ ccpTypeCheck (CCSSetting *s, CompOption *o)
 }
 
 static void
-ccpSetOptionFromContext ( CompDisplay *d,
-			  char *plugin,
-			  char *name,
-			  Bool screen,
-			  int screenNum)
+ccpSetOptionFromContext (CompDisplay *d,
+			 const char  *plugin,
+			 const char  *name,
+			 Bool        screen,
+			 int         screenNum)
 {
     CompPlugin      *p = NULL;
     CompScreen      *s = NULL;
@@ -501,11 +524,11 @@ ccpSetOptionFromContext ( CompDisplay *d,
 }
 
 static void
-ccpSetContextFromOption ( CompDisplay *d,
-			  char *plugin,
-			  char *name,
-			  Bool screen,
-			  int screenNum)
+ccpSetContextFromOption (CompDisplay *d,
+			 const char  *plugin,
+			 const char  *name,
+			 Bool        screen,
+			 int         screenNum)
 {
     CompPlugin *p = NULL;
     CompScreen *s = NULL;
@@ -587,7 +610,7 @@ ccpSetContextFromOption ( CompDisplay *d,
 
 static Bool
 ccpSetDisplayOption (CompDisplay     *d,
-		     char	     *name,
+		     const char	     *name,
 		     CompOptionValue *value)
 {
     Bool status;
@@ -608,8 +631,8 @@ ccpSetDisplayOption (CompDisplay     *d,
 
 static Bool
 ccpSetDisplayOptionForPlugin (CompDisplay     *d,
-			      char	      *plugin,
-			      char	      *name,
+			      const char      *plugin,
+			      const char      *name,
 			      CompOptionValue *value)
 {
     Bool status;
@@ -630,7 +653,7 @@ ccpSetDisplayOptionForPlugin (CompDisplay     *d,
 
 static Bool
 ccpSetScreenOption (CompScreen      *s,
-		    char	    *name,
+		    const char	    *name,
 		    CompOptionValue *value)
 {
     Bool status;
@@ -655,8 +678,8 @@ ccpSetScreenOption (CompScreen      *s,
 
 static Bool
 ccpSetScreenOptionForPlugin (CompScreen      *s,
-			     char	     *plugin,
-			     char	     *name,
+			     const char	     *plugin,
+			     const char	     *name,
 			     CompOptionValue *value)
 {
     Bool status;
