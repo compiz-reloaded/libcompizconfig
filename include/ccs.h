@@ -468,6 +468,8 @@ char * ccsModifiersToString (unsigned int modMask);
 
 char * ccsEdgesToString (unsigned int edge);
 
+char * ccsEdgesToModString (unsigned int edge);
+
 char * ccsKeyBindingToString (CCSSettingKeyValue *key);
 
 char * ccsButtonBindingToString (CCSSettingButtonValue *button);
@@ -477,6 +479,8 @@ char * ccsColorToString (CCSSettingColorValue *color);
 unsigned int ccsStringToModifiers (const char *binding);
 
 unsigned int ccsStringToEdges (const char *edge);
+
+unsigned int ccsModStringToEdges (const char *edge);
 
 Bool ccsStringToKeyBinding (const char         *binding,
 			    CCSSettingKeyValue *key);
