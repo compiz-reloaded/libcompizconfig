@@ -81,18 +81,19 @@ modifierList[] = {
 
 struct _Edge {
     char *name;
+    char *modName;
     int  modifier;
 }
 
 edgeList[] = {
-    { "<LeftEdge>",	   SCREEN_EDGE_LEFT },
-    { "<RightEdge>",	   SCREEN_EDGE_RIGHT },
-    { "<TopEdge>",	   SCREEN_EDGE_TOP },
-    { "<BottomEdge>",	   SCREEN_EDGE_BOTTOM },
-    { "<TopLeftEdge>",	   SCREEN_EDGE_TOPLEFT },
-    { "<TopRightEdge>",	   SCREEN_EDGE_TOPRIGHT },
-    { "<BottomLeftEdge>",  SCREEN_EDGE_BOTTOMLEFT },
-    { "<BottomRightEdge>", SCREEN_EDGE_BOTTOMRIGHT }
+    { "Left",        "<LeftEdge>",	  SCREEN_EDGE_LEFT },
+    { "Right",       "<RightEdge>",	  SCREEN_EDGE_RIGHT },
+    { "Top",         "<TopEdge>",	  SCREEN_EDGE_TOP },
+    { "Bottom",      "<BottomEdge>",	  SCREEN_EDGE_BOTTOM },
+    { "TopLeft",     "<TopLeftEdge>",	  SCREEN_EDGE_TOPLEFT },
+    { "TopRight",    "<TopRightEdge>",	  SCREEN_EDGE_TOPRIGHT },
+    { "BottomLeft",  "<BottomLeftEdge>",  SCREEN_EDGE_BOTTOMLEFT },
+    { "BottomRight", "<BottomRightEdge>", SCREEN_EDGE_BOTTOMRIGHT }
 };
 
 #define N_EDGES (sizeof (edgeList) / sizeof (edgeList[0]))
@@ -148,6 +149,24 @@ ccsModifiersToString (unsigned int modMask)
 }
 
 char *
+ccsEdgesToModString (unsigned int edgeMask)
+{
+    char *binding = NULL;
+    int  i;
+
+    for (i = 0; i < N_EDGES; i++)
+    {
+	if (edgeMask & edgeList[i].modifier)
+	    binding = stringAppend (binding, edgeList[i].modName);
+    }
+
+    if (!binding)
+	return strdup ("");
+
+    return binding;
+}
+
+char *
 ccsEdgesToString (unsigned int edgeMask)
 {
     char *binding = NULL;
@@ -156,7 +175,11 @@ ccsEdgesToString (unsigned int edgeMask)
     for (i = 0; i < N_EDGES; i++)
     {
 	if (edgeMask & edgeList[i].modifier)
+	{
+	    if (binding)
+		binding = stringAppend (binding, "|");
 	    binding = stringAppend (binding, edgeList[i].name);
+	}
     }
 
     if (!binding)
@@ -195,7 +218,7 @@ ccsButtonBindingToString (CCSSettingButtonValue *button)
     char *edges;
     char buttonStr[256];
 
-    edges = ccsEdgesToString (button->edgeMask);
+    edges = ccsEdgesToModString (button->edgeMask);
     binding = stringAppend (edges, ccsModifiersToString (button->buttonModMask));
 
     snprintf (buttonStr, 256, "Button%d", button->button);
@@ -224,12 +247,40 @@ ccsStringToModifiers (const char *binding)
 unsigned int
 ccsStringToEdges (const char *binding)
 {
+    unsigned int edgeMask = 0;
+    char         *needle;
+    int          i;
+
+    for (i = 0; i < N_EDGES; i++)
+    {
+        needle = strstr (binding, edgeList[i].name);
+        if (needle)
+        {
+            if (needle != binding && isalnum (*(needle - 1)))
+                continue;
+
+            needle += strlen (edgeList[i].name);
+
+            if (*needle && isalnum (*needle))
+                continue;
+
+            edgeMask |= 1 << i;
+        }
+    }
+
+    return edgeMask;
+
+}
+
+unsigned int
+ccsModStringToEdges (const char *binding)
+{
     unsigned int mods = 0;
     int		 i;
 
     for (i = 0; i < N_EDGES; i++)
     {
-	if (strcasestr (binding, edgeList[i].name))
+	if (strcasestr (binding, edgeList[i].modName))
 	    mods |= edgeList[i].modifier;
     }
 
@@ -276,7 +327,7 @@ ccsStringToButtonBinding (const char            *binding,
     unsigned int edges;
 
     mods = ccsStringToModifiers (binding);
-    edges = ccsStringToEdges (binding);
+    edges = ccsModStringToEdges (binding);
 
     ptr = strrchr (binding, '>');
 
