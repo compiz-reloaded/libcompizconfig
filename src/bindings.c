@@ -159,6 +159,9 @@ ccsEdgesToString (unsigned int edgeMask)
 	    binding = stringAppend (binding, edgeList[i].name);
     }
 
+    if (!binding)
+	return strdup ("");
+
     return binding;
 }
 
@@ -180,6 +183,8 @@ ccsKeyBindingToString (CCSSettingKeyValue *key)
 	}
     }
 
+    if (!binding)
+	return strdup ("Disabled");
     return binding;
 }
 
@@ -196,6 +201,8 @@ ccsButtonBindingToString (CCSSettingButtonValue *button)
     snprintf (buttonStr, 256, "Button%d", button->button);
     binding = stringAppend (binding, buttonStr);
 
+    if (!binding)
+	return strdup ("Disabled");
     return binding;
 }
 
