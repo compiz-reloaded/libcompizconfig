@@ -178,7 +178,6 @@ CCSLIST (Group, CCSGroup)
 CCSLIST (SubGroup, CCSSubGroup)
 CCSLIST (SettingValue, CCSSettingValue)
 CCSLIST (PluginConflict, CCSPluginConflict)
-CCSLIST (ActionConflict, CCSActionConflict)
 CCSLIST (BackendInfo, CCSBackendInfo)
 CCSLIST (IntDesc, CCSIntDesc)
 
@@ -376,29 +375,6 @@ CCSSettingColorValue * ccsGetColorArrayFromValueList (CCSSettingValueList list,
     return rv;
 }
 
-CCSSettingActionValue * ccsGetActionArrayFromValueList (CCSSettingValueList list,
-							int *num)
-{
-    CCSSettingActionValue * rv = NULL;
-    int length = ccsSettingValueListLength (list);
-    int i;
-
-    if (length)
-    {
-	rv = calloc (length, sizeof (CCSSettingActionValue));
-	if (!rv)
-	    return NULL;
-    }
-
-    for (i = 0; i < length; i++, list = list->next)
-	memcpy (&rv[i], &list->data->value.asAction,
-		sizeof (CCSSettingActionValue));
-
-    *num = length;
-
-    return rv;
-}
-
 CCSSettingValueList ccsGetValueListFromStringArray (char ** array, int num,
 						    CCSSetting *parent)
 {
@@ -525,23 +501,3 @@ CCSSettingValueList ccsGetValueListFromColorArray (CCSSettingColorValue * array,
     return l;
 }
 
-CCSSettingValueList ccsGetValueListFromActionArray (CCSSettingActionValue * array,
-						    int num, CCSSetting *parent)
-{
-    CCSSettingValueList l = NULL;
-    int i;
-
-    for (i = 0; i < num; i++)
-    {
-	CCSSettingValue *value = calloc (1, sizeof (CCSSettingValue));
-	if (!value)
-	    return l;
-
-	value->isListChild = TRUE;
-	value->parent = parent;
-	value->value.asAction = array[i];
-	l = ccsSettingValueListAppend (l, value);
-    }
-
-    return l;
-}

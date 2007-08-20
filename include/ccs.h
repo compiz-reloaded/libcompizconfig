@@ -69,7 +69,6 @@ typedef struct _CCSSubGroup	  CCSSubGroup;
 typedef struct _CCSPluginCategory CCSPluginCategory;
 typedef struct _CCSSettingValue	  CCSSettingValue;
 typedef struct _CCSPluginConflict CCSPluginConflict;
-typedef struct _CCSActionConflict CCSActionConflict;
 typedef struct _CCSBackendInfo	  CCSBackendInfo;
 typedef struct _CCSIntDesc	  CCSIntDesc;
 
@@ -80,7 +79,6 @@ CCSLIST_HDR (Group, CCSGroup)
 CCSLIST_HDR (SubGroup, CCSSubGroup)
 CCSLIST_HDR (SettingValue, CCSSettingValue)
 CCSLIST_HDR (PluginConflict, CCSPluginConflict)
-CCSLIST_HDR (ActionConflict, CCSActionConflict)
 CCSLIST_HDR (BackendInfo, CCSBackendInfo)
 CCSLIST_HDR (IntDesc, CCSIntDesc)
 
@@ -134,10 +132,13 @@ typedef enum _CCSSettingType
     TypeInt,
     TypeFloat,
     TypeString,
-    TypeAction,
     TypeColor,
     TypeMatch,
     TypeList,
+    TypeKey,
+    TypeButton,
+    TypeEdge,
+    TypeBell,
     TypeNum
 } CCSSettingType;
 
@@ -173,19 +174,6 @@ struct _CCSPluginConflict
     CCSPluginList         plugins;
 };
 
-typedef enum _CCSActionConflictType
-{
-    ConflictKey,
-    ConflictButton,
-    ConflictEdge
-} CCSActionConflictType;
-
-struct _CCSActionConflict
-{
-    CCSActionConflictType type;
-    CCSSettingList        settings;
-};
-
 union _CCSSettingInfo;
 
 struct _CCSIntDesc
@@ -212,23 +200,6 @@ typedef struct _CCSSettingFloatInfo
 
 CCSSettingFloatInfo;
 
-typedef struct _CCSSettingActionInfo
-{
-    Bool key;
-    Bool button;
-    Bool bell;
-    Bool edge;
-}
-
-CCSSettingActionInfo;
-
-typedef struct _CSSettingActionArrayInfo
-{
-    Bool array[4];
-}
-
-CCSSettingActionArrayInfo;
-
 typedef struct _CCSSettingListInfo
 {
     CCSSettingType        listType;
@@ -241,8 +212,6 @@ typedef union _CCSSettingInfo
 {
     CCSSettingIntInfo         forInt;
     CCSSettingFloatInfo       forFloat;
-    CCSSettingActionInfo      forAction;
-    CCSSettingActionArrayInfo forActionAsArray;
     CCSSettingListInfo        forList;
 } CCSSettingInfo;
 
@@ -270,16 +239,18 @@ typedef union _CCSSettingColorValue
 } CCSSettingColorValue;
 
 
-typedef struct _CCSSettingActionValue
+typedef struct _CCSSettingKeyValue
+{
+    int          keysym;
+    unsigned int keyModMask;
+} CCSSettingKeyValue;
+
+typedef struct _CCSSettingButtonValue
 {
     int          button;
     unsigned int buttonModMask;
-    int          keysym;
-    unsigned int keyModMask;
-    Bool         onBell;
-    int          edgeMask;
-    int          edgeButton;
-} CCSSettingActionValue;
+    unsigned int edgeMask;
+} CCSSettingButtonValue;
 
 typedef union _CCSSettingValueUnion
 {
@@ -288,9 +259,12 @@ typedef union _CCSSettingValueUnion
     float		  asFloat;
     char *		  asString;
     char *		  asMatch;
-    CCSSettingActionValue asAction;
     CCSSettingColorValue  asColor;
     CCSSettingValueList   asList;
+    CCSSettingKeyValue    asKey;
+    CCSSettingButtonValue asButton;
+    unsigned int	  asEdge;
+    Bool		  asBell;
 } CCSSettingValueUnion;
 
 struct _CCSSettingValue
@@ -364,7 +338,6 @@ void ccsFreeGroup (CCSGroup *group);
 void ccsFreeSubGroup (CCSSubGroup *subGroup);
 void ccsFreeSettingValue (CCSSettingValue *value);
 void ccsFreePluginConflict (CCSPluginConflict *value);
-void ccsFreeActionConflict (CCSActionConflict *value);
 void ccsFreeBackendInfo (CCSBackendInfo *value);
 void ccsFreeIntDesc (CCSIntDesc *value);
 #define ccsFreeString(val) free(val)
@@ -381,8 +354,14 @@ Bool ccsSetColor (CCSSetting           *setting,
 		  CCSSettingColorValue data);
 Bool ccsSetMatch (CCSSetting *setting,
 		  const char *data);
-Bool ccsSetAction (CCSSetting            *setting,
-		   CCSSettingActionValue data);
+Bool ccsSetKey (CCSSetting         *setting,
+		CCSSettingKeyValue data);
+Bool ccsSetButton (CCSSetting            *setting,
+		   CCSSettingButtonValue data);
+Bool ccsSetEdge (CCSSetting   *setting,
+		 unsigned int data);
+Bool ccsSetBell (CCSSetting *setting,
+		 Bool       data);
 Bool ccsSetList (CCSSetting          *setting,
 		 CCSSettingValueList data);
 Bool ccsSetValue (CCSSetting      *setting,
@@ -390,8 +369,10 @@ Bool ccsSetValue (CCSSetting      *setting,
 
 Bool ccsIsEqualColor (CCSSettingColorValue c1,
 		      CCSSettingColorValue c2);
-Bool ccsIsEqualAction (CCSSettingActionValue c1,
-		       CCSSettingActionValue c2);
+Bool ccsIsEqualKey (CCSSettingKeyValue c1,
+		    CCSSettingKeyValue c2);
+Bool ccsIsEqualButton (CCSSettingButtonValue c1,
+		       CCSSettingButtonValue c2);
 
 Bool ccsGetInt (CCSSetting *setting,
 		int        *data);
@@ -405,8 +386,14 @@ Bool ccsGetColor (CCSSetting           *setting,
 		  CCSSettingColorValue *data);
 Bool ccsGetMatch (CCSSetting *setting,
 		  char       **data);
-Bool ccsGetAction (CCSSetting            *setting,
-		   CCSSettingActionValue *data);
+Bool ccsGetKey (CCSSetting         *setting,
+		CCSSettingKeyValue *data);
+Bool ccsGetButton (CCSSetting            *setting,
+		   CCSSettingButtonValue *data);
+Bool ccsGetEdge (CCSSetting  *setting,
+		 unsigned int *data);
+Bool ccsGetBell (CCSSetting *setting,
+		 Bool       *data);
 Bool ccsGetList (CCSSetting          *setting,
 		 CCSSettingValueList *data);
 
@@ -436,8 +423,6 @@ Bool * ccsGetBoolArrayFromValueList (CCSSettingValueList list,
 
 CCSSettingColorValue* ccsGetColorArrayFromValueList (CCSSettingValueList list,
 	       					     int                 *num);
-CCSSettingActionValue* ccsGetActionArrayFromValueList (CCSSettingValueList list,
-						       int                 *num);
 
 CCSSettingValueList ccsGetValueListFromStringArray (char       **array,
 						    int        num,
@@ -457,10 +442,6 @@ CCSSettingValueList ccsGetValueListFromBoolArray (Bool       *array,
 CCSSettingValueList ccsGetValueListFromColorArray (CCSSettingColorValue *array,
 						   int                  num,
 						   CCSSetting           *parent);
-CCSSettingValueList
-ccsGetValueListFromActionArray (CCSSettingActionValue *array,
-				int                   num,
-				CCSSetting            *parent);
 
 CCSPluginList ccsGetActivePluginList (CCSContext *context);
 CCSStringList ccsGetSortedPluginStringList (CCSContext *context);
@@ -485,24 +466,23 @@ Bool ccsGetPluginListAutoSort (CCSContext *context);
 
 char * ccsModifiersToString (unsigned int modMask);
 
-char * ccsKeyBindingToString (CCSSettingActionValue *action);
+char * ccsEdgesToString (unsigned int *edge);
 
-char * ccsButtonBindingToString (CCSSettingActionValue *action);
+char * ccsKeyBindingToString (CCSSettingKeyValue *key);
 
-CCSStringList ccsEdgesToStringList (CCSSettingActionValue *action);
+char * ccsButtonBindingToString (CCSSettingButtonValue *button);
 
 char * ccsColorToString (CCSSettingColorValue *color);
 
 unsigned int ccsStringToModifiers (const char *binding);
 
-Bool ccsStringToKeyBinding (const char            *binding,
-			    CCSSettingActionValue *action);
+unsigned int ccsStringToEdges (const char *edge);
+
+Bool ccsStringToKeyBinding (const char         *binding,
+			    CCSSettingKeyValue *key);
 
 Bool ccsStringToButtonBinding (const char            *binding,
-			       CCSSettingActionValue *action);
-
-void ccsStringListToEdges (CCSStringList         edges,
-			   CCSSettingActionValue *action);
+			       CCSSettingButtonValue *button);
 
 Bool ccsStringToColor (const char           *value,
 		       CCSSettingColorValue *color);
@@ -583,10 +563,22 @@ Bool ccsIniGetColor (IniDictionary        *dictionary,
 		     const char           *section,
 		     const char           *entry,
 		     CCSSettingColorValue *value);
-Bool ccsIniGetAction (IniDictionary         *dictionary,
+Bool ccsIniGetKey (IniDictionary        *dictionary,
+		   const char           *section,
+		   const char           *entry,
+		   CCSSettingKeyValue   *value);
+Bool ccsIniGetButton (IniDictionary         *dictionary,
 		      const char            *section,
 		      const char            *entry,
-		      CCSSettingActionValue *value);
+		      CCSSettingButtonValue *value);
+Bool ccsIniGetEdge (IniDictionary *dictionary,
+		    const char    *section,
+		    const char    *entry,
+		    unsigned int  *value);
+Bool ccsIniGetBell (IniDictionary *dictionary,
+		    const char    *section,
+		    const char    *entry,
+		    Bool          *value);
 Bool ccsIniGetList (IniDictionary       *dictionary,
 		    const char          *section,
 		    const char          *entry,
@@ -613,10 +605,22 @@ void ccsIniSetColor (IniDictionary        *dictionary,
 		     const char           *section,
 		     const char           *entry,
 		     CCSSettingColorValue value);
-void ccsIniSetAction (IniDictionary         *dictionary,
+void ccsIniSetKey (IniDictionary      *dictionary,
+		   const char         *section,
+		   const char         *entry,
+		   CCSSettingKeyValue value);
+void ccsIniSetButton (IniDictionary         *dictionary,
 		      const char            *section,
 		      const char            *entry,
-		      CCSSettingActionValue value);
+		      CCSSettingButtonValue value);
+void ccsIniSetEdge (IniDictionary *dictionary,
+		     const char   *section,
+		     const char   *entry,
+		     unsigned int value);
+void ccsIniSetBell (IniDictionary *dictionary,
+		    const char    *section,
+		    const char    *entry,
+		    Bool          value);
 void ccsIniSetList (IniDictionary       *dictionary,
 		    const char          *section,
 		    const char          *entry,
@@ -632,8 +636,6 @@ CCSPluginConflictList ccsCanEnablePlugin (CCSContext *context,
 					  CCSPlugin  *plugin);
 CCSPluginConflictList ccsCanDisablePlugin (CCSContext *context,
 					   CCSPlugin *plugin);
-CCSActionConflictList ccsCanSetAction (CCSContext *context,
-				       CCSSettingActionValue action);
 
 CCSStringList ccsGetExistingProfiles (CCSContext * context);
 void ccsDeleteProfile (CCSContext *context,

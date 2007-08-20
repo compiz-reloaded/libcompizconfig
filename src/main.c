@@ -502,16 +502,6 @@ ccsFreePluginConflict (CCSPluginConflict * c)
 }
 
 void
-ccsFreeActionConflict (CCSActionConflict * c)
-{
-    if (!c)
-	return;
-
-    if (c->settings)
-	c->settings = ccsSettingListFree (c->settings, FALSE);
-}
-
-void
 ccsFreeBackendInfo (CCSBackendInfo * b)
 {
     if (!b)
@@ -925,14 +915,14 @@ ccsSetMatch (CCSSetting * setting, const char *data)
 }
 
 Bool
-ccsSetAction (CCSSetting * setting, CCSSettingActionValue data)
+ccsSetKey (CCSSetting * setting, CCSSettingKeyValue data)
 {
-    if (setting->type != TypeAction)
+    if (setting->type != TypeKey)
 	return FALSE;
 
-    CCSSettingActionValue defValue = setting->defaultValue.value.asAction;
+    CCSSettingKeyValue defValue = setting->defaultValue.value.asKey;
 
-    Bool isDefault = ccsIsEqualAction (data, defValue);
+    Bool isDefault = ccsIsEqualKey (data, defValue);
 
     if (setting->isDefault && isDefault)
 	return TRUE;
@@ -943,32 +933,114 @@ ccsSetAction (CCSSetting * setting, CCSSettingActionValue data)
 	return TRUE;
     }
 
-    if (ccsIsEqualAction (setting->value->value.asAction, data))
+    if (ccsIsEqualKey (setting->value->value.asKey, data))
 	return TRUE;
 
     if (setting->isDefault)
 	copyFromDefault (setting);
 
-    if (setting->info.forAction.key)
+    setting->value->value.asKey.keysym = data.keysym;
+    setting->value->value.asKey.keyModMask = data.keyModMask;
+
+    setting->parent->context->changedSettings =
+	ccsSettingListAppend (setting->parent->context->changedSettings,
+			      setting);
+
+    return TRUE;
+}
+
+Bool
+ccsSetButton (CCSSetting * setting, CCSSettingButtonValue data)
+{
+    if (setting->type != TypeButton)
+	return FALSE;
+
+    CCSSettingButtonValue defValue = setting->defaultValue.value.asButton;
+
+    Bool isDefault = ccsIsEqualButton (data, defValue);
+
+    if (setting->isDefault && isDefault)
+	return TRUE;
+
+    if (!setting->isDefault && isDefault)
     {
-	setting->value->value.asAction.keysym = data.keysym;
-	setting->value->value.asAction.keyModMask = data.keyModMask;
+	ccsResetToDefault (setting);
+	return TRUE;
     }
 
-    if (setting->info.forAction.button)
+    if (ccsIsEqualButton (setting->value->value.asButton, data))
+	return TRUE;
+
+    if (setting->isDefault)
+	copyFromDefault (setting);
+
+    setting->value->value.asButton.button = data.button;
+    setting->value->value.asButton.buttonModMask = data.buttonModMask;
+    setting->value->value.asButton.edgeMask = data.edgeMask;
+
+    setting->parent->context->changedSettings =
+	ccsSettingListAppend (setting->parent->context->changedSettings,
+			      setting);
+
+    return TRUE;
+}
+
+Bool
+ccsSetEdge (CCSSetting * setting, unsigned int data)
+{
+    if (setting->type != TypeEdge)
+	return FALSE;
+
+    Bool isDefault = (data == setting->defaultValue.value.asEdge);
+
+    if (setting->isDefault && isDefault)
+	return TRUE;
+
+    if (!setting->isDefault && isDefault)
     {
-	setting->value->value.asAction.button = data.button;
-	setting->value->value.asAction.buttonModMask = data.buttonModMask;
+	ccsResetToDefault (setting);
+	return TRUE;
     }
 
-    if (setting->info.forAction.edge)
+    if (setting->value->value.asEdge == data)
+	return TRUE;
+
+    if (setting->isDefault)
+	copyFromDefault (setting);
+
+    setting->value->value.asEdge = data;
+
+    setting->parent->context->changedSettings =
+	ccsSettingListAppend (setting->parent->context->changedSettings,
+			      setting);
+
+    return TRUE;
+}
+
+Bool
+ccsSetBell (CCSSetting * setting, Bool data)
+{
+    if (setting->type != TypeBell)
+	return FALSE;
+
+    Bool isDefault = (data == setting->defaultValue.value.asBool);
+
+    if (setting->isDefault && isDefault)
+	return TRUE;
+
+    if (!setting->isDefault && isDefault)
     {
-	setting->value->value.asAction.edgeButton = data.edgeButton;
-	setting->value->value.asAction.edgeMask = data.edgeMask;
+	ccsResetToDefault (setting);
+	return TRUE;
     }
 
-    if (setting->info.forAction.bell)
-	setting->value->value.asAction.onBell = data.onBell;
+    if (setting->value->value.asBell == data)
+	return TRUE;
+
+    if (setting->isDefault)
+	copyFromDefault (setting);
+
+    setting->value->value.asBell = data;
 
     setting->parent->context->changedSettings =
 	ccsSettingListAppend (setting->parent->context->changedSettings,
@@ -1005,9 +1077,22 @@ ccsCompareLists (CCSSettingValueList l1, CCSSettingValueList l2,
 	    if (strcmp (l1->data->value.asMatch, l2->data->value.asMatch))
 		return FALSE;
 	    break;
-	case TypeAction:
-	    if (!ccsIsEqualAction
-		(l1->data->value.asAction, l2->data->value.asAction))
+	case TypeKey:
+	    if (!ccsIsEqualKey
+		(l1->data->value.asKey, l2->data->value.asKey))
+		return FALSE;
+	    break;
+	case TypeButton:
+	    if (!ccsIsEqualButton
+		(l1->data->value.asButton, l2->data->value.asButton))
+		return FALSE;
+	    break;
+	case TypeEdge:
+	    if (l1->data->value.asEdge != l2->data->value.asEdge)
+		return FALSE;
+	    break;
+	case TypeBell:
+	    if (l1->data->value.asBell != l2->data->value.asBell)
 		return FALSE;
 	    break;
 	case TypeColor:
@@ -1061,9 +1146,19 @@ ccsCopyList (CCSSettingValueList l1, CCSSetting * setting)
 	case TypeMatch:
 	    value->value.asMatch = strdup (l1->data->value.asMatch);
 	    break;
-	case TypeAction:
-	    memcpy (&value->value.asAction, &l1->data->value.asAction,
-		    sizeof (CCSSettingActionValue));
+	case TypeKey:
+	    memcpy (&value->value.asKey, &l1->data->value.asKey,
+		    sizeof (CCSSettingKeyValue));
+	    break;
+	case TypeButton:
+	    memcpy (&value->value.asButton, &l1->data->value.asButton,
+		    sizeof (CCSSettingButtonValue));
+	    break;
+	case TypeEdge:
+	    value->value.asEdge = l1->data->value.asEdge;
+	    break;
+	case TypeBell:
+	    value->value.asBell = l1->data->value.asBell;
 	    break;
 	case TypeColor:
 	    memcpy (&value->value.asColor, &l1->data->value.asColor,
@@ -1151,8 +1246,17 @@ ccsSetValue (CCSSetting * setting, CCSSettingValue * data)
     case TypeMatch:
 	return ccsSetMatch (setting, data->value.asMatch);
 	break;
-    case TypeAction:
-	return ccsSetAction (setting, data->value.asAction);
+    case TypeKey:
+	return ccsSetKey (setting, data->value.asKey);
+	break;
+    case TypeButton:
+	return ccsSetButton (setting, data->value.asButton);
+	break;
+    case TypeEdge:
+	return ccsSetEdge (setting, data->value.asEdge);
+	break;
+    case TypeBell:
+	return ccsSetBell (setting, data->value.asBell);
 	break;
     case TypeList:
 	return ccsSetList (setting, data->value.asList);
@@ -1224,12 +1328,42 @@ ccsGetMatch (CCSSetting * setting, char **data)
 }
 
 Bool
-ccsGetAction (CCSSetting * setting, CCSSettingActionValue * data)
+ccsGetKey (CCSSetting * setting, CCSSettingKeyValue * data)
 {
-    if (setting->type != TypeAction)
+    if (setting->type != TypeKey)
 	return FALSE;
 
-    *data = setting->value->value.asAction;
+    *data = setting->value->value.asKey;
+    return TRUE;
+}
+
+Bool
+ccsGetButton (CCSSetting * setting, CCSSettingButtonValue * data)
+{
+    if (setting->type != TypeButton)
+	return FALSE;
+
+    *data = setting->value->value.asButton;
+    return TRUE;
+}
+
+Bool
+ccsGetEdge (CCSSetting * setting, unsigned int * data)
+{
+    if (setting->type != TypeEdge)
+	return FALSE;
+
+    *data = setting->value->value.asEdge;
+    return TRUE;
+}
+
+Bool
+ccsGetBell (CCSSetting * setting, Bool * data)
+{
+    if (setting->type != TypeBell)
+	return FALSE;
+
+    *data = setting->value->value.asBell;
     return TRUE;
 }
 
@@ -1741,18 +1875,21 @@ ccsIsEqualColor (CCSSettingColorValue c1, CCSSettingColorValue c2)
 }
 
 Bool
-ccsIsEqualAction (CCSSettingActionValue c1, CCSSettingActionValue c2)
+ccsIsEqualKey (CCSSettingKeyValue c1, CCSSettingKeyValue c2)
+{
+    if (c1.keysym == c2.keysym && c1.keyModMask == c2.keyModMask)
+	return TRUE;
+
+    return FALSE;
+}
+
+Bool
+ccsIsEqualButton (CCSSettingButtonValue c1, CCSSettingButtonValue c2)
 {
     if (c1.button == c2.button               &&
 	c1.buttonModMask == c2.buttonModMask &&
-	c1.keysym == c2.keysym               &&
-	c1.keyModMask == c2.keyModMask       &&
-	c1.edgeMask == c2.edgeMask           &&
-	c1.edgeButton == c2.edgeButton       &&
-	((c1.onBell && c2.onBell) || (!c1.onBell && !c2.onBell)))
-    {
+	c1.edgeMask == c2.edgeMask)
 	return TRUE;
-    }
 
     return FALSE;
 }
@@ -2082,138 +2219,6 @@ ccsCanDisablePlugin (CCSContext * context, CCSPlugin * plugin)
     return list;
 }
 
-static Bool
-conflictKey (CCSSettingActionValue a1, CCSSettingActionValue a2)
-{
-    if (a1.keysym == a2.keysym && a1.keyModMask == a2.keyModMask)
-	return TRUE;
-
-    return FALSE;
-}
-
-static Bool
-conflictButton (CCSSettingActionValue a1, CCSSettingActionValue a2)
-{
-    if (a1.button == a2.button && a1.buttonModMask == a2.buttonModMask)
-	return TRUE;
-
-    return FALSE;
-}
-
-static Bool
-conflictEdge (CCSSettingActionValue a1, CCSSettingActionValue a2)
-{
-    if (a1.edgeMask & a2.edgeMask)
-	return TRUE;
-
-    return FALSE;
-}
-
-
-CCSActionConflictList
-ccsCanSetAction (CCSContext * context, CCSSettingActionValue action)
-{
-    CCSActionConflictList rv = NULL;
-    CCSActionConflict *keyC, *buttonC, *edgeC;
-
-    keyC = calloc (1, sizeof (CCSActionConflict));
-    if (!keyC)
-	return NULL;
-
-    buttonC = calloc (1, sizeof (CCSActionConflict));
-    if (!buttonC)
-    {
-	free (keyC);
-	return NULL;
-    }
-
-    edgeC = calloc (1, sizeof (CCSActionConflict));
-    if (!edgeC)
-    {
-	free (keyC);
-	free (buttonC);
-	return NULL;
-    }
-
-    keyC->type = ConflictKey;
-    buttonC->type = ConflictButton;
-    edgeC->type = ConflictEdge;
-
-    CCSPluginList pl = context->plugins;
-    CCSSettingList sl = NULL;
-    CCSSetting *s;
-
-    while (pl)
-    {
-	PLUGIN_PRIV (pl->data);
-
-	if (!pPrivate->loaded)
-	    ccsLoadPluginSettings (pl->data);
-
-	sl = pPrivate->settings;
-
-	while (sl)
-	{
-	    s = sl->data;
-
-	    if (s->type == TypeAction)
-	    {
-		if (conflictKey (action, s->value->value.asAction))
-		    keyC->settings = ccsSettingListAppend (keyC->settings, s);
-
-		if (conflictButton (action, s->value->value.asAction))
-		    buttonC->settings =
-			ccsSettingListAppend (buttonC->settings, s);
-
-		if (conflictEdge (action, s->value->value.asAction))
-		    edgeC->settings =
-			ccsSettingListAppend (edgeC->settings, s);
-	    }
-	    else if (s->type == TypeList
-		     && s->info.forList.listType == TypeAction)
-	    {
-		CCSSettingValueList vl = s->value->value.asList;
-
-		while (vl)
-		{
-		    if (conflictKey (action, vl->data->value.asAction))
-			keyC->settings =
-			    ccsSettingListAppend (keyC->settings, s);
-
-		    if (conflictButton (action, vl->data->value.asAction))
-			buttonC->settings =
-			    ccsSettingListAppend (buttonC->settings, s);
-
-		    if (conflictEdge (action, vl->data->value.asAction))
-			edgeC->settings =
-			    ccsSettingListAppend (edgeC->settings, s);
-
-		    vl = vl->next;
-		}
-	    }
-	    sl = sl->next;
-	}
-	pl = pl->next;
-    }
-
-    if (keyC->settings)
-	rv = ccsActionConflictListAppend (rv, keyC);
-    else
-	free (keyC);
-
-    if (buttonC->settings)
-	rv = ccsActionConflictListAppend (rv, buttonC);
-    else
-	free (buttonC);
-
-    if (edgeC->settings)
-	rv = ccsActionConflictListAppend (rv, edgeC);
-    else
-	free (edgeC);
-
-    return rv;
-}
-
 CCSStringList
 ccsGetExistingProfiles (CCSContext * context)
 {
@@ -2428,9 +2433,21 @@ ccsExportToFile (CCSContext * context, const char * fileName)
 		ccsIniSetString (exportFile, plugin->name, keyName,
 				 setting->value->value.asString);
 		break;
-	    case TypeAction:
-		ccsIniSetAction (exportFile, plugin->name, keyName,
-				 setting->value->value.asAction);
+	    case TypeKey:
+		ccsIniSetKey (exportFile, plugin->name, keyName,
+			      setting->value->value.asKey);
+		break;
+	    case TypeButton:
+		ccsIniSetButton (exportFile, plugin->name, keyName,
+				 setting->value->value.asButton);
+		break;
+	    case TypeEdge:
+		ccsIniSetEdge (exportFile, plugin->name, keyName,
+			       setting->value->value.asEdge);
+		break;
+	    case TypeBell:
+		ccsIniSetBell (exportFile, plugin->name, keyName,
+			       setting->value->value.asBell);
 		break;
 	    case TypeColor:
 		ccsIniSetColor (exportFile, plugin->name, keyName,
@@ -2521,13 +2538,40 @@ ccsImportFromFile (CCSContext * context, const char * fileName, Bool overwrite)
 			ccsSetString (setting, value);
 		}
 		break;
-	    case TypeAction:
+	    case TypeKey:
 		{
-		    CCSSettingActionValue value;
+		    CCSSettingKeyValue value;
 
-		    if (ccsIniGetAction (importFile, plugin->name,
+		    if (ccsIniGetKey (importFile, plugin->name,
+				      keyName, &value))
+			ccsSetKey (setting, value);
+		}
+		break;
+	    case TypeButton:
+		{
+		    CCSSettingButtonValue value;
+
+		    if (ccsIniGetButton (importFile, plugin->name,
 					 keyName, &value))
-			ccsSetAction (setting, value);
+			ccsSetButton (setting, value);
+		}
+		break;
+	    case TypeEdge:
+		{
+		    unsigned int value;
+
+		    if (ccsIniGetEdge (importFile, plugin->name,
+				       keyName, &value))
+			ccsSetEdge (setting, value);
+		}
+		break;
+	    case TypeBell:
+		{
+		    Bool value;
+
+		    if (ccsIniGetBell (importFile, plugin->name,
+				       keyName, &value))
+			ccsSetBell (setting, value);
 		}
 		break;
 	    case TypeColor:
