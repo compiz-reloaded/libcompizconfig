@@ -136,112 +136,6 @@ setIniString (IniDictionary *dictionary,
     free (sectionName);
 }
 
-static char*
-writeActionString (CCSSettingActionValue * action)
-{
-    char          *keyBinding;
-    char          *buttonBinding;
-    char          *actionString = NULL;
-    char          edgeString[500];
-    CCSStringList edgeList, l;
-
-    keyBinding = ccsKeyBindingToString (action);
-    if (!keyBinding)
-	keyBinding = strdup ("");
-
-    buttonBinding = ccsButtonBindingToString (action);
-    if (!buttonBinding)
-	buttonBinding = strdup ("");
-
-    edgeList = ccsEdgesToStringList (action);
-    memset (edgeString, 0, sizeof (edgeString));
-
-    for (l = edgeList; l; l = l->next)
-    {
-	strncat (edgeString, l->data, 500);
-	if (l->next)
-	    strncat (edgeString, "|", 500);
-    }
-
-    if (edgeList)
-	ccsStringListFree (edgeList, TRUE);
-
-    asprintf (&actionString, "%s,%s,%s,%d,%s", keyBinding,
-	      buttonBinding, edgeString, action->edgeButton,
-	      action->onBell ? "true" : "false");
-
-    free (keyBinding);
-    free (buttonBinding);
-
-    return actionString;
-}
-
-static Bool
-parseActionString (const char            *string,
-    		   CCSSettingActionValue *value)
-{
-    char          *valueString, *valueStart;
-    char          *token, *edgeToken;
-    CCSStringList edgeList = NULL;
-
-    memset (value, 0, sizeof (CCSSettingActionValue));
-    valueString = strdup (string);
-    valueStart = valueString;
-
-    token = strsep (&valueString, ",");
-    if (!token)
-    {
-	free (valueStart);
-	return FALSE;
-    }
-
-    /* key binding */
-    ccsStringToKeyBinding (token, value);
-    token = strsep (&valueString, ",");
-    if (!token)
-    {
-	free (valueStart);
-	return FALSE;
-    }
-
-    /* button binding */
-    ccsStringToButtonBinding (token, value);
-    token = strsep (&valueString, ",");
-    if (!token)
-    {
-	free (valueStart);
-	return FALSE;
-    }
-
-    /* edge binding */
-    edgeToken = strsep (&token, "|");
-    while (edgeToken)
-    {
-	if (strlen (edgeToken))
-	    edgeList = ccsStringListAppend (edgeList, strdup (edgeToken));
-	edgeToken = strsep (&token, "|");
-    }
-
-    ccsStringListToEdges (edgeList, value);
-    if (edgeList)
-	ccsStringListFree (edgeList, TRUE);
-
-    token = strsep (&valueString, ",");
-    if (!token)
-    {
-	free (valueStart);
-	return FALSE;
-    }
-
-    /* edge button */
-    value->edgeButton = strtoul (token, NULL, 10);
-
-    /* bell */
-    value->onBell = (strcmp (valueString, "true") == 0);
-
-    return TRUE;
-}
-
 Bool
 ccsIniGetString (IniDictionary *dictionary,
 	    	 const char    *section,
@@ -338,18 +232,60 @@ ccsIniGetColor (IniDictionary        *dictionary,
 }
 
 Bool
-ccsIniGetAction (IniDictionary         *dictionary,
-	   	 const char            *section,
-   		 const char            *entry,
-		 CCSSettingActionValue *value)
+ccsIniGetKey (IniDictionary      *dictionary,
+	      const char         *section,
+	      const char         *entry,
+              CCSSettingKeyValue *value)
 {
     char *retValue;
 
     retValue = getIniString (dictionary, section, entry);
     if (retValue)
-	return parseActionString (retValue, value);
+	return ccsStringToKeyBinding (retValue, value);
     else
 	return FALSE;
+}
+
+Bool
+ccsIniGetButton (IniDictionary         *dictionary,
+	   	 const char            *section,
+   		 const char            *entry,
+		 CCSSettingButtonValue *value)
+{
+    char *retValue;
+
+    retValue = getIniString (dictionary, section, entry);
+    if (retValue)
+	return ccsStringToButtonBinding (retValue, value);
+    else
+	return FALSE;
+}
+
+Bool
+ccsIniGetEdge (IniDictionary  *dictionary,
+	   	 const char   *section,
+   		 const char   *entry,
+		 unsigned int *value)
+{
+    char *retValue;
+
+    retValue = getIniString (dictionary, section, entry);
+    if (retValue)
+    {
+	*value = ccsStringToEdges (retValue);
+	return TRUE;
+    }
+    else
+	return FALSE;
+}
+
+Bool
+ccsIniGetBell (IniDictionary *dictionary,
+	       const char    *section,
+               const char    *entry,
+               Bool          *value)
+{
+    return ccsIniGetBool (dictionary, section, entry, value);
 }
 
 Bool
@@ -473,21 +409,78 @@ ccsIniGetList (IniDictionary       *dictionary,
 	    free (array);
 	}
 	break;
-    case TypeAction:
+    case TypeKey:
 	{
-	    CCSSettingActionValue *array;
-	    array = malloc (nItems * sizeof (CCSSettingActionValue));
-	    if (!array)
-		break;
+	    CCSSettingValue *val = NULL;
+	    list = NULL;
 
 	    while (token)
 	    {
-		parseActionString (token, &array[i++]);
+		val = malloc (sizeof (CCSSettingValue));
+		if (!val)
+		    break;
+		if (ccsStringToKeyBinding (token, &val->value.asKey))
+		    list = ccsSettingValueListAppend (list, val);
+		else
+		    free (val);
 		token = strsep (&valueString, ";");
 	    }
+	}
+	break;
+    case TypeButton:
+	{
+	    CCSSettingValue *val = NULL;
+	    list = NULL;
 
-	    list = ccsGetValueListFromActionArray (array, nItems, parent);
-	    free (array);
+	    while (token)
+	    {
+		val = malloc (sizeof (CCSSettingValue));
+		if (!val)
+		    break;
+		if (ccsStringToButtonBinding (token, &val->value.asButton))
+		    list = ccsSettingValueListAppend (list, val);
+		else
+		    free (val);
+		token = strsep (&valueString, ";");
+	    }
+	}
+	break;
+    case TypeEdge:
+	{
+	    CCSSettingValue *val = NULL;
+	    list = NULL;
+
+	    while (token)
+	    {
+		val = malloc (sizeof (CCSSettingValue));
+		if (!val)
+		    break;
+		val->value.asEdge = ccsStringToEdges (token);
+		list = ccsSettingValueListAppend (list, val);
+		token = strsep (&valueString, ";");
+	    }
+	}
+	break;
+    case TypeBell:
+	{
+	    CCSSettingValue *val = NULL;
+	    list = NULL;
+	    Bool isTrue;
+
+	    while (token)
+	    {
+		val = malloc (sizeof (CCSSettingValue));
+		if (!val)
+		    break;
+
+		isTrue = (token[0] == 'y' || token[0] == 'Y' || 
+			  token[0] == '1' ||
+			  token[0] == 't' || token[0] == 'T');
+		
+		val->value.asBell = isTrue;
+		list = ccsSettingValueListAppend (list, val);
+		token = strsep (&valueString, ";");
+	    }
 	}
 	break;
     default:
@@ -568,19 +561,60 @@ ccsIniSetColor (IniDictionary        *dictionary,
 }
 
 void
-ccsIniSetAction (IniDictionary         *dictionary,
+ccsIniSetKey (IniDictionary      *dictionary,
+	      const char         *section,
+	      const char         *entry,
+	      CCSSettingKeyValue value)
+{
+    char *str;
+
+    str = ccsKeyBindingToString (&value);
+    if (str)
+    {
+	setIniString (dictionary, section, entry, str);
+	free (str);
+    }
+}
+
+void
+ccsIniSetButton (IniDictionary         *dictionary,
 		 const char            *section,
 		 const char            *entry,
-		 CCSSettingActionValue value)
+		 CCSSettingButtonValue value)
 {
-    char *actionString;
+    char *str;
 
-    actionString = writeActionString (&value);
-    if (actionString)
+    str = ccsButtonBindingToString (&value);
+    if (str)
     {
-	setIniString (dictionary, section, entry, actionString);
-	free (actionString);
+	setIniString (dictionary, section, entry, str);
+	free (str);
     }
+}
+
+void
+ccsIniSetEdge (IniDictionary *dictionary,
+	       const char    *section,
+	       const char    *entry,
+	       unsigned int  value)
+{
+    char *str;
+
+    str = ccsEdgesToString (value);
+    if (str)
+    {
+	setIniString (dictionary, section, entry, str);
+	free (str);
+    }
+}
+
+void
+ccsIniSetBell (IniDictionary *dictionary,
+	       const char    *section,
+	       const char    *entry,
+	       Bool          value)
+{
+    ccsIniSetBool (dictionary, section, entry, value);
 }
 
 void
@@ -644,15 +678,41 @@ ccsIniSetList (IniDictionary       *dictionary,
 		free (color);
 	    }
 	    break;
-	case TypeAction:
+	case TypeKey:
 	    {
-		char *action;
-		action = writeActionString (&value->data->value.asAction);
-		if (!action)
+		char *str;
+		str = ccsKeyBindingToString (&value->data->value.asKey);
+		if (!str)
 		    break;
 
-		strncat (stringBuffer, action, STRINGBUFSIZE);
-		free (action);
+		strncat (stringBuffer, str, STRINGBUFSIZE);
+		free (str);
+	    }
+	case TypeButton:
+	    {
+		char *str;
+		str = ccsButtonBindingToString (&value->data->value.asButton);
+		if (!str)
+		    break;
+
+		strncat (stringBuffer, str, STRINGBUFSIZE);
+		free (str);
+	    }
+	case TypeEdge:
+	    {
+		char *str;
+		str = ccsEdgesToString (value->data->value.asEdge);
+		if (!str)
+		    break;
+
+		strncat (stringBuffer, str, STRINGBUFSIZE);
+		free (str);
+	    }
+	case TypeBell:
+	    {
+		strncat (stringBuffer,
+		     (value->data->value.asBell) ? "true" : "false",
+		     STRINGBUFSIZE);
 	    }
 	default:
 	    break;
