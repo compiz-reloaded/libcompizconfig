@@ -47,14 +47,14 @@
 #define CompNumLockMask    (1 << 21)
 #define CompScrollLockMask (1 << 22)
 
-#define SCREEN_EDGE_LEFT	0
-#define SCREEN_EDGE_RIGHT	1
-#define SCREEN_EDGE_TOP		2
-#define SCREEN_EDGE_BOTTOM	3
-#define SCREEN_EDGE_TOPLEFT	4
-#define SCREEN_EDGE_TOPRIGHT	5
-#define SCREEN_EDGE_BOTTOMLEFT	6
-#define SCREEN_EDGE_BOTTOMRIGHT 7
+#define SCREEN_EDGE_LEFT	(1 << 0)
+#define SCREEN_EDGE_RIGHT	(1 << 1)
+#define SCREEN_EDGE_TOP		(1 << 2)
+#define SCREEN_EDGE_BOTTOM	(1 << 3)
+#define SCREEN_EDGE_TOPLEFT	(1 << 4)
+#define SCREEN_EDGE_TOPRIGHT	(1 << 5)
+#define SCREEN_EDGE_BOTTOMLEFT	(1 << 6)
+#define SCREEN_EDGE_BOTTOMRIGHT (1 << 7)
 
 struct _Modifier
 {
