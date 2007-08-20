@@ -332,13 +332,46 @@ readSetting (CCSContext *context,
 	    }
 	}
 	break;
-    case TypeAction:
+    case TypeKey:
 	{
-	    CCSSettingActionValue action;
-	    if (ccsIniGetAction (data->iniFile, setting->parent->name,
-				 keyName, &action))
+	    CCSSettingKeyValue key;
+	    if (ccsIniGetKey (data->iniFile, setting->parent->name,
+			      keyName, &key))
 	    {
-		ccsSetAction (setting, action);
+		ccsSetKey (setting, key);
+		status = TRUE;
+	    }
+	}
+	break;
+    case TypeButton:
+	{
+	    CCSSettingButtonValue button;
+	    if (ccsIniGetButton (data->iniFile, setting->parent->name,
+				 keyName, &button))
+	    {
+		ccsSetButton (setting, button);
+		status = TRUE;
+	    }
+	}
+	break;
+    case TypeEdge:
+	{
+	    unsigned int edges;
+	    if (ccsIniGetEdge (data->iniFile, setting->parent->name,
+				 keyName, &edges))
+	    {
+		ccsSetEdge (setting, edges);
+		status = TRUE;
+	    }
+	}
+	break;
+    case TypeBell:
+	{
+	    Bool bell;
+	    if (ccsIniGetBell (data->iniFile, setting->parent->name,
+			       keyName, &bell))
+	    {
+		ccsSetBell (setting, bell);
 		status = TRUE;
 	    }
 	}
@@ -478,12 +511,36 @@ writeSetting (CCSContext *context,
 				keyName, value);
 	}
 	break;
-    case TypeAction:
+    case TypeKey:
 	{
-	    CCSSettingActionValue value;
-	    if (ccsGetAction (setting, &value))
-		ccsIniSetAction (data->iniFile, setting->parent->name,
+	    CCSSettingKeyValue value;
+	    if (ccsGetKey (setting, &value))
+		ccsIniSetKey (data->iniFile, setting->parent->name,
+			      keyName, value);
+	}
+	break;
+    case TypeButton:
+	{
+	    CCSSettingButtonValue value;
+	    if (ccsGetButton (setting, &value))
+		ccsIniSetButton (data->iniFile, setting->parent->name,
 				 keyName, value);
+	}
+	break;
+    case TypeEdge:
+	{
+	    unsigned int value;
+	    if (ccsGetEdge (setting, &value))
+		ccsIniSetEdge (data->iniFile, setting->parent->name,
+			       keyName, value);
+	}
+	break;
+    case TypeBell:
+	{
+	    Bool value;
+	    if (ccsGetBell (setting, &value))
+		ccsIniSetBell (data->iniFile, setting->parent->name,
+			       keyName, value);
 	}
 	break;
     case TypeList:
