@@ -321,10 +321,10 @@ Bool ccsLoadPlugin (CCSContext *context,
 		    char       *name);
 
 CCSPlugin* ccsFindPlugin (CCSContext *context,
-			  char       *name);
+			  const char *name);
 
 CCSSetting* ccsFindSetting (CCSPlugin    *plugin,
-			    char         *name,
+			    const char   *name,
 			    Bool         isScreen,
 			    unsigned int screenNum);
 
