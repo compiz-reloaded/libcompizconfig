@@ -212,7 +212,7 @@ ccsContextNew (unsigned int *screens, unsigned int numScreens)
 }
 
 CCSPlugin *
-ccsFindPlugin (CCSContext * context, char *name)
+ccsFindPlugin (CCSContext * context, const char *name)
 {
     if (!name)
 	name = "";
@@ -230,7 +230,7 @@ ccsFindPlugin (CCSContext * context, char *name)
 }
 
 CCSSetting *
-ccsFindSetting (CCSPlugin * plugin, char *name,
+ccsFindSetting (CCSPlugin * plugin, const char *name,
 		Bool isScreen, unsigned int screenNum)
 {
     PLUGIN_PRIV (plugin);
