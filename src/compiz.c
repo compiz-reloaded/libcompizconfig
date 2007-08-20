@@ -58,7 +58,10 @@ getOptionType (char *name)
 	{ "float", TypeFloat },
       	{ "string", TypeString },
 	{ "color", TypeColor },
-	{ "action", TypeAction },
+	{ "key", TypeKey },
+	{ "button", TypeButton },
+ 	{ "edge", TypeEdge },
+  	{ "bell", TypeBell },
 	{ "match", TypeMatch },
 	{ "list", TypeList }
     };
@@ -68,7 +71,7 @@ getOptionType (char *name)
 	if (strcasecmp (name, map[i].name) == 0)
 	    return map[i].type;
 
-    return CompOptionTypeBool;
+    return TypeNum;
 }
 
 static char *
@@ -554,165 +557,96 @@ initMatchValue (CCSSettingValue * v, xmlNode * node)
 	v->value.asMatch = strdup ("");
 }
 
-struct _Modifier
-{
-    char *name;
-    int modifier;
-} modifiers[] = {
-    { "<Shift>",      ShiftMask },
-    { "<Control>",    ControlMask },
-    { "<Mod1>",       Mod1Mask },
-    { "<Mod2>",       Mod2Mask },
-    { "<Mod3>",       Mod3Mask },
-    { "<Mod4>",       Mod4Mask },
-    { "<Mod5>",       Mod5Mask },
-    { "<Alt>",        CompAltMask },
-    { "<Meta>",       CompMetaMask },
-    { "<Super>",      CompSuperMask },
-    { "<Hyper>",      CompHyperMask },
-    { "<ModeSwitch>", CompModeSwitchMask }
-};
-
-#define N_MODIFIERS (sizeof (modifiers) / sizeof (struct _Modifier))
-
-static unsigned int
-stringToModifiers (const char *binding)
-{
-    unsigned int mods = 0;
-    int i;
-
-    for (i = 0; i < N_MODIFIERS; i++)
-    {
-	if (strcasestr (binding, modifiers[i].name))
-	    mods |= modifiers[i].modifier;
-    }
-    return mods;
-}
-
-
 static void
-stringToKey (const char *binding, int *keysym, unsigned int *mods)
-{
-    char *ptr;
-
-    *mods = stringToModifiers (binding);
-    ptr = strrchr (binding, '>');
-
-    if (ptr)
-	binding = ptr + 1;
-
-    while (*binding && !isalnum (*binding))
-	binding++;
-
-    *keysym = XStringToKeysym (binding);
-}
-
-
-static void
-stringToButton (const char *binding, int *button, unsigned int *mods)
-{
-    char *ptr;
-
-    *mods = stringToModifiers (binding);
-    ptr = strrchr (binding, '>');
-    if (ptr)
-	binding = ptr + 1;
-
-    while (*binding && !isalnum (*binding))
-	binding++;
-
-    if (strncmp (binding, "Button", strlen ("Button")) == 0)
-    {
-	int buttonNum;
-
-	if (sscanf (binding + strlen ("Button"), "%d", &buttonNum) == 1)
-	{
-	    *button = buttonNum;
-	}
-    }
-}
-
-static void
-initActionValue (CCSSettingValue * v, CCSSettingInfo * i, xmlNode * node)
+initKeyValue (CCSSettingValue * v, CCSSettingInfo * i, xmlNode * node)
 {
     char *value;
-    int j;
 
-    memset (&v->value.asAction, 0, sizeof (v->value.asAction));
+    memset (&v->value.asKey, 0, sizeof (v->value.asKey));
 
-    if (i->forAction.key)
+    value = getStringFromPath (node->doc, node, "child::text()");
+    if (value)
     {
-	value = getStringFromPath (node->doc, node, "key/child::text()");
+	if (strcasecmp (value, "disabled"))
+	{
+	    ccsStringToKeyBinding (value, &v->value.asKey);
+	}
+	free (value);
+    }
+}
+
+static void
+initButtonValue (CCSSettingValue * v, CCSSettingInfo * i, xmlNode * node)
+{
+    char *value;
+
+    memset (&v->value.asButton, 0, sizeof (v->value.asButton));
+
+    value = getStringFromPath (node->doc, node, "button/child::text()");
+    if (value)
+    {
+	if (strcasecmp (value, "disabled"))
+	{
+	    ccsStringToButtonBinding (value, &v->value.asButton);
+	}
+	free (value);
+    }
+}
+
+static void
+initEdgeValue (CCSSettingValue * v, CCSSettingInfo * i, xmlNode * node)
+{
+    xmlNode **nodes;
+    char *value;
+    int j, k, num;
+
+    v->value.asEdge = 0;
+
+    static char *edge[] = {
+	"Left",
+	"Right",
+	"Top",
+	"Bottom",
+    	"TopLeft",
+	"TopRight",
+	"BottomLeft",
+	"BottomRight"
+    };
+
+    nodes = getNodesFromPath (node->doc, node, "edge", &num);
+
+    for (k = 0; k < num; k++)
+    {
+	value = getStringFromPath (node->doc, nodes[k], "@name");
 	if (value)
 	{
-	    if (strcasecmp (value, "disabled"))
+	    for (j = 0; j < sizeof (edge) / sizeof (edge[0]); j++)
 	    {
-		stringToKey (value, &v->value.asAction.keysym,
-			     &v->value.asAction.keyModMask);
+		if (strcasecmp ((char *) value, edge[j]) == 0)
+		    v->value.asEdge |= (1 << j);
 	    }
 	    free (value);
 	}
     }
+    if (num)
+	free (nodes);
+}
 
-    if (i->forAction.button)
+static void
+initBellValue (CCSSettingValue * v, CCSSettingInfo * i, xmlNode * node)
+{
+    char *value;
+
+    v->value.asBell = FALSE;
+
+    value = getStringFromPath (node->doc, node, "child::text()");
+    if (value)
     {
-	value = getStringFromPath (node->doc, node, "button/child::text()");
-	if (value)
-	{
-	    if (strcasecmp (value, "disabled"))
-	    {
-		stringToButton (value, &v->value.asAction.button,
-				&v->value.asAction.buttonModMask);
-	    }
-	    free (value);
-	}
+	if (!strcasecmp (value, "true"))
+	    v->value.asBell = TRUE;
     }
-
-    if (i->forAction.bell)
-    {
-	value = getStringFromPath (node->doc, node, "bell/child::text()");
-	if (value)
-	{
-	    if (!strcasecmp (value, "true"))
-	    {
-		v->value.asAction.onBell = TRUE;
-	    }
-	    free (value);
-	}
-    }
-
-    if (i->forAction.edge)
-    {
-	static char *edge[] = {
-	    "edges/@left",
-	    "edges/@right",
-	    "edges/@top",
-	    "edges/@bottom",
-    	    "edges/@top_left",
-	    "edges/@top_right",
-	    "edges/@bottom_left",
-	    "edges/@bottom_right"
-	};
-
-	for (j = 0; j < sizeof (edge) / sizeof (edge[0]); j++)
-	{
-	    value = getStringFromPath (node->doc, node, edge[j]);
-	    if (value)
-	    {
-		if (strcasecmp ((char *) value, "true") == 0)
-		    v->value.asAction.edgeMask |= (1 << j);
-
-		free (value);
-	    }
-	}
-
-	value = getStringFromPath (node->doc, node, "edges/@button");
-	if (value)
-	{
-	    v->value.asAction.edgeButton = strtol ((char *) value, NULL, 0);
-	    free (value);
-	}
-    }
+    else
+	free (value);
 }
 
 static void
@@ -751,8 +685,17 @@ initListValue (CCSSettingValue * v, CCSSettingInfo * i, xmlNode * node)
 	    case TypeColor:
 		initColorValue (val, nodes[j]);
 		break;
-	    case TypeAction:
-		initActionValue (val, i->forList.listInfo, nodes[j]);
+	    case TypeKey:
+		initKeyValue (val, i->forList.listInfo, nodes[j]);
+		break;
+	    case TypeButton:
+		initButtonValue (val, i->forList.listInfo, nodes[j]);
+		break;
+	    case TypeEdge:
+		initEdgeValue (val, i->forList.listInfo, nodes[j]);
+		break;
+	    case TypeBell:
+		initBellValue (val, i->forList.listInfo, nodes[j]);
 		break;
 	    case TypeMatch:
 		initMatchValue (val, nodes[j]);
@@ -873,61 +816,6 @@ initFloatInfo (CCSSettingInfo * i, xmlNode * node)
 }
 
 static void
-initActionInfo (CCSSettingInfo * i, xmlNode * node)
-{
-    char *value;
-    i->forAction.key = FALSE;
-    i->forAction.button = FALSE;
-    i->forAction.edge = FALSE;
-    i->forAction.bell = FALSE;
-
-    value = getStringFromPath (node->doc, node, "allowed/@key");
-    if (value)
-    {
-	if (!strcasecmp (value, "true"))
-	    i->forAction.key = TRUE;
-
-	free (value);
-    }
-
-    value = getStringFromPath (node->doc, node, "allowed/@button");
-    if (value)
-    {
-	if (!strcasecmp (value, "true"))
-	    i->forAction.button = TRUE;
-
-	free (value);
-    }
-
-    value = getStringFromPath (node->doc, node, "allowed/@bell");
-    if (value)
-    {
-	if (!strcasecmp (value, "true"))
-	    i->forAction.bell = TRUE;
-
-	free (value);
-    }
-
-    value = getStringFromPath (node->doc, node, "allowed/@edge");
-    if (value)
-    {
-	if (!strcasecmp (value, "true"))
-	    i->forAction.edge = TRUE;
-
-	free (value);
-    }
-
-    value = getStringFromPath (node->doc, node, "allowed/@edgednd");
-    if (value)
-    {
-	if (!strcasecmp (value, "true"))
-	    i->forAction.edge = TRUE;
-
-	free (value);
-    }
-}
-
-static void
 initListInfo (CCSSettingInfo * i, xmlNode * node)
 {
     char *value;
@@ -963,194 +851,10 @@ initListInfo (CCSSettingInfo * i, xmlNode * node)
 	    i->forList.listInfo = info;
 	}
 	break;
-    case TypeAction:
-	{
-	    info = calloc (1, sizeof (CCSSettingInfo));
-	    if (info)
-		initActionInfo (info, node);
-	    i->forList.listInfo = info;
-	}
-	break;
     default:
 	break;
     }
 }
-
-#if 0
-static void
-printSetting (CCSSetting * s)
-{
-    char *val;
-    printf ("Name        : %s\n", s->name);
-    printf ("Short       : %s\n", s->shortDesc);
-    printf ("Long        : %s\n", s->longDesc);
-
-    if (s->group && strlen (s->group))
-	printf ("Group       : %s\n", s->group);
-    if (s->subGroup && strlen (s->subGroup))
-	printf ("Subgroup    : %s\n", s->subGroup);
-    if (s->hints && strlen (s->hints))
-	printf ("Hints       : %s\n", s->hints);
-
-    switch (s->type)
-    {
-    case TypeInt:
-	printf ("Type        : int\n");
-	printf ("Value       : %d (Min : %d / Max : %d)\n",
-		s->value->value.asInt, s->info.forInt.min,
-		s->info.forInt.max);
-	break;
-    case TypeBool:
-	printf ("Type        : bool\n");
-	printf ("Value       : %s \n",
-		(s->value->value.asBool) ? "true" : "false");
-	break;
-    case TypeFloat:
-	printf ("Type        : float\n");
-	printf ("Value       : %g (Min : %g / Max : %g / Prec : %g)\n",
-		s->value->value.asFloat, s->info.forFloat.min,
-		s->info.forFloat.max, s->info.forFloat.precision);
-	break;
-    case TypeString:
-	{
-	    printf ("Type        : string\n");
-	    printf ("Value       : %s\n", s->value->value.asString);
-	}
-	break;
-    case TypeColor:
-	printf ("Type        : color\n");
-	printf(
-	    "Value       : red : 0x%x green : 0x%x blue : 0x%x alpha : 0x%x\n",
-	    s->value->value.asColor.color.red,
-	    s->value->value.asColor.color.green,
-	    s->value->value.asColor.color.blue,
-	    s->value->value.asColor.color.alpha);
-	break;
-    case TypeAction:
-	printf ("Type        : action\n");
-	if (s->info.forAction.key)
-	{
-	    val = ccsKeyBindingToString (&s->value->value.asAction);
-	    printf ("    Key     : %s\n", val);
-	    if (val)
-		free (val);
-	}
-
-	if (s->info.forAction.button)
-	{
-	    val = ccsButtonBindingToString (&s->value->value.asAction);
-	    printf ("    Button  : %s\n", val);
-	    if (val)
-		free (val);
-	}
-
-	if (s->info.forAction.edge)
-	{
-	    CCSStringList list, l;
-	    list = ccsEdgesToStringList (&s->value->value.asAction);
-	    printf ("    Edge    : ");
-	    for (l = list; l; l = l->next)
-		printf ("%s ", l->data);
-	    printf ("\n");
-	    if (list)
-		ccsStringListFree (list, TRUE);
-	}
-
-	if (s->info.forAction.bell)
-	    printf ("    Bell    : %s\n",
-		    (s->value->value.asAction.onBell) ? "true" : "false");
-	break;
-    case TypeMatch:
-	printf ("Type        : match\n");
-	printf ("Value       : %s\n", s->value->value.asMatch);
-	break;
-    case TypeList:
-	{
-	    switch (s->info.forList.listType)
-	    {
-	    case TypeInt:
-		printf ("Type        : list (int)\n");
-		printf ("    Info    : Min : %d Max : %d\n",
-			s->info.forList.listInfo->forInt.min,
-			s->info.forList.listInfo->forInt.max);
-		break;
-	    case TypeBool:
-		printf ("Type        : list (bool)\n");
-		break;
-	    case TypeFloat:
-		printf ("Type        : list (float)\n");
-		printf ("    Info    : Min : %g Max : %g Prec : %g\n",
-			s->info.forList.listInfo->forFloat.min,
-			s->info.forList.listInfo->forFloat.max,
-			s->info.forList.listInfo->forFloat.precision);
-		break;
-	    case TypeString:
-		{
-		    printf ("Type        : list (string)\n");
-		}
-		break;
-	    case TypeColor:
-		printf ("Type        : list (color)\n");
-		break;
-	    case TypeAction:
-		printf ("Type        : list (action)\n");
-		break;
-	    case TypeMatch:
-		printf ("Type        : list (match)\n");
-		break;
-	    default:
-		break;
-	    }
-
-	    CCSSettingValueList l = s->value->value.asList;
-	    if (!l)
-		break;
-
-	    printf ("Values      : ");
-	    while (l)
-	    {
-		CCSSettingValue *val = l->data;
-
-		switch (s->info.forList.listType)
-		{
-	    	    case TypeInt:
-			printf ("%d,", val->value.asInt);
-	    		break;
-	    	    case TypeBool:
-			printf ("%s,", (val->value.asBool) ? "true" : "false");
-	    		break;
-	    	    case TypeFloat:
-			printf ("%g,", val->value.asFloat);
-	    		break;
-	    	    case TypeString:
-			printf ("%s,", val->value.asString);
-	    		break;
-	    	    case TypeColor:
-			{
-			    char *str = ccsColorToString (&val->value.asColor);
-			    printf ("%s,", str);
-			    if (str)
-				free (str);
-			}
-		    	break;
-	    	    case TypeMatch:
-			printf ("%s,", val->value.asMatch);
-	    		break;
-	    	    default:
-			break;
-		}
-		l = l->next;
-	    }
-	    printf ("\n");
-	}
-	break;
-    default:
-	break;
-    }
-    printf ("\n");
-}
-
-#endif
 
 static void
 addOptionForPlugin (CCSPlugin * plugin,
@@ -1169,6 +873,9 @@ addOptionForPlugin (CCSPlugin * plugin,
 	fprintf (stderr, "[ERROR]: Option \"%s\" already defined\n", name);
 	return;
     }
+
+    if (getOptionType (type) == TypeNum)
+	return;
 
     setting = calloc (1, sizeof (CCSSetting));
     if (!setting)
@@ -1216,9 +923,6 @@ addOptionForPlugin (CCSPlugin * plugin,
     case TypeFloat:
 	initFloatInfo (&setting->info, node);
 	break;
-    case TypeAction:
-	initActionInfo (&setting->info, node);
-	break;
     case TypeList:
 	initListInfo (&setting->info, node);
 	break;
@@ -1246,8 +950,17 @@ addOptionForPlugin (CCSPlugin * plugin,
 	case TypeColor:
 	    initColorValue (&setting->defaultValue, nodes[0]);
 	    break;
-	case TypeAction:
-	    initActionValue (&setting->defaultValue, &setting->info, nodes[0]);
+	case TypeKey:
+	    initKeyValue (&setting->defaultValue, &setting->info, nodes[0]);
+	    break;
+	case TypeButton:
+	    initButtonValue (&setting->defaultValue, &setting->info, nodes[0]);
+	    break;
+	case TypeEdge:
+	    initEdgeValue (&setting->defaultValue, &setting->info, nodes[0]);
+	    break;
+	case TypeBell:
+	    initBellValue (&setting->defaultValue, &setting->info, nodes[0]);
 	    break;
 	case TypeMatch:
 	    initMatchValue (&setting->defaultValue, nodes[0]);
