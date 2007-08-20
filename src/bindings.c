@@ -104,6 +104,9 @@ stringAppend (char *s,
     char *r;
     int  len;
 
+    if (!a)
+	return s;
+
     len = strlen (a);
 
     if (s)
