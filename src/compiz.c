@@ -244,7 +244,6 @@ getNodesFromXPath (xmlDoc * doc, xmlNode * base, char *path, int *num)
 	return NULL;
     }
 
-    *num = size;
     rv = malloc (size * sizeof (xmlNode *));
     if (!rv)
     {
@@ -252,6 +251,7 @@ getNodesFromXPath (xmlDoc * doc, xmlNode * base, char *path, int *num)
 	xmlXPathFreeContext (xpathCtx);
 	return NULL;
     }
+    *num = size;
 
     for (i = 0; i < size; i++)
 	rv[i] = xpathObj->nodesetval->nodeTab[i];
