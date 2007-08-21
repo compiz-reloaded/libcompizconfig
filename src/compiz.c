@@ -582,7 +582,7 @@ initButtonValue (CCSSettingValue * v, CCSSettingInfo * i, xmlNode * node)
 
     memset (&v->value.asButton, 0, sizeof (v->value.asButton));
 
-    value = getStringFromPath (node->doc, node, "button/child::text()");
+    value = getStringFromPath (node->doc, node, "child::text()");
     if (value)
     {
 	if (strcasecmp (value, "disabled"))
