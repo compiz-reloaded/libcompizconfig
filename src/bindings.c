@@ -221,8 +221,11 @@ ccsButtonBindingToString (CCSSettingButtonValue *button)
     edges = ccsEdgesToModString (button->edgeMask);
     binding = stringAppend (edges, ccsModifiersToString (button->buttonModMask));
 
-    snprintf (buttonStr, 256, "Button%d", button->button);
-    binding = stringAppend (binding, buttonStr);
+    if (button->button)
+    {
+        snprintf (buttonStr, 256, "Button%d", button->button);
+        binding = stringAppend (binding, buttonStr);
+    }
 
     if (!binding)
 	return strdup ("Disabled");
