@@ -160,9 +160,6 @@ ccsEdgesToModString (unsigned int edgeMask)
 	    binding = stringAppend (binding, edgeList[i].modName);
     }
 
-    if (!binding)
-	return strdup ("");
-
     return binding;
 }
 
