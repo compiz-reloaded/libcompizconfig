@@ -1130,7 +1130,8 @@ addPluginFromXMLNode (CCSContext * context, xmlNode * node, char *file)
 	return;
     }
 
-    if (!strcmp (name, "ini") || !strcmp (name, "gconf") || !strcmp (name, "ccp"))
+    if (!strcmp (name, "ini") || !strcmp (name, "gconf") ||
+	!strcmp (name, "ccp") || !strcmp (name, "kconfig"))
     {
 	free (name);
 	return;
@@ -1339,7 +1340,8 @@ addPluginNamed (CCSContext * context, char *name)
     if (ccsFindPlugin (context, name))
 	return;
 
-    if (!strcmp (name, "ini") || !strcmp (name, "gconf") || !strcmp (name, "ccp"))
+    if (!strcmp (name, "ini") || !strcmp (name, "gconf") ||
+	!strcmp (name, "ccp") || !strcmp (name, "kconfig"))
 	return;
 
     if (globalMetadata)
