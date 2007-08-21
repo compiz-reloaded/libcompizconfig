@@ -135,9 +135,7 @@ ccpSetValueToValue (CompDisplay     *d,
 		    v->action.type = CompBindingTypeButton;
 	    }
 	    else
-		v->action.type &= ~CompBindingTypeNone;
-
-
+		v->action.type = CompBindingTypeNone;
 	}
 	break;
     case TypeEdge:
