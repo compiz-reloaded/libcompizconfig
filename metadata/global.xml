@@ -47,27 +47,27 @@
 				<option name="command9" type="string"/>
 				<option name="command10" type="string"/>
 				<option name="command11" type="string"/>
-				<option name="run_command0" type="action"/>
-				<option name="run_command1" type="action"/>
-				<option name="run_command2" type="action"/>
-				<option name="run_command3" type="action"/>
-				<option name="run_command4" type="action"/>
-				<option name="run_command5" type="action"/>
-				<option name="run_command6" type="action"/>
-				<option name="run_command7" type="action"/>
-				<option name="run_command8" type="action"/>
-				<option name="run_command9" type="action"/>
-				<option name="run_command10" type="action"/>
-				<option name="run_command11" type="action"/>
+				<option name="run_command0_key" type="key"/>
+				<option name="run_command1_key" type="key"/>
+				<option name="run_command2_key" type="key"/>
+				<option name="run_command3_key" type="key"/>
+				<option name="run_command4_key" type="key"/>
+				<option name="run_command5_key" type="key"/>
+				<option name="run_command6_key" type="key"/>
+				<option name="run_command7_key" type="key"/>
+				<option name="run_command8_key" type="key"/>
+				<option name="run_command9_key" type="key"/>
+				<option name="run_command10_key" type="key"/>
+				<option name="run_command11_key" type="key"/>
 				<option name="command_screenshot" type="string"/>
-				<option name="run_command_screenshot" type="action"/>
+				<option name="run_command_screenshot_key" type="key"/>
 				<option name="command_window_screenshot" type="string"/>
-				<option name="run_command_window_screenshot" type="action"/>
+				<option name="run_command_window_screenshot_key" type="key"/>
 			</group>
 			<group>
 				<short>Opacity Settings</short>
-				<option name="opacity_increase" type="action"/>
-				<option name="opacity_decrease" type="action"/>
+				<option name="opacity_increase_button" type="button"/>
+				<option name="opacity_decrease_button" type="button"/>
 			</group>
 		</display>
 		<screen>
