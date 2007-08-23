@@ -34,35 +34,69 @@
 				<option name="texture_filter" type="int"/>
 			</group>
 			<group>
+				<short>Key bindings</short>
+				<option name="close_window_key" type="key"/>
+				<option name="main_menu_key" type="key"/>
+				<option name="run_key" type="key"/>
+				<option name="unmaximize_window_key" type="key"/>
+				<option name="minimize_window_key" type="key"/>
+				<option name="maximize_window_key" type="key"/>
+				<option name="maximize_window_horizontally_key" type="key"/>
+				<option name="maximize_window_vertically_key" type="key"/>
+				<option name="window_menu_key" type="key"/>
+				<option name="show_desktop_key" type="key"/>
+				<option name="toggle_window_maximized_key" type="key"/>
+				<option name="toggle_window_maximized_horizontally_key" type="key"/>
+				<option name="toggle_window_maximized_vertically_key" type="key"/>
+				<option name="toggle_window_shaded_key" type="key"/>
+			</group>
+			<group>
 				<short>Commands</short>
-				<option name="command0" type="string"/>
-				<option name="command1" type="string"/>
-				<option name="command2" type="string"/>
-				<option name="command3" type="string"/>
-				<option name="command4" type="string"/>
-				<option name="command5" type="string"/>
-				<option name="command6" type="string"/>
-				<option name="command7" type="string"/>
-				<option name="command8" type="string"/>
-				<option name="command9" type="string"/>
-				<option name="command10" type="string"/>
-				<option name="command11" type="string"/>
-				<option name="run_command0_key" type="key"/>
-				<option name="run_command1_key" type="key"/>
-				<option name="run_command2_key" type="key"/>
-				<option name="run_command3_key" type="key"/>
-				<option name="run_command4_key" type="key"/>
-				<option name="run_command5_key" type="key"/>
-				<option name="run_command6_key" type="key"/>
-				<option name="run_command7_key" type="key"/>
-				<option name="run_command8_key" type="key"/>
-				<option name="run_command9_key" type="key"/>
-				<option name="run_command10_key" type="key"/>
-				<option name="run_command11_key" type="key"/>
-				<option name="command_screenshot" type="string"/>
-				<option name="run_command_screenshot_key" type="key"/>
-				<option name="command_window_screenshot" type="string"/>
-				<option name="run_command_window_screenshot_key" type="key"/>
+				<subgroup>
+					<short>Commands</short>
+					<option name="command0" type="string"/>
+					<option name="command1" type="string"/>
+					<option name="command2" type="string"/>
+					<option name="command3" type="string"/>
+					<option name="command4" type="string"/>
+					<option name="command5" type="string"/>
+					<option name="command6" type="string"/>
+					<option name="command7" type="string"/>
+					<option name="command8" type="string"/>
+					<option name="command9" type="string"/>
+					<option name="command10" type="string"/>
+					<option name="command11" type="string"/>
+				</subgroup>
+				<subgroup>
+					<short>Key bindings</short>
+					<option name="run_command0_key" type="key"/>
+					<option name="run_command1_key" type="key"/>
+					<option name="run_command2_key" type="key"/>
+					<option name="run_command3_key" type="key"/>
+					<option name="run_command4_key" type="key"/>
+					<option name="run_command5_key" type="key"/>
+					<option name="run_command6_key" type="key"/>
+					<option name="run_command7_key" type="key"/>
+					<option name="run_command8_key" type="key"/>
+					<option name="run_command9_key" type="key"/>
+					<option name="run_command10_key" type="key"/>
+					<option name="run_command11_key" type="key"/>
+				</subgroup>
+				<subgroup>
+					<short>Screenshot commands</short>
+					<option name="command_screenshot" type="string"/>
+					<option name="command_window_screenshot" type="string"/>
+				</subgroup>
+				<subgroup>
+					<short>Screenshot key bindings</short>
+					<option name="run_command_screenshot_key" type="key"/>
+					<option name="run_command_window_screenshot_key" type="key"/>
+				</subgroup>
+				<subgroup>
+					<short>Run terminal command</short>
+					<option name="command_terminal" type="string"/>
+					<option name="run_command_terminal_key" type="key"/>
+				</subgroup>
 			</group>
 			<group>
 				<short>Opacity Settings</short>
@@ -179,10 +213,70 @@
 	<!-- rotate metadata -->
 	<plugin name="rotate">
 		<category>Desktop</category>
+		<display>
+			<group>
+				<short>Bindings</short>
+				<subgroup>
+					<short>Rotate cube</short>
+					<option name="initiate_button" type="button"/>
+					<option name="rotate_left_key" type="key"/>
+					<option name="rotate_right_key" type="key"/>
+					<option name="rotate_left_window_key" type="key"/>
+					<option name="rotate_right_window_key" type="key"/>
+					<option name="rotate_to_key" type="key"/>
+					<option name="rotate_window_key" type="key"/>
+					<option name="rotate_flip_left_edge" type="edge"/>
+					<option name="rotate_flip_right_edge" type="edge"/>
+				</subgroup>
+				<subgroup>
+					<short>Rotate to cube face</short>
+					<option name="rotate_to_1_key" type="key"/>
+					<option name="rotate_to_2_key" type="key"/>
+					<option name="rotate_to_3_key" type="key"/>
+					<option name="rotate_to_4_key" type="key"/>
+					<option name="rotate_to_5_key" type="key"/>
+					<option name="rotate_to_6_key" type="key"/>
+					<option name="rotate_to_7_key" type="key"/>
+					<option name="rotate_to_8_key" type="key"/>
+					<option name="rotate_to_9_key" type="key"/>
+					<option name="rotate_to_10_key" type="key"/>
+					<option name="rotate_to_11_key" type="key"/>
+					<option name="rotate_to_12_key" type="key"/>
+				</subgroup>
+				<subgroup>
+					<short>Rotate to cube face with window</short>
+					<option name="rotate_to_1_window_key" type="key"/>
+					<option name="rotate_to_2_window_key" type="key"/>
+					<option name="rotate_to_3_window_key" type="key"/>
+					<option name="rotate_to_4_window_key" type="key"/>
+					<option name="rotate_to_5_window_key" type="key"/>
+					<option name="rotate_to_6_window_key" type="key"/>
+					<option name="rotate_to_7_window_key" type="key"/>
+					<option name="rotate_to_8_window_key" type="key"/>
+					<option name="rotate_to_9_window_key" type="key"/>
+					<option name="rotate_to_10_window_key" type="key"/>
+					<option name="rotate_to_11_window_key" type="key"/>
+					<option name="rotate_to_12_window_key" type="key"/>
+				</subgroup>
+			</group>
+		</display>
 	</plugin>
 	<!-- scale metadata -->
 	<plugin name="scale">
 		<category>Window Management</category>
+		<display>
+			<group>
+				<short>Bindings</short>
+				<option name="initiate_edge" type="edge"/>
+				<option name="initiate_key" type="key"/>
+				<option name="initiate_all_edge" type="edge"/>
+				<option name="initiate_all_key" type="key"/>
+				<option name="initiate_group_edge" type="edge"/>
+				<option name="initiate_group_key" type="key"/>
+				<option name="initiate_output_edge" type="edge"/>
+				<option name="initiate_output_key" type="key"/>
+			</group>
+		</display>
 	</plugin>
 	<!-- png metadata -->
 	<plugin name="png">
@@ -228,10 +322,38 @@
 	<!-- resize metadata -->
 	<plugin name="resize">
 		<category>Window Management</category>
+		<display>
+			<group>
+				<short>Bindings</short>
+				<option name="initiate_normal_key" type="key"/>
+				<option name="initiate_outline_key" type="key"/>
+				<option name="initiate_rectangle_key" type="key"/>
+				<option name="initiate_stretch_key" type="key"/>
+				<option name="initiate_button" type="button"/>
+				<option name="initiate_key" type="key"/>
+			</group>
+		</display>
 	</plugin>
 	<!-- switcher metadata -->
 	<plugin name="switcher">
 		<category>Window Management</category>
+		<display>
+			<group>
+				<short>Bindings</short>
+				<option name="next_button" type="button"/>
+				<option name="next_key" type="key"/>
+				<option name="prev_button" type="button"/>
+				<option name="prev_key" type="key"/>
+				<option name="next_all_button" type="button"/>
+				<option name="next_all_key" type="key"/>
+				<option name="prev_all_button" type="button"/>
+				<option name="prev_all_key" type="key"/>
+				<option name="next_no_popup_button" type="button"/>
+				<option name="next_no_popup_key" type="key"/>
+				<option name="prev_no_popup_button" type="button"/>
+				<option name="prev_no_popup_key" type="key"/>
+			</group>
+		</display>
 	</plugin>
 	<!-- clone metadata -->
 	<plugin name="clone">
