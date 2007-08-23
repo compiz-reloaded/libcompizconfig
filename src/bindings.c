@@ -295,6 +295,14 @@ ccsStringToKeyBinding (const char         *binding,
     unsigned int  mods;
     KeySym	  keysym;
 
+    if (!binding || !strlen(binding) ||
+	strncmp (binding, "Disabled", strlen ("Disabled")) == 0)
+    {
+	value->keysym     = 0;
+	value->keyModMask = 0;
+	return TRUE;
+    }
+
     mods = ccsStringToModifiers (binding);
 
     ptr = strrchr (binding, '>');
@@ -325,6 +333,15 @@ ccsStringToButtonBinding (const char            *binding,
     char	 *ptr;
     unsigned int mods;
     unsigned int edges;
+
+    if (!binding || !strlen(binding) ||
+	strncmp (binding, "Disabled", strlen ("Disabled")) == 0)
+    {
+	value->button        = 0;
+	value->buttonModMask = 0;
+	value->edgeMask      = 0;
+	return TRUE;
+    }
 
     mods = ccsStringToModifiers (binding);
     edges = ccsModStringToEdges (binding);
