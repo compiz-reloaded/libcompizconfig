@@ -56,7 +56,7 @@ ini_file_lock (const char *fileName, Bool exclusive)
     struct flock lockinfo;
 
     if (exclusive)
-	fd = open (fileName, O_WRONLY | O_CREAT, 0666);
+	fd = open (fileName, O_WRONLY | O_CREAT | O_TRUNC, 0666);
     else
 	fd = open (fileName, O_RDONLY | O_CREAT, 0666);
     if (fd < 0)
@@ -689,6 +689,7 @@ iniparser_dump_ini (dictionary * d, const char * file_name)
 	    fprintf (f, "%s = %s\n", d->key[i], d->val[i]);
 	}
 
+	fflush (f);
 	ini_file_unlock (lock);
 	return;
     }
@@ -716,6 +717,7 @@ iniparser_dump_ini (dictionary * d, const char * file_name)
     	fprintf (f, "\n");
     }
 
+    fflush (f);
     ini_file_unlock (lock );
 }
 
