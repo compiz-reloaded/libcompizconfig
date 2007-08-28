@@ -108,7 +108,7 @@ typedef void (*freeFunc) (void *ptr);
 	while (l) \
 	{ \
 	    if (!data && !l->data) break; \
-	    if (memcmp(l->data, data, sizeof(dtype)) == 0) break; \
+	    if (l->data == data) break; \
 	    l = l->next; \
 	} \
 	return l; \
@@ -135,7 +135,7 @@ typedef void (*freeFunc) (void *ptr);
 	while (l) \
 	{ \
 	    if (!l->data) continue; \
-	    if (memcmp(l->data, data, sizeof(dtype)) == 0) \
+	    if (l->data == data) \
 	    { \
 		found = TRUE; \
 		break; \
