@@ -1411,18 +1411,11 @@ ccsGetActivePluginList (CCSContext * context)
 {
     CCSPluginList rv = NULL;
     CCSPluginList l = context->plugins;
-    CCSPlugin     *pl;
-
-    /* core plugin is always at first position */
-    pl = ccsFindPlugin (context, "core");
-    if (pl)
-	rv = ccsPluginListAppend (rv, pl);
 
     while (l)
     {
 	PLUGIN_PRIV (l->data);
-	if (pPrivate->active &&
-	    strcmp (l->data->name, "ccp") && strcmp (l->data->name, "core"))
+	if (pPrivate->active && strcmp (l->data->name, "ccp"))
 	{
 	    rv = ccsPluginListAppend (rv, l->data);
 	}
