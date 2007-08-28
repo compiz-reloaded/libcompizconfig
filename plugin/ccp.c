@@ -45,7 +45,6 @@ typedef struct _CCPDisplay
     CompTimeoutHandle timeoutHandle;
 
     InitPluginForDisplayProc      initPluginForDisplay;
-    SetDisplayOptionProc	  setDisplayOption;
     SetDisplayOptionForPluginProc setDisplayOptionForPlugin;
 }
 
@@ -54,7 +53,6 @@ CCPDisplay;
 typedef struct _CCPScreen
 {
     InitPluginForScreenProc      initPluginForScreen;
-    SetScreenOptionProc		 setScreenOption;
     SetScreenOptionForPluginProc setScreenOptionForPlugin;
 }
 
@@ -436,12 +434,11 @@ ccpSetOptionFromContext (CompDisplay *d,
 
     CCP_DISPLAY (d);
 
-    if (plugin && strlen (plugin) && (strcmp (plugin, CORE_VTABLE_NAME) != 0))
-    {
+    if (plugin)
 	p = findActivePlugin (plugin);
-	if (!p)
-	    return;
-    }
+
+    if (!p)
+	return;
 
     if (!name)
 	return;
@@ -461,25 +458,15 @@ ccpSetOptionFromContext (CompDisplay *d,
 	    return;
     }
 
-    if (p)
+    if (s)
     {
-	if (s)
-	{
-	    if (p->vTable->getScreenOptions)
-		option = (*p->vTable->getScreenOptions) (p, s, &nOption);
-	}
-	else
-	{
-	    if (p->vTable->getDisplayOptions)
-		option = (*p->vTable->getDisplayOptions) (p, d, &nOption);
-	}
+	if (p->vTable->getScreenOptions)
+	    option = (*p->vTable->getScreenOptions) (p, s, &nOption);
     }
     else
     {
-	if (s)
-	    option = compGetScreenOptions (s, &nOption);
-	else
-	    option = compGetDisplayOptions (d, &nOption);
+	if (p->vTable->getDisplayOptions)
+	    option = (*p->vTable->getDisplayOptions) (p, d, &nOption);
     }
 
     if (!option)
@@ -503,20 +490,10 @@ ccpSetOptionFromContext (CompDisplay *d,
     value = o->value;
     ccpSettingToValue (d, setting, &value);
 
-    if (p)
-    {
-	if (s)
-	    (*s->setScreenOptionForPlugin) (s, plugin, name, &value);
-	else
-	    (*d->setDisplayOptionForPlugin) (d, plugin, name, &value);
-    }
+    if (s)
+	(*s->setScreenOptionForPlugin) (s, plugin, name, &value);
     else
-    {
-	if (s)
-	    (*s->setScreenOption) (s, name, &value);
-	else
-	    (*d->setDisplayOption) (d, name, &value);
-    }
+	(*d->setDisplayOptionForPlugin) (d, plugin, name, &value);
 
     ccpFreeCompValue (setting, &value);
 }
@@ -538,12 +515,11 @@ ccpSetContextFromOption (CompDisplay *d,
 
     CCP_DISPLAY (d);
 
-    if (plugin && strlen (plugin))
-    {
+    if (plugin)
 	p = findActivePlugin (plugin);
-	if (!p)
-	    return;
-    }
+
+    if (!p)
+	return;
 
     if (!name)
 	return;
@@ -563,25 +539,15 @@ ccpSetContextFromOption (CompDisplay *d,
 	    return;
     }
 
-    if (p)
+    if (s)
     {
-	if (s)
-	{
-	    if (p->vTable->getScreenOptions)
-		option = (*p->vTable->getScreenOptions) (p, s, &nOption);
-	}
-	else
-	{
-	    if (p->vTable->getDisplayOptions)
-		option = (*p->vTable->getDisplayOptions) (p, d, &nOption);
-	}
+	if (p->vTable->getScreenOptions)
+	    option = (*p->vTable->getScreenOptions) (p, s, &nOption);
     }
     else
     {
-	if (s)
-	    option = compGetScreenOptions (s, &nOption);
-	else
-	    option = compGetDisplayOptions (d, &nOption);
+	if (p->vTable->getDisplayOptions)
+	    option = (*p->vTable->getDisplayOptions) (p, d, &nOption);
     }
 
     if (!option)
@@ -607,27 +573,6 @@ ccpSetContextFromOption (CompDisplay *d,
 }
 
 static Bool
-ccpSetDisplayOption (CompDisplay     *d,
-		     const char	     *name,
-		     CompOptionValue *value)
-{
-    Bool status;
-
-    CCP_DISPLAY (d);
-
-    UNWRAP (cd, d, setDisplayOption);
-    status = (*d->setDisplayOption) (d, name, value);
-    WRAP (cd, d, setDisplayOption, ccpSetDisplayOption);
-
-    if (status && !cd->applyingSettings)
-    {
-	ccpSetContextFromOption (d, NULL, name, FALSE, 0);
-    }
-
-    return status;
-}
-
-static Bool
 ccpSetDisplayOptionForPlugin (CompDisplay     *d,
 			      const char      *plugin,
 			      const char      *name,
@@ -644,31 +589,6 @@ ccpSetDisplayOptionForPlugin (CompDisplay     *d,
     if (status && !cd->applyingSettings)
     {
 	ccpSetContextFromOption (d, plugin, name, FALSE, 0);
-    }
-
-    return status;
-}
-
-static Bool
-ccpSetScreenOption (CompScreen      *s,
-		    const char	    *name,
-		    CompOptionValue *value)
-{
-    Bool status;
-
-    CCP_SCREEN (s);
-
-    UNWRAP (cs, s, setScreenOption);
-    status = (*s->setScreenOption) (s, name, value);
-    WRAP (cs, s, setScreenOption, ccpSetScreenOption);
-
-    if (status)
-    {
-	CCP_DISPLAY (s->display);
-
-	if (!cd->applyingSettings)
-	    ccpSetContextFromOption (s->display, NULL, name, 
-				     TRUE, s->screenNum);
     }
 
     return status;
@@ -802,8 +722,6 @@ static Bool
 ccpInitDisplay (CompPlugin  *p,
 		CompDisplay *d)
 {
-    CompOption   *option;
-    int	         nOption;
     CCPDisplay *cd;
     CompScreen *s;
     int i;
@@ -822,7 +740,6 @@ ccpInitDisplay (CompPlugin  *p,
     }
 
     WRAP (cd, d, initPluginForDisplay, ccpInitPluginForDisplay);
-    WRAP (cd, d, setDisplayOption, ccpSetDisplayOption);
     WRAP (cd, d, setDisplayOptionForPlugin, ccpSetDisplayOptionForPlugin);
 
     d->privates[displayPrivateIndex].ptr = cd;
@@ -855,11 +772,6 @@ ccpInitDisplay (CompPlugin  *p,
     cd->context->changedSettings =
 	ccsSettingListFree (cd->context->changedSettings, FALSE);
 
-    option = compGetDisplayOptions (d, &nOption);
-
-    cd->applyingSettings = TRUE;
-    for (i = 0; i < nOption; i++)
-	ccpSetOptionFromContext ( d, NULL, option[i].name, FALSE, 0);
     cd->applyingSettings = FALSE;
 
     cd->timeoutHandle = compAddTimeout (CCP_UPDATE_TIMEOUT, 
@@ -877,7 +789,6 @@ ccpFiniDisplay (CompPlugin  *p,
     compRemoveTimeout (cd->timeoutHandle);
 
     UNWRAP (cd, d, initPluginForDisplay);
-    UNWRAP (cd, d, setDisplayOption);
     UNWRAP (cd, d, setDisplayOptionForPlugin);
 
     freeScreenPrivateIndex (d, cd->screenPrivateIndex);
@@ -891,10 +802,7 @@ static Bool
 ccpInitScreen (CompPlugin *p,
 	       CompScreen *s)
 {
-    CompOption  *option;
-    int	        nOption;
     CCPScreen *cs;
-    int i;
 
     CCP_DISPLAY (s->display);
 
@@ -904,18 +812,9 @@ ccpInitScreen (CompPlugin *p,
 	return FALSE;
 
     WRAP (cs, s, initPluginForScreen, ccpInitPluginForScreen);
-    WRAP (cs, s, setScreenOption, ccpSetScreenOption);
     WRAP (cs, s, setScreenOptionForPlugin, ccpSetScreenOptionForPlugin);
 
     s->privates[cd->screenPrivateIndex].ptr = cs;
-
-    option = compGetScreenOptions (s, &nOption);
-
-    cd->applyingSettings = TRUE;
-    for (i = 0; i < nOption; i++)
-	ccpSetOptionFromContext (s->display, NULL, option[i].name,
-				 TRUE, s->screenNum);
-    cd->applyingSettings = FALSE;
 
     return TRUE;
 }
@@ -927,7 +826,6 @@ ccpFiniScreen (CompPlugin *p,
     CCP_SCREEN (s);
 
     UNWRAP (cs, s, initPluginForScreen);
-    UNWRAP (cs, s, setScreenOption);
     UNWRAP (cs, s, setScreenOptionForPlugin);
 
     free (cs);

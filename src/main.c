@@ -157,6 +157,7 @@ static void
 ccsSetActivePluginList (CCSContext * context, CCSStringList list)
 {
     CCSPluginList l;
+    CCSPlugin     *plugin;
 
     for (l = context->plugins; l; l = l->next)
     {
@@ -166,7 +167,6 @@ ccsSetActivePluginList (CCSContext * context, CCSStringList list)
 
     for (; list; list = list->next)
     {
-	CCSPlugin *plugin;
 	plugin = ccsFindPlugin (context, list->data);
 
 	if (plugin)
@@ -174,6 +174,14 @@ ccsSetActivePluginList (CCSContext * context, CCSStringList list)
 	    PLUGIN_PRIV (plugin);
 	    pPrivate->active = TRUE;
 	}
+    }
+
+    /* core plugin is always active */
+    plugin = ccsFindPlugin (context, "core");
+    if (plugin)
+    {
+	PLUGIN_PRIV (plugin);
+	pPrivate->active = TRUE;
     }
 }
 
@@ -1403,12 +1411,21 @@ ccsGetActivePluginList (CCSContext * context)
 {
     CCSPluginList rv = NULL;
     CCSPluginList l = context->plugins;
+    CCSPlugin     *pl;
+
+    /* core plugin is always at first position */
+    pl = ccsFindPlugin (context, "core");
+    if (pl)
+	rv = ccsPluginListAppend (rv, pl);
 
     while (l)
     {
 	PLUGIN_PRIV (l->data);
-	if (pPrivate->active && strcmp (l->data->name, "ccp"))
+	if (pPrivate->active &&
+	    strcmp (l->data->name, "ccp") && strcmp (l->data->name, "core"))
+	{
 	    rv = ccsPluginListAppend (rv, l->data);
+	}
 
 	l = l->next;
     }
