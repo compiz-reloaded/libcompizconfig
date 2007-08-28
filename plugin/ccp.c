@@ -43,6 +43,7 @@ typedef struct _CCPDisplay
     Bool applyingSettings;
 
     CompTimeoutHandle timeoutHandle;
+    CompTimeoutHandle reloadHandle;
 
     InitPluginForDisplayProc      initPluginForDisplay;
     SetDisplayOptionForPluginProc setDisplayOptionForPlugin;
@@ -161,12 +162,17 @@ ccpConvertPluginList (CompDisplay         *d,
     int                 i;
 
     sl = ccsGetStringListFromValueList (list);
+
     for (l = sl; l; l = l->next)
 	if (strcmp (l->data, "ccp") == 0)
-	    break;
+	    sl = ccsStringListRemove (sl, l->data, TRUE);
 
-    if (!l)
-	sl = ccsStringListPrepend (sl, strdup ("ccp"));
+    for (l = sl; l; l = l->next)
+	if (strcmp (l->data, "core") == 0)
+	    sl = ccsStringListRemove (sl, l->data, TRUE);
+
+    sl = ccsStringListPrepend (sl, strdup ("ccp"));
+    sl = ccsStringListPrepend (sl, strdup ("core"));
 
     v->list.nValue = ccsStringListLength (sl);
     v->list.value  = calloc (v->list.nValue, sizeof (CompOptionValue));
@@ -490,10 +496,14 @@ ccpSetOptionFromContext (CompDisplay *d,
     value = o->value;
     ccpSettingToValue (d, setting, &value);
 
+    cd->applyingSettings = TRUE;
+
     if (s)
 	(*s->setScreenOptionForPlugin) (s, plugin, name, &value);
     else
 	(*d->setDisplayOptionForPlugin) (d, plugin, name, &value);
+
+    cd->applyingSettings = FALSE;
 
     ccpFreeCompValue (setting, &value);
 }
@@ -586,10 +596,8 @@ ccpSetDisplayOptionForPlugin (CompDisplay     *d,
     status = (*d->setDisplayOptionForPlugin) (d, plugin, name, value);
     WRAP (cd, d, setDisplayOptionForPlugin, ccpSetDisplayOptionForPlugin);
 
-    if (status && !cd->applyingSettings)
-    {
+    if (status && !cd->reloadHandle && !cd->applyingSettings)
 	ccpSetContextFromOption (d, plugin, name, FALSE, 0);
-    }
 
     return status;
 }
@@ -612,7 +620,7 @@ ccpSetScreenOptionForPlugin (CompScreen      *s,
     {
 	CCP_DISPLAY (s->display);
 
-	if (!cd->applyingSettings)
+	if (!cd->reloadHandle && !cd->applyingSettings)
 	    ccpSetContextFromOption (s->display, plugin,
 				     name, TRUE, s->screenNum);
     }
@@ -678,6 +686,53 @@ ccpInitPluginForScreen (CompPlugin *p,
 }
 
 static Bool
+ccpReload (void *closure)
+{
+    CompDisplay *d = (CompDisplay *) closure;
+    CompScreen  *s;
+    CompPlugin  *p;
+    CompOption  *option;
+    int		nOption;
+
+    CCP_DISPLAY (d);
+
+    for (p = getPlugins (); p; p = p->next)
+    {
+	if (!p->vTable->getDisplayOptions)
+	    continue;
+
+	option = (*p->vTable->getDisplayOptions) (p, d, &nOption);
+	while (nOption--)
+	{
+	    ccpSetOptionFromContext (d, p->vTable->name,
+				     option->name, FALSE, 0);
+	    option++;
+	}
+    }
+
+    for (s = d->screens; s; s = s->next)
+    {
+	for (p = getPlugins (); p; p = p->next)
+	{
+	    if (!p->vTable->getScreenOptions)
+		continue;
+
+	    option = (*p->vTable->getScreenOptions) (p, s, &nOption);
+	    while (nOption--)
+	    {
+		ccpSetOptionFromContext (d, p->vTable->name,
+					 option->name, TRUE, s->screenNum);
+		option++;
+	    }
+	}
+    }
+
+    cd->reloadHandle = 0;
+
+    return FALSE;
+}
+
+static Bool
 ccpTimeout (void *closure)
 {
     CompDisplay *d = (CompDisplay *) closure;
@@ -697,8 +752,6 @@ ccpTimeout (void *closure)
 	cd->context->changedSettings = NULL;
 	CCSSetting *s;
 
-	cd->applyingSettings = TRUE;
-
 	while (l)
 	{
 	    s = l->data;
@@ -707,8 +760,6 @@ ccpTimeout (void *closure)
 	    D (D_FULL, "Setting Update \"%s\"\n", s->name);
 	    l = l->next;
 	}
-
-	cd->applyingSettings = FALSE;
 
 	ccsSettingListFree (list, FALSE);
 	cd->context->changedSettings =
@@ -774,7 +825,8 @@ ccpInitDisplay (CompPlugin  *p,
 
     cd->applyingSettings = FALSE;
 
-    cd->timeoutHandle = compAddTimeout (CCP_UPDATE_TIMEOUT, 
+    cd->reloadHandle = compAddTimeout (0, ccpReload, (void *) d);
+    cd->timeoutHandle = compAddTimeout (CCP_UPDATE_TIMEOUT,
 					ccpTimeout, (void *) d);
 
     return TRUE;
