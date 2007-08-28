@@ -1,5 +1,5 @@
 <compiz>
-	<plugin name="core">
+	<core>
 		<category>General</category>
 		<display>
 			<option name="active_plugins" type="list">
@@ -136,7 +136,7 @@
 				<option name="focus_prevention_match" type="match"/>
 			</group>
 		</screen>
-	</plugin>
+	</core>
 	<!-- blur metadata -->
 	<plugin name="blur">
 		<category>Effects</category>
