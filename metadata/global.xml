@@ -4,6 +4,7 @@
 			<option name="active_plugins" type="list">
 				<type>string</type>
 				<default>
+					<value>core</value>
 					<value>dbus</value>
 					<value>place</value>
 					<value>move</value>
