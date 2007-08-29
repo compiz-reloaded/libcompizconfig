@@ -36,6 +36,7 @@
 #include <ccs.h>
 
 #include "ccs-private.h"
+#include "iniparser.h"
 
 Bool basicMetadata = FALSE;
 
@@ -2495,7 +2496,7 @@ ccsImportFromFile (CCSContext * context, const char * fileName, Bool overwrite)
     CCSSetting *setting;
     char *keyName;
 
-    importFile = ccsIniOpen (fileName);
+    importFile = iniparser_new ((char *) fileName);
     if (!importFile)
 	return FALSE;
 
@@ -2619,6 +2620,8 @@ ccsImportFromFile (CCSContext * context, const char * fileName, Bool overwrite)
 	    free (keyName);
 	}
     }
+
+    ccsWriteSettings (context);
 
     ccsIniClose (importFile);
 
