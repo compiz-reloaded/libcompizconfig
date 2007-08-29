@@ -313,6 +313,19 @@ ccsStringToKeyBinding (const char         *binding,
     while (*binding && !isalnum (*binding))
 	binding++;
 
+    if (!*binding)
+    {
+	if (mods)
+	{
+	    value->keysym     = 0;
+	    value->keyModMask = mods;
+
+	    return TRUE;
+	}
+
+	return FALSE;
+    }
+
     keysym = XStringToKeysym (binding);
 
     if (keysym != NoSymbol)
