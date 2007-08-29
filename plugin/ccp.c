@@ -163,25 +163,11 @@ ccpConvertPluginList (CompDisplay         *d,
 
     sl = ccsGetStringListFromValueList (list);
 
-    l = sl;
-    while (l)
-    {
-	if (strcmp (l->data, "ccp") == 0)
-	    l = sl = ccsStringListRemove (sl, l->data, TRUE);
+    while (ccsStringListFind(sl,"ccp"))
+	sl = ccsStringListRemove (sl, "ccp", TRUE);
 
-	if (l)
-	    l = l->next;
-    }
-
-    l = sl;
-    while (l)
-    {
-	if (strcmp (l->data, "core") == 0)
-	    l = sl = ccsStringListRemove (sl, l->data, TRUE);
-
-	if (l)
-	    l = l->next;
-    }
+    while (ccsStringListFind(sl,"core"))
+	sl = ccsStringListRemove (sl, "core", TRUE);
 
     sl = ccsStringListPrepend (sl, strdup ("ccp"));
     sl = ccsStringListPrepend (sl, strdup ("core"));
@@ -198,11 +184,8 @@ ccpConvertPluginList (CompDisplay         *d,
     {
 	if (l->data)
 	    v->list.value[i].s = strdup (l->data);
-	printf("%s, ",l->data);
 	i++;
     }
-    printf("done\n");
-
 
     ccsStringListFree (sl, TRUE);
 }
