@@ -30,7 +30,7 @@
 
 typedef void (*freeFunc) (void *ptr);
 
-#define CCSLIST(type,dtype) \
+#define CCSLIST(type,dtype,ocomp,compfunc) \
     \
     CCS##type##List ccs##type##ListAppend (CCS##type##List list, dtype *data) \
     { \
@@ -108,7 +108,7 @@ typedef void (*freeFunc) (void *ptr);
 	while (l) \
 	{ \
 	    if (!data && !l->data) break; \
-	    if (l->data == data) break; \
+	    if ((ocomp)?(compfunc):(memcmp(l->data, data, sizeof(dtype)) == 0)) break; \
 	    l = l->next; \
 	} \
 	return l; \
@@ -135,7 +135,7 @@ typedef void (*freeFunc) (void *ptr);
 	while (l) \
 	{ \
 	    if (!l->data) continue; \
-	    if (l->data == data) \
+	    if ((ocomp)?(compfunc):(memcmp(l->data, data, sizeof(dtype)) == 0)) \
 	    { \
 		found = TRUE; \
 		break; \
@@ -171,15 +171,15 @@ typedef void (*freeFunc) (void *ptr);
 	return NULL; \
     }
 
-CCSLIST (Plugin, CCSPlugin)
-CCSLIST (Setting, CCSSetting)
-CCSLIST (String, char)
-CCSLIST (Group, CCSGroup)
-CCSLIST (SubGroup, CCSSubGroup)
-CCSLIST (SettingValue, CCSSettingValue)
-CCSLIST (PluginConflict, CCSPluginConflict)
-CCSLIST (BackendInfo, CCSBackendInfo)
-CCSLIST (IntDesc, CCSIntDesc)
+CCSLIST (Plugin, CCSPlugin, FALSE, 0)
+CCSLIST (Setting, CCSSetting, FALSE, 0)
+CCSLIST (String, char, TRUE, strcmp (data, l->data) == 0)
+CCSLIST (Group, CCSGroup, FALSE, 0)
+CCSLIST (SubGroup, CCSSubGroup, FALSE, 0)
+CCSLIST (SettingValue, CCSSettingValue, FALSE, 0)
+CCSLIST (PluginConflict, CCSPluginConflict, FALSE, 0)
+CCSLIST (BackendInfo, CCSBackendInfo, FALSE, 0)
+CCSLIST (IntDesc, CCSIntDesc, FALSE, 0)
 
 CCSSettingValueList ccsGetValueListFromStringList (CCSStringList list,
 						   CCSSetting *parent)
