@@ -34,6 +34,7 @@
 #include <ccs.h>
 
 static int displayPrivateIndex;
+static CompMetadata ccpMetadata;
 
 typedef struct _CCPDisplay
 {
@@ -899,9 +900,18 @@ ccpFiniObject (CompPlugin *p,
 static Bool
 ccpInit (CompPlugin *p)
 {
+    if (!compInitPluginMetadataFromInfo (&ccpMetadata, p->vTable->name,
+					 0, 0, 0, 0))
+	return FALSE;
+
     displayPrivateIndex = allocateDisplayPrivateIndex ();
     if (displayPrivateIndex < 0)
+    {
+	compFiniMetadata (&ccpMetadata);
 	return FALSE;
+    }
+
+    compAddMetadataFromFile (&ccpMetadata, p->vTable->name);
 
     return TRUE;
 }
@@ -909,13 +919,19 @@ ccpInit (CompPlugin *p)
 static void
 ccpFini (CompPlugin *p)
 {
-    if (displayPrivateIndex >= 0)
-	freeDisplayPrivateIndex (displayPrivateIndex);
+    freeDisplayPrivateIndex (displayPrivateIndex);
+    compFiniMetadata (&ccpMetadata);
+}
+
+static CompMetadata*
+ccpGetMetadata (CompPlugin *plugin)
+{
+    return &ccpMetadata;
 }
 
 CompPluginVTable ccpVTable = {
     "ccp",
-    0,
+    ccpGetMetadata,
     ccpInit,
     ccpFini,
     ccpInitObject,
