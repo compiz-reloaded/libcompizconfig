@@ -39,7 +39,7 @@
 #include <locale.h>
 #include <unistd.h>
 
-#include <compiz.h>
+#include <compiz-core.h>
 #include <ccs.h>
 #include "ccs-private.h"
 

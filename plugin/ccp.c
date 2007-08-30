@@ -29,7 +29,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-#include <compiz.h>
+#include <compiz-core.h>
 
 #include <ccs.h>
 
@@ -60,13 +60,13 @@ typedef struct _CCPScreen
 CCPScreen;
 
 #define GET_CCP_DISPLAY(d)				      \
-    ((CCPDisplay *) (d)->privates[displayPrivateIndex].ptr)
+    ((CCPDisplay *) (d)->object.privates[displayPrivateIndex].ptr)
 
 #define CCP_DISPLAY(d)		     \
     CCPDisplay *cd = GET_CCP_DISPLAY (d)
 
 #define GET_CCP_SCREEN(s, cd)				         \
-    ((CCPScreen *) (s)->privates[(cd)->screenPrivateIndex].ptr)
+    ((CCPScreen *) (s)->object.privates[(cd)->screenPrivateIndex].ptr)
 
 #define CCP_SCREEN(s)						           \
     CCPScreen *cs = GET_CCP_SCREEN (s, GET_CCP_DISPLAY (s->display))
@@ -462,16 +462,10 @@ ccpSetOptionFromContext (CompDisplay *d,
 	    return;
     }
 
-    if (s)
-    {
-	if (p->vTable->getScreenOptions)
-	    option = (*p->vTable->getScreenOptions) (p, s, &nOption);
-    }
-    else
-    {
-	if (p->vTable->getDisplayOptions)
-	    option = (*p->vTable->getDisplayOptions) (p, d, &nOption);
-    }
+    if (p->vTable->getObjectOptions)
+	option = (*p->vTable->getObjectOptions) (p,
+						 s ? &s->object : &d->object,
+						 &nOption);
 
     if (!option)
 	return;
@@ -547,16 +541,10 @@ ccpSetContextFromOption (CompDisplay *d,
 	    return;
     }
 
-    if (s)
-    {
-	if (p->vTable->getScreenOptions)
-	    option = (*p->vTable->getScreenOptions) (p, s, &nOption);
-    }
-    else
-    {
-	if (p->vTable->getDisplayOptions)
-	    option = (*p->vTable->getDisplayOptions) (p, d, &nOption);
-    }
+    if (p->vTable->getObjectOptions)
+	option = (*p->vTable->getObjectOptions) (p,
+						 s ? &s->object : &d->object,
+						 &nOption);
 
     if (!option)
 	return;
@@ -638,13 +626,13 @@ ccpInitPluginForDisplay (CompPlugin  *p,
     status = (*d->initPluginForDisplay) (p, d);
     WRAP (cd, d, initPluginForDisplay, ccpInitPluginForDisplay);
 
-    if (status && p->vTable->getDisplayOptions)
+    if (status && p->vTable->getObjectOptions)
     {
 	CompOption *option;
 	int	   nOption;
 	int        i;
 
-	option = (*p->vTable->getDisplayOptions) (p, d, &nOption);
+	option = (*p->vTable->getObjectOptions) (p, &d->object, &nOption);
 
 	for (i = 0; i < nOption; i++)
 	    ccpSetOptionFromContext (d, p->vTable->name,
@@ -666,13 +654,13 @@ ccpInitPluginForScreen (CompPlugin *p,
     status = (*s->initPluginForScreen) (p, s);
     WRAP (cs, s, initPluginForScreen, ccpInitPluginForScreen);
 
-    if (status && p->vTable->getScreenOptions)
+    if (status && p->vTable->getObjectOptions)
     {
 	CompOption *option;
 	int	   nOption;
 	int i;
 
-	option = (*p->vTable->getScreenOptions) (p, s, &nOption);
+	option = (*p->vTable->getObjectOptions) (p, &s->object, &nOption);
 
 	for (i = 0; i < nOption; i++)
 	    ccpSetOptionFromContext (s->display, p->vTable->name,
@@ -696,10 +684,10 @@ ccpReload (void *closure)
 
     for (p = getPlugins (); p; p = p->next)
     {
-	if (!p->vTable->getDisplayOptions)
+	if (!p->vTable->getObjectOptions)
 	    continue;
 
-	option = (*p->vTable->getDisplayOptions) (p, d, &nOption);
+	option = (*p->vTable->getObjectOptions) (p, &d->object, &nOption);
 	while (nOption--)
 	{
 	    ccpSetOptionFromContext (d, p->vTable->name,
@@ -712,10 +700,10 @@ ccpReload (void *closure)
     {
 	for (p = getPlugins (); p; p = p->next)
 	{
-	    if (!p->vTable->getScreenOptions)
+	    if (!p->vTable->getObjectOptions)
 		continue;
 
-	    option = (*p->vTable->getScreenOptions) (p, s, &nOption);
+	    option = (*p->vTable->getObjectOptions) (p, &s->object, &nOption);
 	    while (nOption--)
 	    {
 		ccpSetOptionFromContext (d, p->vTable->name,
@@ -776,8 +764,10 @@ ccpInitDisplay (CompPlugin  *p,
     int i;
     unsigned int *screens;
 
-    cd = malloc (sizeof (CCPDisplay));
+    if (!checkPluginABI ("core", CORE_ABIVERSION))
+	return FALSE;
 
+    cd = malloc (sizeof (CCPDisplay));
     if (!cd)
 	return FALSE;
 
@@ -791,7 +781,7 @@ ccpInitDisplay (CompPlugin  *p,
     WRAP (cd, d, initPluginForDisplay, ccpInitPluginForDisplay);
     WRAP (cd, d, setDisplayOptionForPlugin, ccpSetDisplayOptionForPlugin);
 
-    d->privates[displayPrivateIndex].ptr = cd;
+    d->object.privates[displayPrivateIndex].ptr = cd;
 
     for (s = d->screens, i = 0; s; s = s->next, i++);
     screens = calloc (i, sizeof (unsigned int));
@@ -864,7 +854,7 @@ ccpInitScreen (CompPlugin *p,
     WRAP (cs, s, initPluginForScreen, ccpInitPluginForScreen);
     WRAP (cs, s, setScreenOptionForPlugin, ccpSetScreenOptionForPlugin);
 
-    s->privates[cd->screenPrivateIndex].ptr = cs;
+    s->object.privates[cd->screenPrivateIndex].ptr = cs;
 
     return TRUE;
 }
@@ -880,6 +870,31 @@ ccpFiniScreen (CompPlugin *p,
 
     free (cs);
 }
+
+static CompBool
+ccpInitObject (CompPlugin *p,
+	       CompObject *o)
+{
+    static InitPluginObjectProc dispTab[] = {
+	(InitPluginObjectProc) ccpInitDisplay,
+	(InitPluginObjectProc) ccpInitScreen
+    };
+
+    RETURN_DISPATCH (o, dispTab, ARRAY_SIZE (dispTab), TRUE, (p, o));
+}
+
+static void
+ccpFiniObject (CompPlugin *p,
+	       CompObject *o)
+{
+    static FiniPluginObjectProc dispTab[] = {
+	(FiniPluginObjectProc) ccpFiniDisplay,
+	(FiniPluginObjectProc) ccpFiniScreen
+    };
+
+    DISPATCH (o, dispTab, ARRAY_SIZE (dispTab), (p, o));
+}
+
 
 static Bool
 ccpInit (CompPlugin *p)
@@ -898,34 +913,19 @@ ccpFini (CompPlugin *p)
 	freeDisplayPrivateIndex (displayPrivateIndex);
 }
 
-static int
-ccpGetVersion (CompPlugin *plugin,
-	       int	    version)
-{
-    return ABIVERSION;
-}
-
 CompPluginVTable ccpVTable = {
-
     "ccp",
-    ccpGetVersion,
     0,
     ccpInit,
     ccpFini,
-    ccpInitDisplay,
-    ccpFiniDisplay,
-    ccpInitScreen,
-    ccpFiniScreen,
-    0, /* InitWindow */
-    0, /* FiniWindow */
-    0, /* GetDisplayOptions */
-    0, /* SetDisplayOption */
-    0, /* GetScreenOptions */
-    0, /* SetScreenOption */
+    ccpInitObject,
+    ccpFiniObject,
+    0,
+    0
 };
 
 CompPluginVTable *
-getCompPluginInfo (void)
+getCompPluginInfo20070830 (void)
 {
     return &ccpVTable;
 }
