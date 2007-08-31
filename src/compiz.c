@@ -298,7 +298,10 @@ getNodesFromPath (xmlDoc * doc, xmlNode * base, char *path, int *num)
 	char *bPath = getGenericNodePath (base);
 
 	if (!bPath)
+	{
+	    free (rv);
 	    return NULL;
+	}
 
 	asprintf (&gPath, "%s/%s", bPath, path);
 	if (gPath)
