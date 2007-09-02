@@ -288,6 +288,19 @@ ccsIniGetBell (IniDictionary *dictionary,
     return ccsIniGetBool (dictionary, section, entry, value);
 }
 
+static Bool
+isEmptyString (char *value)
+{
+    int i = 0;
+
+    for (i = 0; i < strlen(value); i++)
+    {
+	if (!isblank(value[i]))
+	    return FALSE;
+    }
+    return TRUE;
+}
+
 Bool
 ccsIniGetList (IniDictionary       *dictionary,
    	       const char          *section,
@@ -303,6 +316,12 @@ ccsIniGetList (IniDictionary       *dictionary,
     valString = getIniString (dictionary, section, entry);
     if (!valString)
 	return FALSE;
+
+    if (strlen(valString) == 0 || isEmptyString(valString))
+    {
+	*value = NULL;
+	return TRUE;
+    }
 
     valueString = strdup (valString);
     valueStart = valueString;
