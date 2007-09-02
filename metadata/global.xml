@@ -384,6 +384,7 @@
 	<!-- wobbly metadata -->
 	<plugin name="wobbly">
 		<category>Effects</category>
+		<feature>edgeresistance</feature>
 	</plugin>
 	<!-- zoom metadata -->
 	<plugin name="zoom">
