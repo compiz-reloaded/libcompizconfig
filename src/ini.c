@@ -291,11 +291,12 @@ ccsIniGetBell (IniDictionary *dictionary,
 static Bool
 isEmptyString (char *value)
 {
-    int i = 0;
+    int len, i = 0;
 
-    for (i = 0; i < strlen(value); i++)
+    len = strlen (value);
+    for (i = 0; i < len; i++)
     {
-	if (!isblank(value[i]))
+	if (!isblank (value[i]))
 	    return FALSE;
     }
     return TRUE;
@@ -317,7 +318,7 @@ ccsIniGetList (IniDictionary       *dictionary,
     if (!valString)
 	return FALSE;
 
-    if (strlen(valString) == 0 || isEmptyString(valString))
+    if (isEmptyString (valString))
     {
 	*value = NULL;
 	return TRUE;
