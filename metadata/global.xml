@@ -222,9 +222,13 @@
 					<short>Rotate cube</short>
 					<option name="initiate_button" type="button"/>
 					<option name="rotate_left_key" type="key"/>
+					<option name="rotate_left_button" type="button"/>
 					<option name="rotate_right_key" type="key"/>
+					<option name="rotate_right_button" type="button"/>
 					<option name="rotate_left_window_key" type="key"/>
+					<option name="rotate_left_window_button" type="button"/>
 					<option name="rotate_right_window_key" type="key"/>
+					<option name="rotate_right_window_button" type="button"/>
 					<option name="rotate_to_key" type="key"/>
 					<option name="rotate_window_key" type="key"/>
 					<option name="rotate_flip_left_edge" type="edge"/>
@@ -270,12 +274,16 @@
 			<group>
 				<short>Bindings</short>
 				<option name="initiate_edge" type="edge"/>
+				<option name="initiate_button" type="button"/>
 				<option name="initiate_key" type="key"/>
 				<option name="initiate_all_edge" type="edge"/>
+				<option name="initiate_all_button" type="button"/>
 				<option name="initiate_all_key" type="key"/>
 				<option name="initiate_group_edge" type="edge"/>
+				<option name="initiate_group_button" type="button"/>
 				<option name="initiate_group_key" type="key"/>
 				<option name="initiate_output_edge" type="edge"/>
+				<option name="initiate_output_button" type="button"/>
 				<option name="initiate_output_key" type="key"/>
 			</group>
 		</display>
