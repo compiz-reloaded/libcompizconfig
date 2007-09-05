@@ -1454,12 +1454,17 @@ CCSStringList
 ccsGetSortedPluginStringList (CCSContext * context)
 {
     CCSPluginList ap = ccsGetActivePluginList (context);
-    CCSPluginList list = ap;
+    CCSPluginList list;
     CCSPlugin *p = NULL;
-    CCSStringList rv = NULL;
+    CCSStringList rv = ccsStringListAppend (NULL, strdup ("core"));
     PluginSortHelper *ph = NULL;
 
+    p = findPluginInList (ap, "core");
+    if (p)
+	ap = ccsPluginListRemove (ap, p, FALSE);
+
     int len = ccsPluginListLength (ap);
+    
     int i, j;
     /* TODO: conflict handling */
 
@@ -1467,7 +1472,7 @@ ccsGetSortedPluginStringList (CCSContext * context)
     if (!plugins)
 	return NULL;
 
-    for (i = 0; i < len; i++, list = list->next)
+    for (i = 0, list = ap; i < len; i++, list = list->next)
     {
 	plugins[i].plugin = list->data;
 	plugins[i].after = NULL;
