@@ -296,7 +296,7 @@ ccsStringToKeyBinding (const char         *binding,
     KeySym	  keysym;
 
     if (!binding || !strlen(binding) ||
-	strncmp (binding, "Disabled", strlen ("Disabled")) == 0)
+	strncasecmp (binding, "Disabled", strlen ("Disabled")) == 0)
     {
 	value->keysym     = 0;
 	value->keyModMask = 0;
