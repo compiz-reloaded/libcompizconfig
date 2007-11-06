@@ -2399,7 +2399,7 @@ ccsGetExistingBackends ()
 }
 
 Bool
-ccsExportToFile (CCSContext * context, const char * fileName)
+ccsExportToFile (CCSContext * context, const char * fileName, Bool skipDefaults)
 {
     IniDictionary *exportFile;
     CCSPluginList p;
@@ -2423,6 +2423,9 @@ ccsExportToFile (CCSContext * context, const char * fileName)
 	for (s = pPrivate->settings; s; s = s->next)
 	{
 	    setting = s->data;
+
+	    if (skipDefaults && setting->isDefault)
+		continue;
 
 	    if (setting->isScreen)
 		asprintf (&keyName, "s%d_%s", 
