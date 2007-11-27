@@ -645,8 +645,10 @@ ccsIniSetList (IniDictionary       *dictionary,
 	       CCSSettingType      listType)
 {
 #define STRINGBUFSIZE 2048
+
     /* FIXME: We should allocate that dynamically */
     char stringBuffer[STRINGBUFSIZE];
+    int  maxLen = STRINGBUFSIZE - 1;
 
     memset (stringBuffer, 0, sizeof (stringBuffer));
 
@@ -655,10 +657,10 @@ ccsIniSetList (IniDictionary       *dictionary,
 	switch (listType)
 	{
 	case TypeString:
-	    strncat (stringBuffer, value->data->value.asString, STRINGBUFSIZE-strlen(stringBuffer)-1);
+	    strncat (stringBuffer, value->data->value.asString, maxLen);
 	    break;
 	case TypeMatch:
-	    strncat (stringBuffer, value->data->value.asMatch, STRINGBUFSIZE-strlen(stringBuffer)-1);
+	    strncat (stringBuffer, value->data->value.asMatch, maxLen);
 	    break;
 	case TypeInt:
 	    {
@@ -667,14 +669,13 @@ ccsIniSetList (IniDictionary       *dictionary,
 		if (!valueString)
 		    break;
 
-		strncat (stringBuffer, valueString, STRINGBUFSIZE-strlen(stringBuffer)-1);
+		strncat (stringBuffer, valueString, maxLen);
 		free (valueString);
 	    }
 	    break;
 	case TypeBool:
 	    strncat (stringBuffer,
-		     (value->data->value.asBool) ? "true" : "false",
-		     STRINGBUFSIZE-strlen(stringBuffer)-1);
+		     (value->data->value.asBool) ? "true" : "false", maxLen);
 	    break;
 	case TypeFloat:
 	    {
@@ -683,7 +684,7 @@ ccsIniSetList (IniDictionary       *dictionary,
 		if (!valueString)
 		    break;
 
-		strncat (stringBuffer, valueString, STRINGBUFSIZE-strlen(stringBuffer)-1);
+		strncat (stringBuffer, valueString, maxLen);
 		free (valueString);
 	    }
 	    break;
@@ -694,7 +695,7 @@ ccsIniSetList (IniDictionary       *dictionary,
 		if (!color)
 		    break;
 
-		strncat (stringBuffer, color, STRINGBUFSIZE-strlen(stringBuffer)-1);
+		strncat (stringBuffer, color, maxLen);
 		free (color);
 	    }
 	    break;
@@ -705,7 +706,7 @@ ccsIniSetList (IniDictionary       *dictionary,
 		if (!str)
 		    break;
 
-		strncat (stringBuffer, str, STRINGBUFSIZE-strlen(stringBuffer)-1);
+		strncat (stringBuffer, str, maxLen);
 		free (str);
 	    }
 	case TypeButton:
@@ -715,7 +716,7 @@ ccsIniSetList (IniDictionary       *dictionary,
 		if (!str)
 		    break;
 
-		strncat (stringBuffer, str, STRINGBUFSIZE-strlen(stringBuffer)-1);
+		strncat (stringBuffer, str, maxLen);
 		free (str);
 	    }
 	case TypeEdge:
@@ -725,21 +726,26 @@ ccsIniSetList (IniDictionary       *dictionary,
 		if (!str)
 		    break;
 
-		strncat (stringBuffer, str, STRINGBUFSIZE-strlen(stringBuffer)-1);
+		strncat (stringBuffer, str, maxLen);
 		free (str);
 	    }
 	case TypeBell:
 	    {
 		strncat (stringBuffer,
-		     (value->data->value.asBell) ? "true" : "false",
-		     STRINGBUFSIZE-strlen(stringBuffer)-1);
+		     (value->data->value.asBell) ? "true" : "false", maxLen);
 	    }
 	default:
 	    break;
 	}
 
+	/* as we filled our buffer, we have less space in it now; so
+	   calculate the amount of space for the next run */
+	maxLen = STRINGBUFSIZE - strlen (stringBuffer) - 1;
 	if (value->next)
-	    strncat (stringBuffer, ";", STRINGBUFSIZE-strlen(stringBuffer)-1);
+	    strncat (stringBuffer, ";", maxLen--);
+
+	if (maxLen <= 0)
+	    break;
 
 	value = value->next;
     }
