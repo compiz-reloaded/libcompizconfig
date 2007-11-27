@@ -655,10 +655,10 @@ ccsIniSetList (IniDictionary       *dictionary,
 	switch (listType)
 	{
 	case TypeString:
-	    strncat (stringBuffer, value->data->value.asString, STRINGBUFSIZE);
+	    strncat (stringBuffer, value->data->value.asString, STRINGBUFSIZE-strlen(stringBuffer)-1);
 	    break;
 	case TypeMatch:
-	    strncat (stringBuffer, value->data->value.asMatch, STRINGBUFSIZE);
+	    strncat (stringBuffer, value->data->value.asMatch, STRINGBUFSIZE-strlen(stringBuffer)-1);
 	    break;
 	case TypeInt:
 	    {
@@ -667,14 +667,14 @@ ccsIniSetList (IniDictionary       *dictionary,
 		if (!valueString)
 		    break;
 
-		strncat (stringBuffer, valueString, STRINGBUFSIZE);
+		strncat (stringBuffer, valueString, STRINGBUFSIZE-strlen(stringBuffer)-1);
 		free (valueString);
 	    }
 	    break;
 	case TypeBool:
 	    strncat (stringBuffer,
 		     (value->data->value.asBool) ? "true" : "false",
-		     STRINGBUFSIZE);
+		     STRINGBUFSIZE-strlen(stringBuffer)-1);
 	    break;
 	case TypeFloat:
 	    {
@@ -683,7 +683,7 @@ ccsIniSetList (IniDictionary       *dictionary,
 		if (!valueString)
 		    break;
 
-		strncat (stringBuffer, valueString, STRINGBUFSIZE);
+		strncat (stringBuffer, valueString, STRINGBUFSIZE-strlen(stringBuffer)-1);
 		free (valueString);
 	    }
 	    break;
@@ -694,7 +694,7 @@ ccsIniSetList (IniDictionary       *dictionary,
 		if (!color)
 		    break;
 
-		strncat (stringBuffer, color, STRINGBUFSIZE);
+		strncat (stringBuffer, color, STRINGBUFSIZE-strlen(stringBuffer)-1);
 		free (color);
 	    }
 	    break;
@@ -705,7 +705,7 @@ ccsIniSetList (IniDictionary       *dictionary,
 		if (!str)
 		    break;
 
-		strncat (stringBuffer, str, STRINGBUFSIZE);
+		strncat (stringBuffer, str, STRINGBUFSIZE-strlen(stringBuffer)-1);
 		free (str);
 	    }
 	case TypeButton:
@@ -715,7 +715,7 @@ ccsIniSetList (IniDictionary       *dictionary,
 		if (!str)
 		    break;
 
-		strncat (stringBuffer, str, STRINGBUFSIZE);
+		strncat (stringBuffer, str, STRINGBUFSIZE-strlen(stringBuffer)-1);
 		free (str);
 	    }
 	case TypeEdge:
@@ -725,21 +725,21 @@ ccsIniSetList (IniDictionary       *dictionary,
 		if (!str)
 		    break;
 
-		strncat (stringBuffer, str, STRINGBUFSIZE);
+		strncat (stringBuffer, str, STRINGBUFSIZE-strlen(stringBuffer)-1);
 		free (str);
 	    }
 	case TypeBell:
 	    {
 		strncat (stringBuffer,
 		     (value->data->value.asBell) ? "true" : "false",
-		     STRINGBUFSIZE);
+		     STRINGBUFSIZE-strlen(stringBuffer)-1);
 	    }
 	default:
 	    break;
 	}
 
 	if (value->next)
-	    strncat (stringBuffer, ";", STRINGBUFSIZE);
+	    strncat (stringBuffer, ";", STRINGBUFSIZE-strlen(stringBuffer)-1);
 
 	value = value->next;
     }
