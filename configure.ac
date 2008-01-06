@@ -2,8 +2,6 @@ AC_PREREQ(2.57)
 
 AC_INIT([libcompizconfig],esyscmd(. ./VERSION;echo -n $VERSION), [dev@opencompositing.org])
 
-AC_DEFINE_UNQUOTED(VERSION,"$VERSION",[Version])
-
 #AC_CONFIG_AUX_DIR(config)
 
 AM_INIT_AUTOMAKE([1.9 dist-bzip2])
