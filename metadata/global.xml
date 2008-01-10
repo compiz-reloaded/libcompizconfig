@@ -38,16 +38,23 @@
 			<group>
 				<short>Key bindings</short>
 				<option name="close_window_key" type="key"/>
+				<option name="close_window_button" type="button"/>
 				<option name="main_menu_key" type="key"/>
 				<option name="run_key" type="key"/>
+				<option name="raise_window_key" type="key"/>
+				<option name="raise_window_button" type="button"/>
+				<option name="lower_window_key" type="key"/>
+				<option name="lower_window_button" type="button"/>
 				<option name="unmaximize_window_key" type="key"/>
 				<option name="minimize_window_key" type="key"/>
+				<option name="minimize_window_button" type="button"/>
 				<option name="maximize_window_key" type="key"/>
 				<option name="maximize_window_horizontally_key" type="key"/>
 				<option name="maximize_window_vertically_key" type="key"/>
 				<option name="window_menu_key" type="key"/>
 				<option name="show_desktop_key" type="key"/>
 				<option name="toggle_window_maximized_key" type="key"/>
+				<option name="toggle_window_maximized_button" type="button"/>
 				<option name="toggle_window_maximized_horizontally_key" type="key"/>
 				<option name="toggle_window_maximized_vertically_key" type="key"/>
 				<option name="toggle_window_shaded_key" type="key"/>
@@ -165,7 +172,9 @@
 				<subgroup>
 					<short>Cube Caps</short>
 					<option name="scale_image" type="bool"/>
-					<option name="images" type="list"/>
+					<option name="images" type="list">
+						<hints>file;image;</hints>
+					</option>
 					<option name="adjust_image" type="bool"/>
 				</subgroup>
 				<subgroup>
