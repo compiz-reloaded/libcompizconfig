@@ -507,7 +507,8 @@ void ccsResetToDefault (CCSSetting * setting);
 
 /* File import / export */
 Bool ccsExportToFile (CCSContext *context,
-		      const char *fileName);
+		      const char *fileName,
+		      Bool skipDefaults);
 Bool ccsImportFromFile (CCSContext *context,
 			const char *fileName,
 			Bool       overwrite);
