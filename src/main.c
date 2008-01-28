@@ -553,9 +553,11 @@ openBackend (char *backend)
 	err = dlerror ();
     }
 
-    if (err || !dlhand)
+    if (!dlhand)
     {
-	free (dlname);
+        if (dlname) {
+	        free (dlname);
+        }
 	asprintf (&dlname, "%s/compizconfig/backends/lib%s.so", 
 		  LIBDIR, backend);
 	dlhand = dlopen (dlname, RTLD_NOW | RTLD_NODELETE | RTLD_GLOBAL);
@@ -564,10 +566,9 @@ openBackend (char *backend)
 
     free (dlname);
 
-    if (err || !dlhand)
+    if (err)
     {
 	fprintf (stderr, "libccs: dlopen: %s\n", err);
-	return NULL;
     }
 
     return dlhand;
@@ -1174,6 +1175,7 @@ ccsCopyList (CCSSettingValueList l1, CCSSetting * setting)
 		    sizeof (CCSSettingColorValue));
 	    break;
 	default:
+	  /* FIXME If l2 != NULL, we leak l2 */
 	    free (value);
 	    return FALSE;
 	    break;
