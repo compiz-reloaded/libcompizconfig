@@ -2500,6 +2500,13 @@ ccsImportFromFile (CCSContext * context, const char * fileName, Bool overwrite)
     CCSPlugin *plugin;
     CCSSetting *setting;
     char *keyName;
+    FILE *fp;
+
+    /* check if the file exists first */
+    fp = fopen (fileName, "r");
+    if (!fp)
+	return FALSE;
+    fclose (fp);
 
     importFile = iniparser_new ((char *) fileName);
     if (!importFile)
