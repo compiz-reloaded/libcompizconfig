@@ -2401,7 +2401,9 @@ ccsGetExistingBackends ()
 }
 
 Bool
-ccsExportToFile (CCSContext * context, const char * fileName, Bool skipDefaults)
+ccsExportToFile (CCSContext *context,
+		 const char *fileName,
+		 Bool       skipDefaults)
 {
     IniDictionary *exportFile;
     CCSPluginList p;
@@ -2492,7 +2494,9 @@ ccsExportToFile (CCSContext * context, const char * fileName, Bool skipDefaults)
 }
 
 Bool
-ccsImportFromFile (CCSContext * context, const char * fileName, Bool overwrite)
+ccsImportFromFile (CCSContext *context,
+		   const char *fileName,
+		   Bool       overwriteNonDefault)
 {
     IniDictionary *importFile;
     CCSPluginList p;
@@ -2523,7 +2527,7 @@ ccsImportFromFile (CCSContext * context, const char * fileName, Bool overwrite)
 	for (s = pPrivate->settings; s; s = s->next)
 	{
 	    setting = s->data;
-	    if (!setting->isDefault && !overwrite)
+	    if (!setting->isDefault && !overwriteNonDefault)
 		continue;
 
 	    if (setting->isScreen)

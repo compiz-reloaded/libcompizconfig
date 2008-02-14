@@ -633,12 +633,12 @@ Bool ccsExportToFile (CCSContext *context,
 		      const char *fileName,
 		      Bool skipDefaults);
 
-/* Imports a profile from a file. If overwrite is TRUE, also overwrites
-   settings that were non-default before. Returns TRUE on success, FALSE
-   otherwise. */
+/* Imports a profile from a file. If overwriteNonDefault is TRUE, also
+   overwrites settings that were non-default before. Returns TRUE on success,
+   FALSE otherwise. */
 Bool ccsImportFromFile (CCSContext *context,
 			const char *fileName,
-			Bool       overwrite);
+			Bool       overwriteNonDefault);
 
 /* File watch stuff */
 
