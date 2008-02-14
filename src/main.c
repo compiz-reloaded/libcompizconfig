@@ -2633,8 +2633,6 @@ ccsImportFromFile (CCSContext * context, const char * fileName, Bool overwrite)
 	}
     }
 
-    ccsWriteSettings (context);
-
     ccsIniClose (importFile);
 
     return TRUE;
