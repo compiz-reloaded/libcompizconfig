@@ -2447,6 +2447,10 @@ ccsExportToFile (CCSContext *context,
 		ccsIniSetInt (exportFile, plugin->name, keyName,
 			      setting->value->value.asInt);
 		break;
+	    case TypeFloat:
+		ccsIniSetFloat (exportFile, plugin->name, keyName,
+				setting->value->value.asFloat);
+		break;
 	    case TypeString:
 		ccsIniSetString (exportFile, plugin->name, keyName,
 				 setting->value->value.asString);
