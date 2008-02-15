@@ -2223,9 +2223,11 @@ ccsCanDisablePlugin (CCSContext * context, CCSPlugin * plugin)
 		}
 		pluginList = pluginList->next;
 	    }
-	    if (conflict)
-		list = ccsPluginConflictListAppend (list, conflict);
+	    
 	}
+	if (conflict)
+	    list = ccsPluginConflictListAppend (list, conflict);
+	conflict = NULL;
 	sl = sl->next;
     }
 
