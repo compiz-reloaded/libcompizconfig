@@ -1230,7 +1230,8 @@ addCoreSettingsFromXMLNode (CCSContext * context, xmlNode * node, char *file)
 	plugin->shortDesc = strdup ("General Options");
 	plugin->longDesc  = strdup ("General Compiz Options");
     }
-
+    
+    initRulesFromRootNode (plugin, node);
     D (D_FULL, "Adding core settings (%s)\n", plugin->shortDesc);
     context->plugins = ccsPluginListAppend (context->plugins, plugin);
 }
