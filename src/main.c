@@ -2201,7 +2201,7 @@ ccsCanDisablePlugin (CCSContext * context, CCSPlugin * plugin)
 	    if (!ccsPluginIsActive (context, pl->data->name))
 		continue;
 
-	    pluginList = pl->data->requiresPlugin;
+	    pluginList = pl->data->requiresFeature;
 
 	    while (pluginList)
 	    {
@@ -2214,7 +2214,7 @@ ccsCanDisablePlugin (CCSContext * context, CCSPlugin * plugin)
 			if (conflict)
 			{
 			    conflict->value = strdup (sl->data);
-			    conflict->type = ConflictPluginNeeded;
+			    conflict->type = ConflictFeatureNeeded;
 			}
 		    }
 		    if (conflict)
