@@ -2562,6 +2562,15 @@ ccsImportFromFile (CCSContext *context,
 			ccsSetInt (setting, value);
 		}
 		break;
+	    case TypeFloat:
+		{
+		    float value;
+
+		    if (ccsIniGetFloat (importFile, plugin->name,
+					keyName, &value))
+			ccsSetFloat (setting, value);
+		}
+		break;
 	    case TypeString:
 		{
 		    char *value;
