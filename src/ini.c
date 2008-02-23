@@ -312,7 +312,7 @@ ccsIniGetList (IniDictionary       *dictionary,
     CCSSettingValueList list = NULL;
     char                *valueString, *valueStart, *valString;
     char                *token;
-    int                 nItems = 1, i = 0;
+    int                 nItems = 1, i = 0, len;
 
     valString = getIniString (dictionary, section, entry);
     if (!valString)
@@ -326,6 +326,12 @@ ccsIniGetList (IniDictionary       *dictionary,
 
     valueString = strdup (valString);
     valueStart = valueString;
+
+    /* remove trailing semicolon that we added to be able to differentiate
+       between an empty list and a list with one empty item */
+    len = strlen (valueString);
+    if (valueString[len - 1] == ';')
+	valueString[len - 1] = 0;
 
     token = strchr (valueString, ';');
     while (token)
@@ -741,8 +747,7 @@ ccsIniSetList (IniDictionary       *dictionary,
 	/* as we filled our buffer, we have less space in it now; so
 	   calculate the amount of space for the next run */
 	maxLen = STRINGBUFSIZE - strlen (stringBuffer) - 1;
-	if (value->next)
-	    strncat (stringBuffer, ";", maxLen--);
+	strncat (stringBuffer, ";", maxLen--);
 
 	if (maxLen <= 0)
 	    break;
