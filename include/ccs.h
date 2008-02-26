@@ -44,6 +44,43 @@
 #define FALSE 0
 #endif
 
+/**
+ * list functions:
+ * for each list there is a set of functions, explained using String as example
+ *
+ * ccsStringListAppend (list, item)
+ * Adds an item at the end of the list. Returns the new list.
+ *
+ * ccsStringListPrepend (list, item)
+ * Adds an item at the beginning of the list. Returns the new list.
+ *
+ * ccsStringListInsert (list, item, position)
+ * Adds an item at a given position. Position is 0-based. If position is
+ * larger than the amount of items in the list, the item is inserted at the
+ * end of the list. Returns the new list.
+ *
+ * ccsStringListInsertBefore (list, sibling, item)
+ * Inserts item before sibling into the list. If sibling is no list member,
+ * item is inserted at the end. Returns the new list.
+ *
+ * ccsStringListLength (list)
+ * Returns the amount of items in list.
+ *
+ * ccsStringListFind (list, item)
+ * Finds and returns an item matching <item>. If nothing is found, returns NULL.
+ *
+ * ccsStringListGetItem (list, index)
+ * Returns the list item at position <index>. If index is larger than the
+ * amount of items in the list, returns NULL.
+ *
+ * ccsStringListRemove (list, item, freeObj)
+ * Removes item from the list. If freeObj is TRUE, also frees the data item.
+ * Returns the new list.
+ *
+ * ccsStringListFree (list, freeObj)
+ * Frees the complete list. If freeObj is TRUE, also frees the data items.
+ * Returns the new list (NULL).
+ */
 #define CCSLIST_HDR(type,dtype)		\
     typedef struct _CCS##type##List *	CCS##type##List;\
     struct _CCS##type##List	\
@@ -84,46 +121,59 @@ CCSLIST_HDR (IntDesc, CCSIntDesc)
 
 struct _CCSContext
 {
-    CCSPluginList     plugins;
-    CCSPluginCategory *categories;
-    void              *privatePtr;
-    void              *ccsPrivate;
+    CCSPluginList     plugins;         /* list of plugins settings
+					  were loaded for */
+    CCSPluginCategory *categories;     /* list of plugin categories */
+    void              *privatePtr;     /* private pointer that can be used
+					  by the caller */
+    void              *ccsPrivate;     /* private pointer for compizconfig
+					  internal usage */
 
-    CCSSettingList    changedSettings;
+    CCSSettingList    changedSettings; /* list of settings changed since last
+					  settings write */
 
-    unsigned int      *screens;
-    unsigned int      numScreens;
+    unsigned int      *screens;        /* numbers of the available screens */
+    unsigned int      numScreens;      /* number of screens */
 };
 
 struct _CCSBackendInfo
 {
-    char *name;
-    char *shortDesc;
-    char *longDesc;
-    Bool integrationSupport;
-    Bool profileSupport;
+    char *name;              /* name of the backend */
+    char *shortDesc;         /* backend's short description */
+    char *longDesc;          /* backend's long description */
+    Bool integrationSupport; /* does the backend support DE integration? */
+    Bool profileSupport;     /* does the backend support profiles? */
 };
 
 struct _CCSPlugin
 {
-    char *name;
-    char *shortDesc;		/* in current locale */
-    char *longDesc;		/* in current locale */
-    char *hints;
-    char *category;		/* simple name */
+    char *name;                    /* plugin name */
+    char *shortDesc;		   /* plugin short description */
+    char *longDesc;		   /* plugin long description */
+    char *hints;                   /* currently unused */
+    char *category;		   /* plugin category name */
 
-    CCSStringList loadAfter;
-    CCSStringList loadBefore;
-    CCSStringList requiresPlugin;
-    CCSStringList conflictPlugin;
-    CCSStringList conflictFeature;
-    CCSStringList providesFeature;
-    CCSStringList requiresFeature;
+    CCSStringList loadAfter;       /* list of plugin names this plugin needs to
+				      be loaded after */
+    CCSStringList loadBefore;      /* list of plugin names this plugin needs to
+				      be loaded before */
+    CCSStringList requiresPlugin;  /* list of plugin names this plugin
+				      requires */
+    CCSStringList conflictPlugin;  /* list of plugin names this plugin
+				      conflicts with */
+    CCSStringList conflictFeature; /* list of feature names this plugin
+				      conflicts with */
+    CCSStringList providesFeature; /* list of feature names this plugin
+				      provides */
+    CCSStringList requiresFeature; /* list of feature names this plugin
+				      requires */
 
-    void       *privatePtr;
-    CCSContext *context;
+    void       *privatePtr;        /* private pointer that can be used
+				      by the caller */
+    CCSContext *context;           /* context this plugin belongs to */
 
-    void *ccsPrivate;
+    void *ccsPrivate;              /* private pointer for compizconfig
+				      internal usage */
 };
 
 typedef enum _CCSSettingType
@@ -144,14 +194,14 @@ typedef enum _CCSSettingType
 
 struct _CCSSubGroup
 {
-    char           *name;    /* in current locale */
-    CCSSettingList settings; /* list of CCSSetting */
+    char           *name;    /* sub group name in current locale */
+    CCSSettingList settings; /* list of settings in this sub group */
 };
 
 struct _CCSGroup
 {
-    char            *name;     /* in current locale */
-    CCSSubGroupList subGroups; /* list of CCSSubGroup */
+    char            *name;     /* group name in current locale */
+    CCSSubGroupList subGroups; /* list of sub groups in this group */
 };
 
 typedef enum _CCSPluginConflictType
@@ -169,50 +219,45 @@ typedef enum _CCSPluginConflictType
 
 struct _CCSPluginConflict
 {
-    char *                value;
-    CCSPluginConflictType type;
-    CCSPluginList         plugins;
+    char *                value;   /* item (plugin / feature) name that
+				      caused the conflict */
+    CCSPluginConflictType type;    /* type of the conflict */
+    CCSPluginList         plugins; /* list of conflicting plugins */
 };
 
 union _CCSSettingInfo;
 
 struct _CCSIntDesc
 {
-    int  value;
-    char *name;
+    int  value; /* value the description is assigned to */
+    char *name; /* description */
 };
 
 typedef struct _CCSSettingIntInfo
 {
-    int            min;
-    int            max;
-    CCSIntDescList desc;
-}
-
-CCSSettingIntInfo;
+    int            min;  /* minimum value for this setting */
+    int            max;  /* maximum value */
+    CCSIntDescList desc; /* list of item descriptions */
+} CCSSettingIntInfo;
 
 typedef struct _CCSSettingFloatInfo
 {
-    float min;
-    float max;
-    float precision;
-}
-
-CCSSettingFloatInfo;
+    float min;       /* minimum value for this setting */
+    float max;       /* maximum value */
+    float precision; /* precision (allowed increment) */
+} CCSSettingFloatInfo;
 
 typedef struct _CCSSettingListInfo
 {
-    CCSSettingType        listType;
-    union _CCSSettingInfo *listInfo;
-}
-
-CCSSettingListInfo;
+    CCSSettingType        listType;  /* type of setting this list contains */
+    union _CCSSettingInfo *listInfo; /* list of settings */
+} CCSSettingListInfo;
 
 typedef union _CCSSettingInfo
 {
-    CCSSettingIntInfo         forInt;
-    CCSSettingFloatInfo       forFloat;
-    CCSSettingListInfo        forList;
+    CCSSettingIntInfo   forInt;
+    CCSSettingFloatInfo forFloat;
+    CCSSettingListInfo  forList;
 } CCSSettingInfo;
 
 typedef struct _CCSSettingColorValueColor
@@ -276,58 +321,81 @@ struct _CCSSettingValue
 
 struct _CCSSetting
 {
-    char *name;
-    char *shortDesc; /* in current locale */
-    char *longDesc;  /* in current locale */
+    char *name;             /* setting name */
+    char *shortDesc;        /* setting short description in current locale */
+    char *longDesc;         /* setting long description in current locale */
 
-    CCSSettingType type;
+    CCSSettingType type;    /* setting type */
 
-    Bool	 isScreen;  /* support the 'screen/display' thing */
-    unsigned int screenNum;
+    Bool	 isScreen;  /* is this setting a screen setting? */
+    unsigned int screenNum; /* screen number this setting is assigned to, valid
+			       if isScreen is TRUE */
 
-    CCSSettingInfo info;
+    CCSSettingInfo info;    /* information assigned to this setting,
+			       valid if the setting is an int, float
+			       or list setting */
 
-    char *group;	/* in current locale */
-    char *subGroup;	/* in current locale */
-    char *hints;	/* in current locale */
+    char *group;	    /* group name in current locale */
+    char *subGroup;	    /* sub group name in current locale */
+    char *hints;	    /* hints in current locale */
 
-    CCSSettingValue defaultValue;
-    CCSSettingValue *value; /* = &default_value if isDefault == TRUE */
-    Bool	    isDefault;
+    CCSSettingValue defaultValue; /* default value of this setting */
+    CCSSettingValue *value;       /* actual value of this setting */
+    Bool	    isDefault;    /* does the actual value match the default
+				     value? */
 
-    CCSPlugin *parent;
-    void      *privatePtr;
+    CCSPlugin *parent;            /* plugin this setting belongs to */
+    void      *privatePtr;        /* private pointer for usage by the caller */
 };
 
 struct _CCSPluginCategory
 {
-    const char *name;
-    const char *shortDesc;
-    const char *longDesc;
+    const char *name;      /* plugin category name */
+    const char *shortDesc; /* plugin category short description */
+    const char *longDesc;  /* plugin category long description */
 
-    CCSStringList plugins;
+    CCSStringList plugins; /* list of plugins in this category */
 };
 
 /* set basic metadata to TRUE and no additional
    metadata informations will be parsed */
 void ccsSetBasicMetadata (Bool value);
+
+/* Creates a new context for the screens given in screens and numScreens.
+   Set numScreens to 0 to initialize for all screens.
+   All plugin settings are automatically enumerated. */
 CCSContext* ccsContextNew (unsigned int *screens,
 			   unsigned int numScreens);
+
+/* Creates a new context without auto-enumerating any plugin or setting.
+   Behaves otherwise exactly like ccsContextNew. */
 CCSContext* ccsEmptyContextNew (unsigned int *screens,
 				unsigned int numScreens);
+
+/* Destroys the allocated context. */
 void ccsContextDestroy (CCSContext * context);
 
+/* Load the plugin and setting metadata for a given plugin.
+   Returns TRUE on success, FALSE otherwise. */
 Bool ccsLoadPlugin (CCSContext *context,
 		    char       *name);
 
+/* Searches for a plugin identified by its name in the context.
+   Returns the plugin struct if it could be found, NULL otherwise. */
 CCSPlugin* ccsFindPlugin (CCSContext *context,
 			  const char *name);
 
+/* Searches for a setting in a plugin. screenNum is only valid if isScreen is
+   TRUE. Returns the setting struct if the search was successful (setting with
+   name <name> found and isScreen and screenNum matched the values of the
+   setting), NULL otherwise. */
 CCSSetting* ccsFindSetting (CCSPlugin    *plugin,
 			    const char   *name,
 			    Bool         isScreen,
 			    unsigned int screenNum);
 
+/* Returns TRUE if the named plugin is in the context and marked as currently
+   active in Compiz, FALSE otherwise. */
 Bool ccsPluginIsActive (CCSContext *context,
 			char       *name);
 
@@ -342,6 +410,9 @@ void ccsFreeBackendInfo (CCSBackendInfo *value);
 void ccsFreeIntDesc (CCSIntDesc *value);
 #define ccsFreeString(val) free(val)
 
+/* Setting setters. Set <setting> to value <data>. Return TRUE if new value
+   matches data. If the new value doesn't match the old value, the setting
+   is added to the context's changedSettings list. */
 Bool ccsSetInt (CCSSetting *setting,
 		int        data);
 Bool ccsSetFloat (CCSSetting *setting,
@@ -367,6 +438,8 @@ Bool ccsSetList (CCSSetting          *setting,
 Bool ccsSetValue (CCSSetting      *setting,
 		  CCSSettingValue *data);
 
+/* Compares two setting values. Returns TRUE if values match,
+   FALSE otherwise. */
 Bool ccsIsEqualColor (CCSSettingColorValue c1,
 		      CCSSettingColorValue c2);
 Bool ccsIsEqualKey (CCSSettingKeyValue c1,
@@ -374,6 +447,8 @@ Bool ccsIsEqualKey (CCSSettingKeyValue c1,
 Bool ccsIsEqualButton (CCSSettingButtonValue c1,
 		       CCSSettingButtonValue c2);
 
+/* Setting getters. Returns TRUE if the setting value was successfully
+   copied into <data>, FALSE otherwise. */
 Bool ccsGetInt (CCSSetting *setting,
 		int        *data);
 Bool ccsGetFloat (CCSSetting *setting,
@@ -397,18 +472,32 @@ Bool ccsGetBell (CCSSetting *setting,
 Bool ccsGetList (CCSSetting          *setting,
 		 CCSSettingValueList *data);
 
+/* Retrieves a list of settings in a plugin */
 CCSSettingList ccsGetPluginSettings (CCSPlugin *plugin);
+
+/* Retrieves a list of setting groups in a plugin */
 CCSGroupList ccsGetPluginGroups (CCSPlugin *plugin);
 
+/* Converts a string list into a list of string settings.
+   Return value needs to be freed by the caller. */
 CCSSettingValueList ccsGetValueListFromStringList (CCSStringList list,
 						   CCSSetting    *parent);
+/* Converts a string setting value list into a string list.
+   Return value needs to be freed by the caller. */
 CCSStringList ccsGetStringListFromValueList (CCSSettingValueList list);
 
+/* Converts a string list into a string array. If the return value is not
+   NULL, the item count is copied into <num>. Return value needs to be freed
+   by the caller. */
 char** ccsGetStringArrayFromList (CCSStringList list,
 				  int           *num);
+/* Converts a string array with <num> items into a string list. Return value
+   needs to be freed by the caller. */
 CCSStringList ccsGetListFromStringArray (char **array,
 					 int  num);
 
+/* Converts a setting value list into an array of the setting item data type.
+   Behaves similar to ccsGetStringArrayFromList. */
 char** ccsGetStringArrayFromValueList (CCSSettingValueList list,
 				       int                 *num);
 char** ccsGetMatchArrayFromValueList (CCSSettingValueList list,
@@ -420,10 +509,11 @@ float* ccsGetFloatArrayFromValueList (CCSSettingValueList list,
 				      int                 *num);
 Bool * ccsGetBoolArrayFromValueList (CCSSettingValueList list,
 				     int                 *num);
-
 CCSSettingColorValue* ccsGetColorArrayFromValueList (CCSSettingValueList list,
 	       					     int                 *num);
 
+/* Converts an array of data items to a setting value list. Behaves similar
+   to ccsGetListFromStringArray */
 CCSSettingValueList ccsGetValueListFromStringArray (char       **array,
 						    int        num,
 						    CCSSetting *parent);
@@ -443,23 +533,47 @@ CCSSettingValueList ccsGetValueListFromColorArray (CCSSettingColorValue *array,
 						   int                  num,
 						   CCSSetting           *parent);
 
+/* Retrieves a list of plugins marked as active in Compiz for this context */
 CCSPluginList ccsGetActivePluginList (CCSContext *context);
+
+/* Retrieves a list of plugin names which are active in Compiz for a given
+   context, sorted as needed according to load after/before/etc. rules */
 CCSStringList ccsGetSortedPluginStringList (CCSContext *context);
 
+/* Switches the backend for a context. Returns TRUE on successful switch,
+   FALSE otherwise. */
 Bool ccsSetBackend (CCSContext *context,
 		    char       *name);
+/* Retrieves the name of the backend active for the context. */
 char * ccsGetBackend (CCSContext *context);
+
+/* Enable/disable DE integration for a context. */
 void ccsSetIntegrationEnabled (CCSContext *context,
 			       Bool       value);
+
+/* Sets the profile for a context. */
 void ccsSetProfile (CCSContext *context,
 		    char       *name);
+
+/* Set plugin list autosort for a context. */
 void ccsSetPluginListAutoSort (CCSContext *context,
 			       Bool       value);
+
+/* Retrieve current profile of the context. */
 char * ccsGetProfile (CCSContext *context);
+
+/* Retrieves current DE integration status for a context */
 Bool ccsGetIntegrationEnabled (CCSContext *context);
+
+/* Retrieves the autosort setting for a context. */
+Bool ccsGetPluginListAutoSort (CCSContext *context);
+
+/* Changes the plugin activeness status in compiz. If plugin list autosort
+   is enabled, automatically writes a new sorted plugin list to the
+   active_plugins setting. If autosort is disabled, it's up to the caller
+   to do that. */
 Bool ccsPluginSetActive (CCSPlugin *plugin,
 			 Bool      value);
-Bool ccsGetPluginListAutoSort (CCSContext *context);
 
 /* functions parsing/creating an action string -
    the returned strings must be free'd after usage! */
@@ -497,21 +611,34 @@ Bool ccsStringToColor (const char           *value,
 void ccsProcessEvents (CCSContext   *context,
 		       unsigned int flags);
 
+/* Read all setting values from disk */
 void ccsReadSettings (CCSContext *context);
+
+/* Read setting values for a given plugin */
 void ccsReadPluginSettings (CCSPlugin *plugin);
 
+/* Write all settings to disk */
 void ccsWriteSettings (CCSContext *context);
+
+/* Write changed settings to disk */
 void ccsWriteChangedSettings (CCSContext *context);
 
+/* Reset all settings to defaults. Settings that were non-default
+   previously are added to the changedSettings list of the context. */
 void ccsResetToDefault (CCSSetting * setting);
 
-/* File import / export */
+/* Exports a profile to a file. If skipDefaults is TRUE, only exports
+   non-default settings. Returns TRUE on successful export, FALSE otherwise. */
 Bool ccsExportToFile (CCSContext *context,
 		      const char *fileName,
 		      Bool skipDefaults);
+
+/* Imports a profile from a file. If overwriteNonDefault is TRUE, also
+   overwrites settings that were non-default before. Returns TRUE on success,
+   FALSE otherwise. */
 Bool ccsImportFromFile (CCSContext *context,
 			const char *fileName,
-			Bool       overwrite);
+			Bool       overwriteNonDefault);
 
 /* File watch stuff */
 
@@ -636,19 +763,31 @@ void ccsIniRemoveEntry (IniDictionary *dictionary,
 			const char    *section,
 			const char    *entry);
 
-/* plugin conflict handling */
+/* Checks if a plugin can be enabled. Returns a list of conflicts that
+   would occur when loading the plugin. A return value of NULL means that
+   the plugin can be enabled without problems. */
 CCSPluginConflictList ccsCanEnablePlugin (CCSContext *context,
 					  CCSPlugin  *plugin);
+
+/* Checks if a plugin can be disabled. The meaning of the return value is the
+   same as for ccsCanEnablePlugin */
 CCSPluginConflictList ccsCanDisablePlugin (CCSContext *context,
 					   CCSPlugin *plugin);
 
+/* Enumerates the available profiles for the current backend. */
 CCSStringList ccsGetExistingProfiles (CCSContext * context);
+
+/* Deletes the profile with the given name. */
 void ccsDeleteProfile (CCSContext *context,
 		       char       *name);
 
+/* Enumerates the available backends. */
 CCSBackendInfoList ccsGetExistingBackends (void);
 
+/* Checks if a given setting is integrated in the desktop environment. */
 Bool ccsSettingIsIntegrated (CCSSetting *setting);
+
+/* Checks if a given setting is read-only. */
 Bool ccsSettingIsReadOnly (CCSSetting *setting);
 
 #endif

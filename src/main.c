@@ -553,9 +553,11 @@ openBackend (char *backend)
 	err = dlerror ();
     }
 
-    if (err || !dlhand)
+    if (!dlhand)
     {
-	free (dlname);
+        if (dlname) {
+	        free (dlname);
+        }
 	asprintf (&dlname, "%s/compizconfig/backends/lib%s.so", 
 		  LIBDIR, backend);
 	dlhand = dlopen (dlname, RTLD_NOW | RTLD_NODELETE | RTLD_GLOBAL);
@@ -564,10 +566,9 @@ openBackend (char *backend)
 
     free (dlname);
 
-    if (err || !dlhand)
+    if (err)
     {
 	fprintf (stderr, "libccs: dlopen: %s\n", err);
-	return NULL;
     }
 
     return dlhand;
@@ -1174,6 +1175,7 @@ ccsCopyList (CCSSettingValueList l1, CCSSetting * setting)
 		    sizeof (CCSSettingColorValue));
 	    break;
 	default:
+	  /* FIXME If l2 != NULL, we leak l2 */
 	    free (value);
 	    return FALSE;
 	    break;
@@ -2204,7 +2206,7 @@ ccsCanDisablePlugin (CCSContext * context, CCSPlugin * plugin)
 	    if (!ccsPluginIsActive (context, pl->data->name))
 		continue;
 
-	    pluginList = pl->data->requiresPlugin;
+	    pluginList = pl->data->requiresFeature;
 
 	    while (pluginList)
 	    {
@@ -2217,7 +2219,7 @@ ccsCanDisablePlugin (CCSContext * context, CCSPlugin * plugin)
 			if (conflict)
 			{
 			    conflict->value = strdup (sl->data);
-			    conflict->type = ConflictPluginNeeded;
+			    conflict->type = ConflictFeatureNeeded;
 			}
 		    }
 		    if (conflict)
@@ -2226,9 +2228,11 @@ ccsCanDisablePlugin (CCSContext * context, CCSPlugin * plugin)
 		}
 		pluginList = pluginList->next;
 	    }
-	    if (conflict)
-		list = ccsPluginConflictListAppend (list, conflict);
+	    
 	}
+	if (conflict)
+	    list = ccsPluginConflictListAppend (list, conflict);
+	conflict = NULL;
 	sl = sl->next;
     }
 
@@ -2404,7 +2408,9 @@ ccsGetExistingBackends ()
 }
 
 Bool
-ccsExportToFile (CCSContext * context, const char * fileName, Bool skipDefaults)
+ccsExportToFile (CCSContext *context,
+		 const char *fileName,
+		 Bool       skipDefaults)
 {
     IniDictionary *exportFile;
     CCSPluginList p;
@@ -2447,6 +2453,10 @@ ccsExportToFile (CCSContext * context, const char * fileName, Bool skipDefaults)
 	    case TypeInt:
 		ccsIniSetInt (exportFile, plugin->name, keyName,
 			      setting->value->value.asInt);
+		break;
+	    case TypeFloat:
+		ccsIniSetFloat (exportFile, plugin->name, keyName,
+				setting->value->value.asFloat);
 		break;
 	    case TypeString:
 		ccsIniSetString (exportFile, plugin->name, keyName,
@@ -2495,7 +2505,9 @@ ccsExportToFile (CCSContext * context, const char * fileName, Bool skipDefaults)
 }
 
 Bool
-ccsImportFromFile (CCSContext * context, const char * fileName, Bool overwrite)
+ccsImportFromFile (CCSContext *context,
+		   const char *fileName,
+		   Bool       overwriteNonDefault)
 {
     IniDictionary *importFile;
     CCSPluginList p;
@@ -2503,6 +2515,13 @@ ccsImportFromFile (CCSContext * context, const char * fileName, Bool overwrite)
     CCSPlugin *plugin;
     CCSSetting *setting;
     char *keyName;
+    FILE *fp;
+
+    /* check if the file exists first */
+    fp = fopen (fileName, "r");
+    if (!fp)
+	return FALSE;
+    fclose (fp);
 
     importFile = iniparser_new ((char *) fileName);
     if (!importFile)
@@ -2519,7 +2538,7 @@ ccsImportFromFile (CCSContext * context, const char * fileName, Bool overwrite)
 	for (s = pPrivate->settings; s; s = s->next)
 	{
 	    setting = s->data;
-	    if (!setting->isDefault && !overwrite)
+	    if (!setting->isDefault && !overwriteNonDefault)
 		continue;
 
 	    if (setting->isScreen)
@@ -2546,6 +2565,15 @@ ccsImportFromFile (CCSContext * context, const char * fileName, Bool overwrite)
 		    if (ccsIniGetInt (importFile, plugin->name,
 				      keyName, &value))
 			ccsSetInt (setting, value);
+		}
+		break;
+	    case TypeFloat:
+		{
+		    float value;
+
+		    if (ccsIniGetFloat (importFile, plugin->name,
+					keyName, &value))
+			ccsSetFloat (setting, value);
 		}
 		break;
 	    case TypeString:
@@ -2628,8 +2656,6 @@ ccsImportFromFile (CCSContext * context, const char * fileName, Bool overwrite)
 	    free (keyName);
 	}
     }
-
-    ccsWriteSettings (context);
 
     ccsIniClose (importFile);
 
