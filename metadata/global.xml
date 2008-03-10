@@ -126,6 +126,7 @@
 				<option name="detect_refresh_rate" type="bool"/>
 				<option name="refresh_rate" type="int"/>
 				<option name="detect_outputs" type="bool"/>
+				<option name="overlapping_outputs" type="int"/>
 				<option name="outputs" type="list"/>
 				<option name="sync_to_vblank" type="bool"/>
 			</group>
