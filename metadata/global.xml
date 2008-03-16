@@ -141,6 +141,7 @@
 			</group>
 			<group>
 				<short>Focus &amp; Raise Behaviour</short>
+				<option name="focus_prevention_level" type="int"/>
 				<option name="focus_prevention_match" type="match"/>
 			</group>
 		</screen>
