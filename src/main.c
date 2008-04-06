@@ -549,7 +549,7 @@ openBackend (char *backend)
 	asprintf (&dlname, "%s/.compizconfig/backends/lib%s.so", 
 		  home, backend);
 	dlerror ();
-	dlhand = dlopen (dlname, RTLD_NOW | RTLD_NODELETE | RTLD_GLOBAL);
+	dlhand = dlopen (dlname, RTLD_NOW | RTLD_NODELETE | RTLD_LOCAL);
 	err = dlerror ();
     }
 
@@ -560,7 +560,7 @@ openBackend (char *backend)
         }
 	asprintf (&dlname, "%s/compizconfig/backends/lib%s.so", 
 		  LIBDIR, backend);
-	dlhand = dlopen (dlname, RTLD_NOW | RTLD_NODELETE | RTLD_GLOBAL);
+	dlhand = dlopen (dlname, RTLD_NOW | RTLD_NODELETE | RTLD_LOCAL);
 	err = dlerror ();
     }
 
@@ -2290,7 +2290,7 @@ addBackendInfo (CCSBackendInfoList * bl, char *file)
 
     dlerror ();
 
-    dlhand = dlopen (file, RTLD_LAZY);
+    dlhand = dlopen (file, RTLD_LAZY | RTLD_LOCAL);
     err = dlerror ();
     if (err || !dlhand)
 	return;
