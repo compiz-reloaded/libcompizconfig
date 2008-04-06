@@ -457,7 +457,7 @@ ccpSetContextFromOption (CompObject *object,
     int  screenNum = 0;
 
     /* we currently only support screen and display opton types */
-    if (object->type != COMP_OBJECT_TYPE_SCREEN ||
+    if (object->type != COMP_OBJECT_TYPE_SCREEN &&
 	object->type != COMP_OBJECT_TYPE_DISPLAY)
 	return;
     
@@ -619,7 +619,7 @@ ccpSetOptionForPlugin (CompObject      *object,
     status = (*core.setOptionForPlugin) (object, plugin, name, value);
     WRAP (cc, &core, setOptionForPlugin, ccpSetOptionForPlugin);
 
-    if (status && !cc->applyingSettings)
+    if (status && !cc->applyingSettings && !cc->reloadHandle)
     {
 	CompPlugin *p;
 
