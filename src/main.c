@@ -1552,6 +1552,11 @@ ccsGetSortedPluginStringList (CCSContext * context)
 	    if (plugins[i].after)
 		continue;
 
+	    /* This is a special case to ensure that bench is the last plugin */
+	    if (len - removed > 1 &&
+		strcmp (plugins[i].plugin->name, "bench") == 0)
+		continue;
+
 	    found = TRUE;
 	    removed++;
 	    p = plugins[i].plugin;
