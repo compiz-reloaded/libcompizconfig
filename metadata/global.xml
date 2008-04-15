@@ -373,6 +373,10 @@
 				<option name="next_no_popup_key" type="key"/>
 				<option name="prev_no_popup_button" type="button"/>
 				<option name="prev_no_popup_key" type="key"/>
+				<option name="next_panel_button" type="button"/>
+				<option name="next_panel_key" type="key"/>
+				<option name="prev_panel_button" type="button"/>
+				<option name="prev_panel_key" type="key"/>
 			</group>
 		</display>
 	</plugin>
