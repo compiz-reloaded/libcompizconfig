@@ -253,11 +253,17 @@ typedef struct _CCSSettingListInfo
     union _CCSSettingInfo *listInfo; /* list of settings */
 } CCSSettingListInfo;
 
+typedef struct _CCSSettingActionInfo
+{
+    Bool internal; /* is this binding global or plugin internal*/
+} CCSSettingActionInfo;
+
 typedef union _CCSSettingInfo
 {
-    CCSSettingIntInfo   forInt;
-    CCSSettingFloatInfo forFloat;
-    CCSSettingListInfo  forList;
+    CCSSettingIntInfo    forInt;
+    CCSSettingFloatInfo  forFloat;
+    CCSSettingListInfo   forList;
+    CCSSettingActionInfo forAction;
 } CCSSettingInfo;
 
 typedef struct _CCSSettingColorValueColor
