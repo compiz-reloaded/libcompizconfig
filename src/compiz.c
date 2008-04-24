@@ -860,6 +860,25 @@ initListInfo (CCSSettingInfo * i, xmlNode * node)
 }
 
 static void
+initActionInfo (CCSSettingInfo * i, xmlNode * node)
+{
+    char *value;
+
+    i->forAction.internal = FALSE;
+
+    value = getStringFromPath (node->doc, node, "internal/child::text()");
+    if (value)
+    {
+	if (strcasecmp (value, "true") == 0)
+	    i->forAction.internal = TRUE;
+	free (value);
+	return;
+    }
+    if (nodeExists (node, "internal"))
+	i->forAction.internal = TRUE;
+}
+
+static void
 addOptionForPlugin (CCSPlugin * plugin,
 		    char * name,
 		    char * type,
@@ -928,6 +947,12 @@ addOptionForPlugin (CCSPlugin * plugin,
 	break;
     case TypeList:
 	initListInfo (&setting->info, node);
+	break;
+    case TypeKey:
+    case TypeButton:
+    case TypeEdge:
+    case TypeBell:
+	initActionInfo (&setting->info, node);
 	break;
     default:
 	break;
