@@ -150,6 +150,9 @@ static CompOptionType
 ccpCCSTypeToCompizType (CCSSettingType st, CompOptionType *ct)
 {
     switch (st) {
+    case TypeBool:
+	*ct = CompOptionTypeBool;
+	break;
     case TypeInt:
 	*ct = CompOptionTypeInt;
 	break;
