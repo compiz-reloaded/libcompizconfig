@@ -225,9 +225,16 @@ ccsWriteConfig (ConfigOption option,
     char          *section;
     char          *fileName;
     char          *curVal;
+    Bool          changed = TRUE;
 
     /* don't change config if nothing changed */
-    if (ccsReadConfig (option, &curVal) && strcmp (value, curVal) == 0)
+    if (ccsReadConfig (option, &curVal))
+    {
+	changed = (strcmp (value, curVal) != 0);
+	free (curVal);
+    }
+
+    if (!changed)
 	return TRUE;
 
     iniFile = getConfigFile();
