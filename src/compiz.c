@@ -647,9 +647,8 @@ initBellValue (CCSSettingValue * v, CCSSettingInfo * i, xmlNode * node)
     {
 	if (!strcasecmp (value, "true"))
 	    v->value.asBell = TRUE;
-    }
-    else
 	free (value);
+    }
 }
 
 static void
