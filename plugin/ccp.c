@@ -146,6 +146,47 @@ ccpSetValueToValue (CompObject      *object,
     }
 }
 
+static CompOptionType
+ccpCCSTypeToCompizType (CCSSettingType st, CompOptionType *ct)
+{
+    switch (st) {
+    case TypeInt:
+	*ct = CompOptionTypeInt;
+	break;
+    case TypeFloat:
+	*ct = CompOptionTypeFloat;
+	break;
+    case TypeColor:
+	*ct = CompOptionTypeColor;
+	break;
+    case TypeString:
+	*ct = CompOptionTypeString;
+	break;
+    case TypeMatch:
+	*ct = CompOptionTypeMatch;
+	break;
+    case TypeKey:
+	*ct = CompOptionTypeKey;
+	break;
+    case TypeButton:
+	*ct = CompOptionTypeButton;
+	break;
+    case TypeEdge:
+	*ct = CompOptionTypeEdge;
+	break;
+    case TypeBell:
+	*ct = CompOptionTypeBell;
+	break;
+    case TypeList:
+	*ct = CompOptionTypeList;
+	break;
+    default:
+	return FALSE;
+    }
+
+    return TRUE;
+}
+
 static void
 ccpConvertPluginList (CCSSetting          *s,
 		      CCSSettingValueList list,
@@ -196,6 +237,9 @@ ccpSettingToValue (CompObject      *object,
 	int                 i = 0;
 
 	ccsGetList (s, &list);
+
+	if (!ccpCCSTypeToCompizType (s->info.forList.listType, &v->list.type))
+	    v->list.type = CompOptionTypeBool;
 
 	if ((strcmp (s->name, "active_plugins") == 0) &&
 	    (strcmp (s->parent->name, CORE_VTABLE_NAME) == 0))
@@ -346,46 +390,22 @@ ccpValueToSetting (CompObject      *object,
 }
 
 static Bool
-ccpSameType (CCSSettingType st, CompOptionType ot)
-{
-    if (st == TypeBool && ot == CompOptionTypeBool)
-	return TRUE;
-    if (st == TypeInt && ot == CompOptionTypeInt)
-	return TRUE;
-    if (st == TypeFloat && ot == CompOptionTypeFloat)
-	return TRUE;
-    if (st == TypeColor && ot == CompOptionTypeColor)
-	return TRUE;
-    if (st == TypeString && ot == CompOptionTypeString)
-	return TRUE;
-    if (st == TypeMatch && ot == CompOptionTypeMatch)
-	return TRUE;
-    if (st == TypeKey && ot == CompOptionTypeKey)
-	return TRUE;
-    if (st == TypeButton && ot == CompOptionTypeButton)
-	return TRUE;
-    if (st == TypeEdge && ot == CompOptionTypeEdge)
-	return TRUE;
-    if (st == TypeBell && ot == CompOptionTypeBell)
-	return TRUE;
-    if (st == TypeList && ot == CompOptionTypeList)
-	return TRUE;
-    return FALSE;
-}
-
-static Bool
 ccpTypeCheck (CCSSetting *s, CompOption *o)
 {
+    CompOptionType ot;
+
     switch (s->type)
     {
     case TypeList:
-	return ccpSameType (s->type, o->type) &&
-	       ccpSameType (s->info.forList.listType, o->value.list.type);
+	return ccpCCSTypeToCompizType (s->type, &ot) && (ot == o->type) &&
+	       ccpCCSTypeToCompizType (s->info.forList.listType, &ot) &&
+	       (ot == o->value.list.type);
 	break;
     default:
-	return ccpSameType (s->type, o->type);
+	return ccpCCSTypeToCompizType (s->type, &ot) && (ot == o->type);
 	break;
     }
+
     return FALSE;
 }
 
@@ -429,18 +449,14 @@ ccpSetOptionFromContext (CompObject *object,
     if (!ccpTypeCheck (setting, o))
 	return;
 
-    
     compInitOptionValue (&value);
-    
     ccpSettingToValue (object, setting, &value);
 
     cc->applyingSettings = TRUE;
-
     (*core.setOptionForPlugin) (object, plugin, o->name, &value);
+    cc->applyingSettings = FALSE;
 
     compFiniOptionValue (&value, o->type);
-
-    cc->applyingSettings = FALSE;
 }
 
 static void
