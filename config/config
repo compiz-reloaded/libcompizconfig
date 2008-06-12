@@ -1,3 +1,8 @@
+[kde4_session]
+backend = kconfig4
+integration = true
+plugin_list_autosort = true
+
 [kde_session]
 backend = kconfig
 integration = true

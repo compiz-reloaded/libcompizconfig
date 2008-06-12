@@ -69,6 +69,10 @@ getSectionName (void)
     if (profile && strlen (profile))
 	return strdup ("gnome_session");
 
+    profile = getenv ("KDE_SESSION_VERSION");
+    if (profile && strlen (profile) && strcasecmp (profile, "4") == 0)
+	return strdup ("kde4_session");
+
     profile = getenv ("KDE_FULL_SESSION");
     if (profile && strlen (profile) && strcasecmp (profile, "true") == 0)
 	return strdup ("kde_session");
