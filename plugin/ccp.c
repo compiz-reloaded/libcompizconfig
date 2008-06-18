@@ -55,7 +55,8 @@ CCPCore;
 #define CCP_CORE(c)		     \
     CCPCore *cc = GET_CCP_CORE (c)
 
-#define CCP_UPDATE_TIMEOUT 250
+#define CCP_UPDATE_MIN_TIMEOUT 250
+#define CCP_UPDATE_MAX_TIMEOUT 4000
 #define CORE_VTABLE_NAME  "core"
 
 static void
@@ -741,8 +742,9 @@ ccpInitCore (CompPlugin *p,
 
     cc->applyingSettings = FALSE;
 
-    cc->reloadHandle = compAddTimeout (0, ccpReload, 0);
-    cc->timeoutHandle = compAddTimeout (CCP_UPDATE_TIMEOUT,
+    cc->reloadHandle = compAddTimeout (0, 0, ccpReload, 0);
+    cc->timeoutHandle = compAddTimeout (CCP_UPDATE_MIN_TIMEOUT,
+					CCP_UPDATE_MAX_TIMEOUT,
 					ccpTimeout, 0);
 
     core.base.privates[corePrivateIndex].ptr = cc;
