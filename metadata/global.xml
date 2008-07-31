@@ -326,6 +326,7 @@
 					<option type="list" name="position_matches"/>
 					<option type="list" name="position_x_values"/>
 					<option type="list" name="position_y_values"/>
+					<option type="list" name="position_constrain_workarea"/>
 				</subgroup>
 				<subgroup>
 					<short>Windows with fixed viewport</short>
