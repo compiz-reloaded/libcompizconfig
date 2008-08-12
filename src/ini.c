@@ -650,112 +650,93 @@ ccsIniSetList (IniDictionary       *dictionary,
 	       CCSSettingValueList value,
 	       CCSSettingType      listType)
 {
-#define STRINGBUFSIZE 2048
+    char         *stringBuffer, *valueString;
+    char         valueBuffer[100];
+    unsigned int bufferSize = 1024, fill;
 
-    /* FIXME: We should allocate that dynamically */
-    char stringBuffer[STRINGBUFSIZE];
-    int  maxLen = STRINGBUFSIZE - 1;
-
-    memset (stringBuffer, 0, sizeof (stringBuffer));
+    stringBuffer = calloc (1, bufferSize);
+    if (!stringBuffer)
+	return;
 
     while (value)
     {
 	switch (listType)
 	{
 	case TypeString:
-	    strncat (stringBuffer, value->data->value.asString, maxLen);
+	    valueString = value->data->value.asString;
 	    break;
 	case TypeMatch:
-	    strncat (stringBuffer, value->data->value.asMatch, maxLen);
+	    valueString = value->data->value.asMatch;
 	    break;
 	case TypeInt:
-	    {
-		char *valueString = NULL;
-		asprintf (&valueString, "%d", value->data->value.asInt);
-		if (!valueString)
-		    break;
-
-		strncat (stringBuffer, valueString, maxLen);
-		free (valueString);
-	    }
+	    snprintf (valueBuffer, 100, "%d", value->data->value.asInt);
+	    valueString = valueBuffer;
 	    break;
 	case TypeBool:
-	    strncat (stringBuffer,
-		     (value->data->value.asBool) ? "true" : "false", maxLen);
+	    strncpy (valueBuffer,
+		     (value->data->value.asBool) ? "true" : "false", 100);
+	    valueString = valueBuffer;
 	    break;
 	case TypeFloat:
-	    {
-		char *valueString = NULL;
-		asprintf (&valueString, "%f", value->data->value.asFloat);
-		if (!valueString)
-		    break;
-
-		strncat (stringBuffer, valueString, maxLen);
-		free (valueString);
-	    }
+	    snprintf (valueBuffer, 100, "%f", value->data->value.asFloat);
+	    valueString = valueBuffer;
 	    break;
 	case TypeColor:
-	    {
-		char *color = NULL;
-		color = ccsColorToString (&value->data->value.asColor);
-		if (!color)
-		    break;
-
-		strncat (stringBuffer, color, maxLen);
-		free (color);
-	    }
+	    valueString = ccsColorToString (&value->data->value.asColor);
 	    break;
 	case TypeKey:
-	    {
-		char *str;
-		str = ccsKeyBindingToString (&value->data->value.asKey);
-		if (!str)
-		    break;
-
-		strncat (stringBuffer, str, maxLen);
-		free (str);
-	    }
+	    valueString = ccsKeyBindingToString (&value->data->value.asKey);
+	    break;
 	case TypeButton:
-	    {
-		char *str;
-		str = ccsButtonBindingToString (&value->data->value.asButton);
-		if (!str)
-		    break;
-
-		strncat (stringBuffer, str, maxLen);
-		free (str);
-	    }
+	    valueString =
+		ccsButtonBindingToString (&value->data->value.asButton);
+	    break;
 	case TypeEdge:
-	    {
-		char *str;
-		str = ccsEdgesToString (value->data->value.asEdge);
-		if (!str)
-		    break;
-
-		strncat (stringBuffer, str, maxLen);
-		free (str);
-	    }
+	    valueString = ccsEdgesToString (value->data->value.asEdge);
+	    break;
 	case TypeBell:
-	    {
-		strncat (stringBuffer,
-		     (value->data->value.asBell) ? "true" : "false", maxLen);
-	    }
+    	    strncpy (valueBuffer,
+		     (value->data->value.asBell) ? "true" : "false", 100);
+	    valueString = valueBuffer;
+	    break;
 	default:
+	    valueString = NULL;
 	    break;
 	}
 
-	/* as we filled our buffer, we have less space in it now; so
-	   calculate the amount of space for the next run */
-	maxLen = STRINGBUFSIZE - strlen (stringBuffer) - 1;
-	strncat (stringBuffer, ";", maxLen--);
+	if (!valueString)
+	    return;
 
-	if (maxLen <= 0)
-	    break;
+	fill = strlen (stringBuffer);
+	/* the + 1 is the semicolon we're going to add */
+	if ((fill + strlen (valueString) + 1) >= bufferSize)
+	{
+	    /* buffer is too small, make it larger */
+	    bufferSize *= 2;
+	    stringBuffer = realloc (stringBuffer, bufferSize);
+	    if (!stringBuffer)
+		return;
 
+	    /* properly NULL terminate it */
+	    stringBuffer[fill] = 0;
+	}
+
+	/* we made sure that the buffer is large enough before, so
+	   there is no need for strncat */
+	strcat (stringBuffer, valueString);
+	strcat (stringBuffer, ";");
+
+	if (listType == TypeColor  || listType == TypeKey ||
+	    listType == TypeButton || listType == TypeEdge)
+	{
+	    free (valueString);
+	}
+	
 	value = value->next;
     }
 
     setIniString (dictionary, section, entry, stringBuffer);
+    free (stringBuffer);
 }
 
 void ccsIniRemoveEntry (IniDictionary * dictionary,
