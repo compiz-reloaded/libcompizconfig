@@ -421,6 +421,41 @@ stringFromNodeDefTrans (xmlNode * node, char *path, char *def)
 }
 
 static void
+ccsAddRestrictionToStringInfo (CCSSettingStringInfo *forString,
+			       char *name,
+			       char *value)
+{
+    CCSStrRestriction *restriction;
+
+    restriction = calloc (1, sizeof (CCSStrRestriction));
+    if (restriction)
+    {
+	restriction->name = strdup (name);
+	restriction->value = strdup (value);
+	forString->restriction =
+	    ccsStrRestrictionListAppend (forString->restriction,
+					 restriction);
+    }
+}
+
+static void
+ccsAddRestrictionToStringExtension (CCSStrExtension *ext,
+				    char *name,
+				    char *value)
+{
+    CCSStrRestriction *restriction;
+
+    restriction = calloc (1, sizeof (CCSStrRestriction));
+    if (restriction)
+    {
+	restriction->name = strdup (name);
+	restriction->value = strdup (value);
+	ext->restriction = ccsStrRestrictionListAppend (ext->restriction,
+							restriction);
+    }
+}
+
+static void
 initBoolValue (CCSSettingValue * v, xmlNode * node)
 {
     char *value;
@@ -818,6 +853,70 @@ initFloatInfo (CCSSettingInfo * i, xmlNode * node)
 }
 
 static void
+initStringInfo (CCSSettingInfo * i, xmlNode * node)
+{
+    xmlNode **nodes;
+    char *name;
+    char *value;
+    int num, j;
+    i->forString.restriction = NULL;
+    i->forString.sortStartsAt = -1;
+    i->forString.extensible = FALSE;
+
+    if (nodeExists (node, "extensible"))
+    {
+	i->forString.extensible = TRUE;
+    }
+
+    nodes = getNodesFromPath (node->doc, node, "sort", &num);
+
+    if (num)
+    {
+	int val = 0; /* Start sorting at 0 unless otherwise specified. */
+
+	value = getStringFromPath (node->doc, nodes[0], "@start");
+	if (value)
+	{
+	    /* Custom starting value specified. */
+	    val = strtol (value, NULL, 0);
+	    if (val < 0)
+		val = 0;
+	    free (value);
+	}
+	i->forString.sortStartsAt = val;
+
+	free (nodes);
+    }
+
+    if (!basicMetadata)
+    {
+	nodes = getNodesFromPath (node->doc, node, "restriction", &num);
+	if (num)
+	{
+	    for (j = 0; j < num; j++)
+	    {
+		value = getStringFromPath (node->doc, nodes[j],
+					   "value/child::text()");
+		if (value)
+		{
+		    name = stringFromNodeDefTrans (nodes[j],
+						   "name/child::text()",
+						   NULL);
+		    if (name)
+		    {
+			ccsAddRestrictionToStringInfo (&i->forString,
+						       name, value);
+			free (name);
+		    }
+		    free (value);
+		}
+	    }
+	    free (nodes);
+	}
+    }
+}
+
+static void
 initListInfo (CCSSettingInfo * i, xmlNode * node)
 {
     char *value;
@@ -850,6 +949,14 @@ initListInfo (CCSSettingInfo * i, xmlNode * node)
 	    info = calloc (1, sizeof (CCSSettingInfo));
 	    if (info)
 		initFloatInfo (info, node);
+	    i->forList.listInfo = info;
+	}
+	break;
+    case TypeString:
+	{
+	    info = calloc (1, sizeof (CCSSettingInfo));
+	    if (info)
+		initStringInfo (info, node);
 	    i->forList.listInfo = info;
 	}
 	break;
@@ -943,6 +1050,9 @@ addOptionForPlugin (CCSPlugin * plugin,
 	break;
     case TypeFloat:
 	initFloatInfo (&setting->info, node);
+	break;
+    case TypeString:
+	initStringInfo (&setting->info, node);
 	break;
     case TypeList:
 	initListInfo (&setting->info, node);
@@ -1108,6 +1218,70 @@ addStringsFromPath (CCSStringList * list, char * path, xmlNode * node)
 	    if (value && !strlen (value))
 		free (value);
 	}
+
+	free (nodes);
+    }
+}
+
+static void
+addStringExtensionFromXMLNode (CCSPlugin * plugin, xmlNode * node)
+{
+    xmlNode **nodes;
+    int num, j;
+    CCSStrExtension *extension;
+    char *name;
+    char *value;
+
+    extension = calloc (1, sizeof (CCSStrExtension));
+    if (!extension)
+	return;
+
+    extension->isScreen = nodeExists (node, "ancestor::screen");
+
+    extension->restriction = NULL;
+
+    extension->basePlugin = getStringFromPath (node->doc, node, "@plugin");
+
+    addStringsFromPath (&extension->baseSettings, "option", node);
+
+    nodes = getNodesFromPath (node->doc, node, "restriction", &num);
+    if (!num)
+	return;
+
+    for (j = 0; j < num; j++)
+    {
+	value = getStringFromPath (node->doc, nodes[j], "value/child::text()");
+	if (value)
+	{
+	    name = stringFromNodeDefTrans (nodes[j], "name/child::text()",
+					   NULL);
+	    if (name)
+	    {
+		ccsAddRestrictionToStringExtension (extension, name, value);
+		free (name);
+	    }
+	    free (value);
+	}
+    }
+    free (nodes);
+
+    PLUGIN_PRIV (plugin);
+
+    pPrivate->stringExtensions =
+	ccsStrExtensionListAppend (pPrivate->stringExtensions, extension);
+}
+
+static void
+initStringExtensionsFromRootNode (CCSPlugin * plugin, xmlNode * node)
+{
+    xmlNode **nodes;
+    int num, i;
+    nodes = getNodesFromPath (node->doc, node, ".//extension", &num);
+
+    if (num)
+    {
+	for (i = 0; i < num; i++)
+	    addStringExtensionFromXMLNode (plugin, nodes[i]);
 
 	free (nodes);
     }
@@ -1550,6 +1724,7 @@ ccsLoadPluginSettings (CCSPlugin * plugin)
     if (num)
     {
 	initOptionsFromRootNode (plugin, nodes[0]);
+	initStringExtensionsFromRootNode (plugin, nodes[0]);
 	free (nodes);
     }
 

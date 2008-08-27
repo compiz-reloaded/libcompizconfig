@@ -108,6 +108,8 @@ typedef struct _CCSSettingValue	  CCSSettingValue;
 typedef struct _CCSPluginConflict CCSPluginConflict;
 typedef struct _CCSBackendInfo	  CCSBackendInfo;
 typedef struct _CCSIntDesc	  CCSIntDesc;
+typedef struct _CCSStrRestriction CCSStrRestriction;
+typedef struct _CCSStrExtension   CCSStrExtension;
 
 CCSLIST_HDR (Plugin, CCSPlugin)
 CCSLIST_HDR (Setting, CCSSetting)
@@ -118,6 +120,8 @@ CCSLIST_HDR (SettingValue, CCSSettingValue)
 CCSLIST_HDR (PluginConflict, CCSPluginConflict)
 CCSLIST_HDR (BackendInfo, CCSBackendInfo)
 CCSLIST_HDR (IntDesc, CCSIntDesc)
+CCSLIST_HDR (StrRestriction, CCSStrRestriction)
+CCSLIST_HDR (StrExtension, CCSStrExtension)
 
 struct _CCSContext
 {
@@ -233,6 +237,21 @@ struct _CCSIntDesc
     char *name; /* description */
 };
 
+struct _CCSStrRestriction
+{
+    char *value; /* value the restriction is assigned to */
+    char *name;  /* description */
+};
+
+struct _CCSStrExtension
+{
+    char *basePlugin;           /* plugin this extension extends */
+    CCSStringList baseSettings; /* list of settings this extension extends */
+    CCSStrRestrictionList restriction; /* list of added restriction items */
+
+    Bool isScreen;          /* is this extension a screen setting extension? */
+};
+
 typedef struct _CCSSettingIntInfo
 {
     int            min;  /* minimum value for this setting */
@@ -246,6 +265,15 @@ typedef struct _CCSSettingFloatInfo
     float max;       /* maximum value */
     float precision; /* precision (allowed increment) */
 } CCSSettingFloatInfo;
+
+typedef struct _CCSSettingStringInfo
+{
+    CCSStrRestrictionList restriction;  /* list of restriction items */
+    int                sortStartsAt; /* the restriction index to start sorting
+					at (defaults to -1 for no sorting) */
+    Bool               extensible;   /* whether extension is allowed for
+					this setting */
+} CCSSettingStringInfo;
 
 typedef struct _CCSSettingListInfo
 {
@@ -262,6 +290,7 @@ typedef union _CCSSettingInfo
 {
     CCSSettingIntInfo    forInt;
     CCSSettingFloatInfo  forFloat;
+    CCSSettingStringInfo forString;
     CCSSettingListInfo   forList;
     CCSSettingActionInfo forAction;
 } CCSSettingInfo;
@@ -338,7 +367,7 @@ struct _CCSSetting
 			       if isScreen is TRUE */
 
     CCSSettingInfo info;    /* information assigned to this setting,
-			       valid if the setting is an int, float
+			       valid if the setting is an int, float, string
 			       or list setting */
 
     char *group;	    /* group name in current locale */
@@ -414,6 +443,9 @@ void ccsFreeSettingValue (CCSSettingValue *value);
 void ccsFreePluginConflict (CCSPluginConflict *value);
 void ccsFreeBackendInfo (CCSBackendInfo *value);
 void ccsFreeIntDesc (CCSIntDesc *value);
+void ccsFreeStrRestriction (CCSStrRestriction *restriction);
+void ccsFreeStrExtension (CCSStrExtension *extension);
+
 #define ccsFreeString(val) free(val)
 
 /* Setting setters. Set <setting> to value <data>. Return TRUE if new value
@@ -795,5 +827,7 @@ Bool ccsSettingIsIntegrated (CCSSetting *setting);
 
 /* Checks if a given setting is read-only. */
 Bool ccsSettingIsReadOnly (CCSSetting *setting);
+
+CCSStrExtensionList ccsGetPluginStrExtensions (CCSPlugin *plugin);
 
 #endif
