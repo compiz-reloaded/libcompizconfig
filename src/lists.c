@@ -180,6 +180,8 @@ CCSLIST (SettingValue, CCSSettingValue, FALSE, 0)
 CCSLIST (PluginConflict, CCSPluginConflict, FALSE, 0)
 CCSLIST (BackendInfo, CCSBackendInfo, FALSE, 0)
 CCSLIST (IntDesc, CCSIntDesc, FALSE, 0)
+CCSLIST (StrRestriction, CCSStrRestriction, FALSE, 0)
+CCSLIST (StrExtension, CCSStrExtension, FALSE, 0)
 
 CCSSettingValueList ccsGetValueListFromStringList (CCSStringList list,
 						   CCSSetting *parent)

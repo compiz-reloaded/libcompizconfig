@@ -396,6 +396,7 @@ ccsFreePlugin (CCSPlugin * p)
 
     ccsSettingListFree (pPrivate->settings, TRUE);
     ccsGroupListFree (pPrivate->groups, TRUE);
+    ccsStrExtensionListFree (pPrivate->stringExtensions, TRUE);
 
     if (pPrivate->xmlFile)
 	free (pPrivate->xmlFile);
@@ -424,6 +425,9 @@ ccsFreeSetting (CCSSetting * s)
     {
     case TypeInt:
 	ccsIntDescListFree (s->info.forInt.desc, TRUE);
+	break;
+    case TypeString:
+	ccsStrRestrictionListFree (s->info.forString.restriction, TRUE);
 	break;
     case TypeList:
 	if (s->info.forList.listType == TypeInt)
@@ -534,6 +538,29 @@ ccsFreeIntDesc (CCSIntDesc * i)
 
     if (i->name)
 	free (i->name);
+}
+
+void
+ccsFreeStrRestriction (CCSStrRestriction * r)
+{
+    if (!r)
+	return;
+
+    if (r->name)
+	free (r->name);
+
+    if (r->value)
+	free (r->value);
+}
+
+void
+ccsFreeStrExtension (CCSStrExtension *e)
+{
+    if (!e)
+	return;
+
+    if (e->basePlugin)
+	free (e->basePlugin);
 }
 
 static void *
@@ -2718,5 +2745,15 @@ Bool ccsSettingIsReadOnly (CCSSetting *setting)
 	return (*cPrivate->backend->vTable->getSettingIsReadOnly) (setting);
 
     return FALSE;
+}
+
+CCSStrExtensionList ccsGetPluginStrExtensions (CCSPlugin *plugin)
+{
+    PLUGIN_PRIV (plugin);
+
+    if (!pPrivate->loaded)
+	ccsLoadPluginSettings (plugin);
+
+    return pPrivate->stringExtensions;
 }
 
