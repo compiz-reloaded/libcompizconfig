@@ -1246,7 +1246,10 @@ addStringExtensionFromXMLNode (CCSPlugin * plugin, xmlNode * node)
 
     nodes = getNodesFromPath (node->doc, node, "restriction", &num);
     if (!num)
+    {
+	free (extension);
 	return;
+    }
 
     for (j = 0; j < num; j++)
     {
