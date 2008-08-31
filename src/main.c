@@ -332,7 +332,6 @@ groupAdd (CCSSetting * setting, CCSPluginPrivate * p)
 }
 
 void
-
 collateGroups (CCSPluginPrivate * p)
 {
     CCSSettingList l = p->settings;
@@ -510,8 +509,9 @@ ccsFreePluginConflict (CCSPluginConflict * c)
 
     free (c->value);
 
-    if (c->plugins)
-	c->plugins = ccsPluginListFree (c->plugins, FALSE);
+    ccsPluginListFree (c->plugins, FALSE);
+
+    free (c);
 }
 
 void
@@ -528,6 +528,8 @@ ccsFreeBackendInfo (CCSBackendInfo * b)
 
     if (b->longDesc)
 	free (b->longDesc);
+
+    free (b);
 }
 
 void
@@ -538,6 +540,8 @@ ccsFreeIntDesc (CCSIntDesc * i)
 
     if (i->name)
 	free (i->name);
+
+    free (i);
 }
 
 void
@@ -551,6 +555,8 @@ ccsFreeStrRestriction (CCSStrRestriction * r)
 
     if (r->value)
 	free (r->value);
+
+    free (r);
 }
 
 void
@@ -561,6 +567,11 @@ ccsFreeStrExtension (CCSStrExtension *e)
 
     if (e->basePlugin)
 	free (e->basePlugin);
+
+    ccsStringListFree (e->baseSettings, TRUE);
+    ccsStrRestrictionListFree (e->restriction, TRUE);
+
+    free (e);
 }
 
 static void *
