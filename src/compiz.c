@@ -1231,12 +1231,18 @@ addStringExtensionFromXMLNode (CCSPlugin * plugin, xmlNode * node)
     CCSStrExtension *extension;
     char *name;
     char *value;
+    char *isDisplay;
 
     extension = calloc (1, sizeof (CCSStrExtension));
     if (!extension)
 	return;
 
-    extension->isScreen = nodeExists (node, "ancestor::screen");
+    isDisplay = getStringFromXPath (node->doc, node, "@display");
+
+    extension->isScreen = !(isDisplay && !strcmp (isDisplay, "true"));
+
+    if (isDisplay)
+	free (isDisplay);
 
     extension->restriction = NULL;
 
