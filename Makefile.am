@@ -14,15 +14,7 @@ SUBDIRS = $(ALL_SUBDIRS)
 EXTRA_DIST =            \
     VERSION             \
     COPYING		\
-    libcompizconfig.pc.in \
-    intltool-extract.in \
-    intltool-merge.in   \
-    intltool-update.in
-
-DISTCLEANFILES =     \
-    intltool-extract \
-    intltool-merge   \
-    intltool-update
+    libcompizconfig.pc.in
 
 clean:
 	for sdir in $(SUBDIRS) ; do \
