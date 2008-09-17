@@ -1246,9 +1246,9 @@ addStringExtensionFromXMLNode (CCSPlugin * plugin, xmlNode * node)
 
     extension->restriction = NULL;
 
-    extension->basePlugin = getStringFromPath (node->doc, node, "@plugin");
+    extension->basePlugin = getStringFromPath (node->doc, node, "@base_plugin");
 
-    addStringsFromPath (&extension->baseSettings, "option", node);
+    addStringsFromPath (&extension->baseSettings, "base_option", node);
 
     nodes = getNodesFromPath (node->doc, node, "restriction", &num);
     if (!num)
