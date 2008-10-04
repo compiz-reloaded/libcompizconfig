@@ -91,6 +91,17 @@ AC_SUBST(plugindir)
 PKG_CHECK_MODULES(LIBXML2, "libxml-2.0")
 AC_SUBST(LIBXML2_REQUIRES)
 
+AC_ARG_ENABLE(protobuf,
+  [  --disable-protobuf      Disable Protocol Buffers],
+  [use_protobuf=$enableval], [use_protobuf=yes])
+
+if test "x$use_protobuf" = "xyes"; then
+  AC_CHECK_PROG(have_protoc, protoc, yes)
+
+  AC_CHECK_LIB(protobuf, _ZN6google8protobuf7MessageD2Ev)
+fi
+AM_CONDITIONAL([USE_PROTOBUF], [test "x$use_protobuf" = "xyes"])
+
 AC_CHECK_HEADERS([sys/inotify.h], [have_inotify=yes], [have_inotify=no])
 
 AC_ARG_ENABLE(debug,

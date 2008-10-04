@@ -403,6 +403,11 @@ ccsFreePlugin (CCSPlugin * p)
     if (pPrivate->xmlPath)
 	free (pPrivate->xmlPath);
 
+#ifdef USE_PROTOBUF
+    if (pPrivate->pbFilePath)
+	free (pPrivate->pbFilePath);
+#endif
+
     free (pPrivate);
     free (p);
 }
