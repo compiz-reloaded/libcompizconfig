@@ -863,33 +863,32 @@ initStringInfo (CCSSettingInfo * i, xmlNode * node)
     i->forString.sortStartsAt = -1;
     i->forString.extensible = FALSE;
 
-    if (nodeExists (node, "extensible"))
-    {
-	i->forString.extensible = TRUE;
-    }
-
-    nodes = getNodesFromPath (node->doc, node, "sort", &num);
-
-    if (num)
-    {
-	int val = 0; /* Start sorting at 0 unless otherwise specified. */
-
-	value = getStringFromPath (node->doc, nodes[0], "@start");
-	if (value)
-	{
-	    /* Custom starting value specified. */
-	    val = strtol (value, NULL, 0);
-	    if (val < 0)
-		val = 0;
-	    free (value);
-	}
-	i->forString.sortStartsAt = val;
-
-	free (nodes);
-    }
-
     if (!basicMetadata)
     {
+	if (nodeExists (node, "extensible"))
+	{
+	    i->forString.extensible = TRUE;
+	}
+
+	nodes = getNodesFromPath (node->doc, node, "sort", &num);
+	if (num)
+	{
+	    int val = 0; /* Start sorting at 0 unless otherwise specified. */
+
+	    value = getStringFromPath (node->doc, nodes[0], "@start");
+	    if (value)
+	    {
+		/* Custom starting value specified. */
+		val = strtol (value, NULL, 0);
+		if (val < 0)
+		    val = 0;
+		free (value);
+	    }
+	    i->forString.sortStartsAt = val;
+
+	    free (nodes);
+	}
+
 	nodes = getNodesFromPath (node->doc, node, "restriction", &num);
 	if (num)
 	{
@@ -1735,7 +1734,8 @@ ccsLoadPluginSettings (CCSPlugin * plugin)
     if (num)
     {
 	initOptionsFromRootNode (plugin, nodes[0]);
-	initStringExtensionsFromRootNode (plugin, nodes[0]);
+	if (!basicMetadata)
+	    initStringExtensionsFromRootNode (plugin, nodes[0]);
 	free (nodes);
     }
 
