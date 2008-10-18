@@ -999,13 +999,13 @@ getOptionType (const char *name)
 	{ "bool", TypeBool },
 	{ "int", TypeInt },
 	{ "float", TypeFloat },
-      	{ "string", TypeString },
+	{ "string", TypeString },
 	{ "color", TypeColor },
 	{ "action", TypeAction },
 	{ "key", TypeKey },
 	{ "button", TypeButton },
- 	{ "edge", TypeEdge },
-  	{ "bell", TypeBell },
+	{ "edge", TypeEdge },
+	{ "bell", TypeBell },
 	{ "match", TypeMatch },
 	{ "list", TypeList }
     };
@@ -1448,7 +1448,7 @@ initEdgeValue (CCSSettingValue * v,
 	"Right",
 	"Top",
 	"Bottom",
-    	"TopLeft",
+	"TopLeft",
 	"TopRight",
 	"BottomLeft",
 	"BottomRight"
@@ -1622,7 +1622,7 @@ initIntInfo (CCSSettingInfo * i, xmlNode * node, void * optionPBv)
 		    if (val >= i->forInt.min && val <= i->forInt.max)
 		    {
 			name = stringFromNodeDefTrans (nodes[j],
-						       "name/child::text()", 
+						       "name/child::text()",
 						       NULL);
 			if (name)
 			{
@@ -1910,7 +1910,7 @@ createProtoBufCacheDir ()
 {
     char *path = NULL;
     char *home = getenv ("HOME");
-    
+
     if (home && strlen (home))
     {
 	asprintf (&path, "%s/%s", home, METADATA_CACHE_DIR);
@@ -2588,7 +2588,7 @@ addCoreSettingsFromXMLNode (CCSContext * context,
 #ifdef USE_PROTOBUF
     fillBasicInfoIntoPB (plugin, (PluginInfoMetadata *) pluginInfoPBv);
 #endif
-    
+
     initRulesFromRootNode (plugin, node, pluginInfoPBv);
     context->plugins = ccsPluginListAppend (context->plugins, plugin);
 }
@@ -2743,7 +2743,7 @@ loadPluginFromXMLFile (CCSContext * context, char *xmlName, char *xmlDirPath)
     if (usingProtobuf)
     {
 	struct stat xmlStat;
-    
+
 	if (stat (xmlFilePath, &xmlStat))
 	{
 	    free (xmlFilePath);
