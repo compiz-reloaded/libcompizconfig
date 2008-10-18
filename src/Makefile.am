@@ -6,7 +6,6 @@ INCLUDES =			     \
 	-DPLUGINDIR=\"$(PLUGINDIR)\" \
 	-DMETADATADIR=\"$(METADATADIR)\" \
 	-DLIBDIR=\"$(libdir)\" \
-	-DGLOBALMETADATA=\"$(globalmetadata)\" \
 	-DSYSCONFDIR=\"$(sysconfdir)\"
 
 

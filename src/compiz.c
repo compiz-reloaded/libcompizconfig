@@ -43,8 +43,6 @@
 #include <ccs.h>
 #include "ccs-private.h"
 
-static xmlDoc * globalMetadata = NULL;
-
 static CCSSettingType
 getOptionType (char *name)
 {
@@ -262,94 +260,12 @@ getNodesFromXPath (xmlDoc * doc, xmlNode * base, char *path, int *num)
     return rv;
 }
 
-static char *
-getStringFromPath (xmlDoc * doc, xmlNode * base, char *path)
-{
-    char *rv = getStringFromXPath (doc, base, path);
-
-    if (!rv && globalMetadata && base)
-    {
-	char *gPath;
-	char *bPath = getGenericNodePath (base);
-	if (!bPath)
-	    return NULL;
-
-	asprintf (&gPath, "%s/%s", bPath, path);
-	if (gPath)
-	{
-	    rv = getStringFromXPath (globalMetadata, NULL, gPath);
-	    free (gPath);
-	}
-
-     	free (bPath);
-    }
-    return rv;
-}
-
-static xmlNode **
-getNodesFromPath (xmlDoc * doc, xmlNode * base, char *path, int *num)
-{
-
-    xmlNode **rv = getNodesFromXPath (doc, base, path, num);
-
-    if (!*num && globalMetadata && base)
-    {
-	char *gPath;
-	char *bPath = getGenericNodePath (base);
-
-	if (!bPath)
-	{
-	    free (rv);
-	    return NULL;
-	}
-
-	asprintf (&gPath, "%s/%s", bPath, path);
-	if (gPath)
-	{
-	    rv = getNodesFromXPath (globalMetadata, NULL, gPath, num);
-	    free (gPath);
-	}
-
-	free (bPath);
-    }
-    return rv;
-}
-
-static xmlNode **
-getNodesFromPathGlobal (xmlDoc * doc, xmlNode * base, char *path, int *num)
-{
-    xmlNode **rv = NULL;
-
-    if (globalMetadata && base)
-    {
-	char *gPath;
-	char *bPath = getGenericNodePath (base);
-
-	if (!bPath)
-	    return NULL;
-
-	asprintf (&gPath, "%s/%s", bPath, path);
-	if (gPath)
-	{
-	    rv = getNodesFromXPath (globalMetadata, NULL, gPath, num);
-	    free (gPath);
-	}
-
-	free (bPath);
-    }
-
-    if (!*num)
-	rv = getNodesFromXPath (doc, base, path, num);
-
-    return rv;
-}
-
 static Bool
 nodeExists (xmlNode * node, char *path)
 {
     xmlNode **nodes = NULL;
     int num;
-    nodes = getNodesFromPath (node->doc, node, path, &num);
+    nodes = getNodesFromXPath (node->doc, node, path, &num);
 
     if (num)
     {
@@ -366,7 +282,7 @@ stringFromNodeDef (xmlNode * node, char *path, char *def)
     char *val;
     char *rv = NULL;
 
-    val = getStringFromPath (node->doc, node, path);
+    val = getStringFromXPath (node->doc, node, path);
 
     if (val)
     {
@@ -462,7 +378,7 @@ initBoolValue (CCSSettingValue * v, xmlNode * node)
 
     v->value.asBool = FALSE;
 
-    value = getStringFromPath (node->doc, node, "child::text()");
+    value = getStringFromXPath (node->doc, node, "child::text()");
 
     if (value)
     {
@@ -480,7 +396,7 @@ initIntValue (CCSSettingValue * v, CCSSettingInfo * i, xmlNode * node)
 
     v->value.asInt = (i->forInt.min + i->forInt.max) / 2;
 
-    value = getStringFromPath (node->doc, node, "child::text()");
+    value = getStringFromXPath (node->doc, node, "child::text()");
 
     if (value)
     {
@@ -503,7 +419,7 @@ initFloatValue (CCSSettingValue * v, CCSSettingInfo * i, xmlNode * node)
 
     loc = setlocale (LC_NUMERIC, NULL);
     setlocale (LC_NUMERIC, "C");
-    value = getStringFromPath (node->doc, node, "child::text()");
+    value = getStringFromXPath (node->doc, node, "child::text()");
 
     if (value)
     {
@@ -522,7 +438,7 @@ initStringValue (CCSSettingValue * v, CCSSettingInfo * i, xmlNode * node)
 {
     char *value;
 
-    value = getStringFromPath (node->doc, node, "child::text()");
+    value = getStringFromXPath (node->doc, node, "child::text()");
 
     if (value)
     {
@@ -542,7 +458,7 @@ initColorValue (CCSSettingValue * v, xmlNode * node)
     memset (&v->value.asColor, 0, sizeof (v->value.asColor));
     v->value.asColor.color.alpha = 0xffff;
 
-    value = getStringFromPath (node->doc, node, "red/child::text()");
+    value = getStringFromXPath (node->doc, node, "red/child::text()");
     if (value)
     {
 	int color = strtol ((char *) value, NULL, 0);
@@ -551,7 +467,7 @@ initColorValue (CCSSettingValue * v, xmlNode * node)
 	free (value);
     }
 
-    value = getStringFromPath (node->doc, node, "green/child::text()");
+    value = getStringFromXPath (node->doc, node, "green/child::text()");
     if (value)
     {
 	int color = strtol ((char *) value, NULL, 0);
@@ -560,7 +476,7 @@ initColorValue (CCSSettingValue * v, xmlNode * node)
 	free (value);
     }
 
-    value = getStringFromPath (node->doc, node, "blue/child::text()");
+    value = getStringFromXPath (node->doc, node, "blue/child::text()");
     if (value)
     {
 	int color = strtol ((char *) value, NULL, 0);
@@ -569,7 +485,7 @@ initColorValue (CCSSettingValue * v, xmlNode * node)
 	free (value);
     }
 
-    value = getStringFromPath (node->doc, node, "alpha/child::text()");
+    value = getStringFromXPath (node->doc, node, "alpha/child::text()");
     if (value)
     {
 	int color = strtol (value, NULL, 0);
@@ -584,7 +500,7 @@ initMatchValue (CCSSettingValue * v, xmlNode * node)
 {
     char *value;
 
-    value = getStringFromPath (node->doc, node, "child::text()");
+    value = getStringFromXPath (node->doc, node, "child::text()");
     if (value)
     {
 	free (v->value.asMatch);
@@ -602,7 +518,7 @@ initKeyValue (CCSSettingValue * v, CCSSettingInfo * i, xmlNode * node)
 
     memset (&v->value.asKey, 0, sizeof (v->value.asKey));
 
-    value = getStringFromPath (node->doc, node, "child::text()");
+    value = getStringFromXPath (node->doc, node, "child::text()");
     if (value)
     {
 	if (strcasecmp (value, "disabled"))
@@ -620,7 +536,7 @@ initButtonValue (CCSSettingValue * v, CCSSettingInfo * i, xmlNode * node)
 
     memset (&v->value.asButton, 0, sizeof (v->value.asButton));
 
-    value = getStringFromPath (node->doc, node, "child::text()");
+    value = getStringFromXPath (node->doc, node, "child::text()");
     if (value)
     {
 	if (strcasecmp (value, "disabled"))
@@ -651,11 +567,11 @@ initEdgeValue (CCSSettingValue * v, CCSSettingInfo * i, xmlNode * node)
 	"BottomRight"
     };
 
-    nodes = getNodesFromPath (node->doc, node, "edge", &num);
+    nodes = getNodesFromXPath (node->doc, node, "edge", &num);
 
     for (k = 0; k < num; k++)
     {
-	value = getStringFromPath (node->doc, nodes[k], "@name");
+	value = getStringFromXPath (node->doc, nodes[k], "@name");
 	if (value)
 	{
 	    for (j = 0; j < sizeof (edge) / sizeof (edge[0]); j++)
@@ -677,7 +593,7 @@ initBellValue (CCSSettingValue * v, CCSSettingInfo * i, xmlNode * node)
 
     v->value.asBell = FALSE;
 
-    value = getStringFromPath (node->doc, node, "child::text()");
+    value = getStringFromXPath (node->doc, node, "child::text()");
     if (value)
     {
 	if (!strcasecmp (value, "true"))
@@ -692,7 +608,7 @@ initListValue (CCSSettingValue * v, CCSSettingInfo * i, xmlNode * node)
     xmlNode **nodes;
     int num, j;
 
-    nodes = getNodesFromPath (node->doc, node, "value", &num);
+    nodes = getNodesFromXPath (node->doc, node, "value", &num);
     if (num)
     {
 	for (j = 0; j < num; j++)
@@ -755,7 +671,7 @@ initIntInfo (CCSSettingInfo * i, xmlNode * node)
     i->forInt.max = MAXSHORT;
     i->forInt.desc = NULL;
 
-    value = getStringFromPath (node->doc, node, "min/child::text()");
+    value = getStringFromXPath (node->doc, node, "min/child::text()");
     if (value)
     {
 	int val = strtol (value, NULL, 0);
@@ -763,7 +679,7 @@ initIntInfo (CCSSettingInfo * i, xmlNode * node)
 	free (value);
     }
 
-    value = getStringFromPath (node->doc, node, "max/child::text()");
+    value = getStringFromXPath (node->doc, node, "max/child::text()");
     if (value)
     {
 	int val = strtol (value, NULL, 0);
@@ -773,12 +689,12 @@ initIntInfo (CCSSettingInfo * i, xmlNode * node)
 
     if (!basicMetadata)
     {
-	nodes = getNodesFromPath (node->doc, node, "desc", &num);
+	nodes = getNodesFromXPath (node->doc, node, "desc", &num);
 	if (num)
 	{
 	    for (j = 0; j < num; j++)
 	    {
-		value = getStringFromPath (node->doc, nodes[j],
+		value = getStringFromXPath (node->doc, nodes[j],
 					   "value/child::text()");
 		if (value)
 		{
@@ -825,7 +741,7 @@ initFloatInfo (CCSSettingInfo * i, xmlNode * node)
 
     loc = setlocale (LC_NUMERIC, NULL);
     setlocale (LC_NUMERIC, "C");
-    value = getStringFromPath (node->doc, node, "min/child::text()");
+    value = getStringFromXPath (node->doc, node, "min/child::text()");
     if (value)
     {
 	float val = strtod (value, NULL);
@@ -833,7 +749,7 @@ initFloatInfo (CCSSettingInfo * i, xmlNode * node)
 	free (value);
     }
 
-    value = getStringFromPath (node->doc, node, "max/child::text()");
+    value = getStringFromXPath (node->doc, node, "max/child::text()");
     if (value)
     {
 	float val = strtod (value, NULL);
@@ -841,7 +757,7 @@ initFloatInfo (CCSSettingInfo * i, xmlNode * node)
 	free (value);
     }
 
-    value = getStringFromPath (node->doc, node, "precision/child::text()");
+    value = getStringFromXPath (node->doc, node, "precision/child::text()");
     if (value)
     {
 	float val = strtod (value, NULL);
@@ -870,12 +786,12 @@ initStringInfo (CCSSettingInfo * i, xmlNode * node)
 	    i->forString.extensible = TRUE;
 	}
 
-	nodes = getNodesFromPath (node->doc, node, "sort", &num);
+	nodes = getNodesFromXPath (node->doc, node, "sort", &num);
 	if (num)
 	{
 	    int val = 0; /* Start sorting at 0 unless otherwise specified. */
 
-	    value = getStringFromPath (node->doc, nodes[0], "@start");
+	    value = getStringFromXPath (node->doc, nodes[0], "@start");
 	    if (value)
 	    {
 		/* Custom starting value specified. */
@@ -889,12 +805,12 @@ initStringInfo (CCSSettingInfo * i, xmlNode * node)
 	    free (nodes);
 	}
 
-	nodes = getNodesFromPath (node->doc, node, "restriction", &num);
+	nodes = getNodesFromXPath (node->doc, node, "restriction", &num);
 	if (num)
 	{
 	    for (j = 0; j < num; j++)
 	    {
-		value = getStringFromPath (node->doc, nodes[j],
+		value = getStringFromXPath (node->doc, nodes[j],
 					   "value/child::text()");
 		if (value)
 		{
@@ -924,7 +840,7 @@ initListInfo (CCSSettingInfo * i, xmlNode * node)
     i->forList.listType = TypeBool;
     i->forList.listInfo = NULL;
 
-    value = getStringFromPath (node->doc, node, "type/child::text()");
+    value = getStringFromXPath (node->doc, node, "type/child::text()");
 
     if (!value)
 	return;
@@ -971,7 +887,7 @@ initActionInfo (CCSSettingInfo * i, xmlNode * node)
 
     i->forAction.internal = FALSE;
 
-    value = getStringFromPath (node->doc, node, "internal/child::text()");
+    value = getStringFromXPath (node->doc, node, "internal/child::text()");
     if (value)
     {
 	if (strcasecmp (value, "true") == 0)
@@ -1066,7 +982,7 @@ addOptionForPlugin (CCSPlugin * plugin,
 	break;
     }
 
-    nodes = getNodesFromPathGlobal (node->doc, node, "default", &num);
+    nodes = getNodesFromXPath (node->doc, node, "default", &num);
     if (num)
     {
 	switch (setting->type)
@@ -1187,7 +1103,7 @@ initOptionsFromRootNode (CCSPlugin * plugin, xmlNode * node)
 {
     xmlNode **nodes;
     int num, i;
-    nodes = getNodesFromPath (node->doc, node, ".//option", &num);
+    nodes = getNodesFromXPath (node->doc, node, ".//option", &num);
 
     if (num)
     {
@@ -1203,7 +1119,7 @@ addStringsFromPath (CCSStringList * list, char * path, xmlNode * node)
 {
     xmlNode **nodes;
     int num, i;
-    nodes = getNodesFromPath (node->doc, node, path, &num);
+    nodes = getNodesFromXPath (node->doc, node, path, &num);
 
     if (num)
     {
@@ -1245,13 +1161,13 @@ addStringExtensionFromXMLNode (CCSPlugin * plugin, xmlNode * node)
 
     extension->restriction = NULL;
 
-    extension->basePlugin = getStringFromPath (node->doc, node, "@base_plugin");
+    extension->basePlugin = getStringFromXPath (node->doc, node, "@base_plugin");
     if (!extension->basePlugin)
 	extension->basePlugin = strdup ("");
 
     addStringsFromPath (&extension->baseSettings, "base_option", node);
 
-    nodes = getNodesFromPath (node->doc, node, "restriction", &num);
+    nodes = getNodesFromXPath (node->doc, node, "restriction", &num);
     if (!num)
     {
 	free (extension);
@@ -1260,7 +1176,7 @@ addStringExtensionFromXMLNode (CCSPlugin * plugin, xmlNode * node)
 
     for (j = 0; j < num; j++)
     {
-	value = getStringFromPath (node->doc, nodes[j], "value/child::text()");
+	value = getStringFromXPath (node->doc, nodes[j], "value/child::text()");
 	if (value)
 	{
 	    name = stringFromNodeDefTrans (nodes[j], "name/child::text()",
@@ -1286,7 +1202,7 @@ initStringExtensionsFromRootNode (CCSPlugin * plugin, xmlNode * node)
 {
     xmlNode **nodes;
     int num, i;
-    nodes = getNodesFromPath (node->doc, node, ".//extension", &num);
+    nodes = getNodesFromXPath (node->doc, node, ".//extension", &num);
 
     if (num)
     {
@@ -1556,27 +1472,6 @@ addPluginNamed (CCSContext * context, char *name)
 	!strcmp (name, "ccp") || !strcmp (name, "kconfig"))
 	return;
 
-    if (globalMetadata)
-    {
-	xmlNode **nodes;
-	int num, i;
-	char *path;
-	asprintf (&path, "/compiz/plugin[@name = '%s']", name);
-
-	nodes = getNodesFromPath (globalMetadata, NULL, path, &num);
-	free (path);
-
-	if (num)
-	{
-	    for (i = 0; i < num; i++)
-		addPluginFromXMLNode (context, nodes[i], NULL);
-
-	    free (nodes);
-
-	    return;
-	}
-    }
-
     plugin = calloc (1, sizeof (CCSPlugin));
     if (!plugin)
 	return;
@@ -1657,14 +1552,6 @@ ccsLoadPlugin (CCSContext * context, char *name)
 void
 ccsLoadPlugins (CCSContext * context)
 {
-    FILE *fp;
-    fp = fopen (GLOBALMETADATA, "r");
-    if (fp)
-    {
-	fclose (fp);
-	globalMetadata = xmlReadFile (GLOBALMETADATA, NULL, 0);
-    }
-
     char *home = getenv ("HOME");
     if (home && strlen (home))
     {
@@ -1690,11 +1577,6 @@ ccsLoadPlugins (CCSContext * context)
     }
 
     loadPluginsFromName (context, PLUGINDIR);
-    if (globalMetadata)
-    {
-	xmlFreeDoc (globalMetadata);
-	globalMetadata = NULL;
-    }
 }
 
 void
@@ -1712,16 +1594,9 @@ ccsLoadPluginSettings (CCSPlugin * plugin)
     pPrivate->loaded = TRUE;
     D (D_FULL, "Initializing %s options...", plugin->name);
 
-    FILE *fp;
-    fp = fopen (GLOBALMETADATA, "r");
-    if (fp)
-    {
-	fclose (fp);
-	globalMetadata = xmlReadFile (GLOBALMETADATA, NULL, 0);
-    }
-
     if (pPrivate->xmlFile)
     {
+	FILE *fp;
 	fp = fopen (pPrivate->xmlFile, "r");
 	if (fp)
 	{
@@ -1730,7 +1605,7 @@ ccsLoadPluginSettings (CCSPlugin * plugin)
 	}
     }
 
-    nodes = getNodesFromPath (doc, NULL, pPrivate->xmlPath, &num);
+    nodes = getNodesFromXPath (doc, NULL, pPrivate->xmlPath, &num);
     if (num)
     {
 	initOptionsFromRootNode (plugin, nodes[0]);
@@ -1741,12 +1616,6 @@ ccsLoadPluginSettings (CCSPlugin * plugin)
 
     if (doc)
 	xmlFreeDoc (doc);
-
-    if (globalMetadata)
-    {
-	xmlFreeDoc (globalMetadata);
-	globalMetadata = NULL;
-    }
 
     D (D_FULL, "done\n");
 

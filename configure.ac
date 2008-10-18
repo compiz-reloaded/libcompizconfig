@@ -93,9 +93,6 @@ AC_SUBST(LIBXML2_REQUIRES)
 
 AC_CHECK_HEADERS([sys/inotify.h], [have_inotify=yes], [have_inotify=no])
 
-globalmetadata=$datadir/compizconfig/global.xml
-AC_SUBST(globalmetadata)
-
 AC_ARG_ENABLE(debug,
   [  --enable-debug[=none,normal,full]    Enable output of debug messages],
   [enable_debug=$enableval], [enable_debug=none])
