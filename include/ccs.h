@@ -182,17 +182,19 @@ struct _CCSPlugin
 
 typedef enum _CCSSettingType
 {
+    /* This needs to be in the same order as CompOptionType for consistency */
     TypeBool,
     TypeInt,
     TypeFloat,
     TypeString,
     TypeColor,
-    TypeMatch,
-    TypeList,
+    TypeAction,
     TypeKey,
     TypeButton,
     TypeEdge,
     TypeBell,
+    TypeMatch,
+    TypeList,
     TypeNum
 } CCSSettingType;
 

@@ -51,6 +51,9 @@ typedef struct _CCSPluginPrivate
     Bool           active;
     char *	   xmlFile;
     char *	   xmlPath;
+#ifdef USE_PROTOBUF
+    char *	   pbFilePath;
+#endif
 
     CCSStrExtensionList stringExtensions;
 } CCSPluginPrivate;
