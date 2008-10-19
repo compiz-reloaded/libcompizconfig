@@ -73,6 +73,7 @@ fi
 
 AC_C_BIGENDIAN
 
+PKG_CHECK_MODULES(LIBX11, "x11")
 PKG_CHECK_MODULES(COMPIZ, "compiz")
 
 if test -z "$PKG_CONFIG"; then

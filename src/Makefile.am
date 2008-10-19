@@ -1,11 +1,12 @@
-INCLUDES =			     \
-	@COMPIZ_CFLAGS@ \
-	@LIBXML2_CFLAGS@ \
-	-I$(top_srcdir)/include	     \
-	-I$(top_srcdir)/src \
-	-DPLUGINDIR=\"$(PLUGINDIR)\" \
-	-DMETADATADIR=\"$(METADATADIR)\" \
-	-DLIBDIR=\"$(libdir)\" \
+INCLUDES =			               \
+	@COMPIZ_CFLAGS@                        \
+	@LIBX11_CFLAGS@                        \
+	@LIBXML2_CFLAGS@                       \
+	-I$(top_srcdir)/include	               \
+	-I$(top_srcdir)/src                    \
+	-DPLUGINDIR=\"$(PLUGINDIR)\"           \
+	-DMETADATADIR=\"$(METADATADIR)\"       \
+	-DLIBDIR=\"$(libdir)\"                 \
 	-DGLOBALMETADATA=\"$(globalmetadata)\" \
 	-DSYSCONFDIR=\"$(sysconfdir)\"
 
@@ -22,7 +23,7 @@ libcompizconfig_la_SOURCES = \
 	ccs-private.h	\
 	iniparser.h
 
-libcompizconfig_la_LIBADD = @LIBXML2_LIBS@
+libcompizconfig_la_LIBADD = @LIBXML2_LIBS@ @LIBX11_LIBS@
 
 lib_LTLIBRARIES=libcompizconfig.la
 
