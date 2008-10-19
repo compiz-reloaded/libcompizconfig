@@ -22,15 +22,16 @@ clean-local:
 endif
 
 
-INCLUDES =			     \
-	@COMPIZ_CFLAGS@ \
-	@LIBXML2_CFLAGS@ \
-	-I$(top_srcdir)/include	     \
-	-I$(top_srcdir)/src \
-	-DPLUGINDIR=\"$(PLUGINDIR)\" \
-	-DMETADATADIR=\"$(METADATADIR)\" \
-	-DLIBDIR=\"$(libdir)\" \
-	$(PROTOBUF_DEFINES) \
+INCLUDES =			               \
+	@COMPIZ_CFLAGS@                        \
+	@LIBX11_CFLAGS@                        \
+	@LIBXML2_CFLAGS@                       \
+	-I$(top_srcdir)/include	               \
+	-I$(top_srcdir)/src                    \
+	-DPLUGINDIR=\"$(PLUGINDIR)\"           \
+	-DMETADATADIR=\"$(METADATADIR)\"       \
+	-DLIBDIR=\"$(libdir)\"                 \
+	$(PROTOBUF_DEFINES)                    \
 	-DSYSCONFDIR=\"$(sysconfdir)\"
 
 
@@ -46,7 +47,7 @@ libcompizconfig_la_SOURCES = \
 	ccs-private.h	\
 	iniparser.h
 
-libcompizconfig_la_LIBADD = @LIBXML2_LIBS@ $(PROTOBUF_LIB)
+libcompizconfig_la_LIBADD = @LIBXML2_LIBS@ @LIBX11_LIBS@ $(PROTOBUF_LIB)
 
 lib_LTLIBRARIES=libcompizconfig.la
 
