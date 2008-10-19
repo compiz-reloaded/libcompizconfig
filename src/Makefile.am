@@ -4,6 +4,8 @@ PROTOBUF_LIB = -lprotobuf
 PROTOBUF_DEFINES = \
 	-DUSE_PROTOBUF=1
 
+EXTRA_DIST = compizconfig.proto
+
 compizconfig.pb.cc: compizconfig.proto
 	protoc --cpp_out=. compizconfig.proto
 
@@ -16,11 +18,6 @@ nodist_libcompizconfig_la_SOURCES = \
 
 clean-local:
 	rm -f compizconfig.pb.cc compizconfig.pb.h
-
-else
-
-PROTOBUF_LIB =
-nodist_libcompizconfig_la_SOURCES =
 
 endif
 
