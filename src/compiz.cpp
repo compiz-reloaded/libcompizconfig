@@ -55,8 +55,6 @@ Bool usingProtobuf = TRUE;
 
 #define PB_ABI_VERSION 20081004
 
-#define METADATA_CACHE_DIR ".config/compiz/compizconfig/cache"
-
 typedef metadata::PluginInfo PluginInfoMetadata;
 typedef metadata::PluginBrief PluginBriefMetadata;
 typedef metadata::Plugin PluginMetadata;
@@ -73,6 +71,8 @@ PluginBriefMetadata persistentPluginBriefPB;
 PluginMetadata persistentPluginPB; // Made global so that it gets reused,
 					 // for better performance (to avoid
 					 // mem alloc/free for each plugin)
+
+std::string metadataCacheDir = "";
 
 static char *
 getLocale ()
@@ -1908,25 +1908,50 @@ checkAddGroupSubgroup (OptionMetadata *optPB,
 static Bool
 createProtoBufCacheDir ()
 {
-    char *path = NULL;
-    char *home = getenv ("HOME");
-
-    if (home && strlen (home))
+    if (metadataCacheDir.length () > 0)
     {
-	asprintf (&path, "%s/%s", home, METADATA_CACHE_DIR);
-	if (path)
-	{
-	    Bool success = !mkdir (path, 0700);
-	    success |= (errno == EEXIST);
-	    if (!success)
-		fprintf (stderr, "[ERROR]: Error creating directory \"%s\"\n",
-			 path);
-	    free (path);
+	// Cache dir must have been created already, since otherwise it would
+	// be "". So we can return here.
+	return TRUE;
+    }
+    char *cacheBaseDir = NULL;
+    char *cacheHome = getenv ("XDG_CACHE_HOME");
 
-	    if (success)
-		return TRUE;
+    if (cacheHome && strlen (cacheHome))
+    {
+	asprintf (&cacheBaseDir, "%s", cacheHome);
+    }
+    else
+    {
+	char *home = getenv ("HOME");
+	if (home && strlen (home))
+	{
+	    asprintf (&cacheBaseDir, "%s/.cache", home);
 	}
     }
+
+    if (cacheBaseDir)
+    {
+	metadataCacheDir = cacheBaseDir;
+	metadataCacheDir += "/compizconfig";
+
+	// Create base dir
+	mkdir (cacheBaseDir, 0700);
+
+	// Create cache dir
+	Bool success = !mkdir (metadataCacheDir.c_str (), 0700);
+	success |= (errno == EEXIST);
+	if (!success)
+	    fprintf (stderr, "[ERROR]: Error creating directory \"%s\"\n",
+		     metadataCacheDir.c_str ());
+	free (cacheBaseDir);
+
+	if (success)
+	    return TRUE; // metadataCacheDir will be used later in this case
+
+	metadataCacheDir = ""; // invalidate metadataCacheDir
+    }
+
     return FALSE;
 }
 
@@ -2764,11 +2789,10 @@ loadPluginFromXMLFile (CCSContext * context, char *xmlName, char *xmlDirPath)
 	strncpy (name, xmlName, lenXMLName - 4);
 	name[lenXMLName - 4] = '\0';
 
-	char *home = getenv ("HOME");
-	if (home && strlen (home))
+	if (createProtoBufCacheDir () &&
+	    metadataCacheDir.length () > 0)
 	{
-	    asprintf (&pbFilePath, "%s/%s/%s.pb",
-		      home, METADATA_CACHE_DIR, name);
+	    asprintf (&pbFilePath, "%s/%s.pb", metadataCacheDir.c_str (), name);
 	    if (!pbFilePath)
 	    {
 		fprintf (stderr, "[ERROR]: Can't allocate memory\n");
