@@ -6,6 +6,8 @@ AC_INIT([libcompizconfig],esyscmd(. ./VERSION;echo -n $VERSION), [dev@opencompos
 
 AM_INIT_AUTOMAKE([1.9 dist-bzip2])
 
+AC_PROG_CXX
+
 AC_CONFIG_HEADER([config.h])
 AM_MAINTAINER_MODE
 
@@ -97,7 +99,6 @@ AC_ARG_ENABLE(protobuf,
   [use_protobuf=$enableval], [use_protobuf=yes])
 
 if test "x$use_protobuf" = "xyes"; then
-  AC_LANG([C++])
   protobuf_error_msg="\nWARNING: You need to install Protocol Buffers to get faster program startup.\n        Sources are available at http://code.google.com/p/protobuf/downloads/list\n         Package names for Ubuntu/Debian: libprotobuf0, libprotobuf-dev, protobuf-compiler\n         Package names for other distributions: protobuf, protobuf-devel\n        Disabling protobuf.\n"
   AC_CHECK_PROG(have_protoc, protoc, yes, no)
   if test "x$have_protoc" = "xno"; then
@@ -106,11 +107,12 @@ if test "x$use_protobuf" = "xyes"; then
     AC_CHECK_LIB(protobuf, _ZN6google8protobuf7MessageD2Ev, [], [
       echo -e $protobuf_error_msg; use_protobuf=no ])
     if test "x$use_protobuf" = "xyes"; then
+      AC_LANG([C++])
       AC_CHECK_HEADER([google/protobuf/message.h],,[
         echo -e $protobuf_error_msg; use_protobuf=no ])
+      AC_LANG([C])
     fi
   fi
-  AC_LANG([C])
 fi
 AM_CONDITIONAL([USE_PROTOBUF], [test "x$use_protobuf" = "xyes"])
 
