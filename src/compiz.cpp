@@ -1952,6 +1952,7 @@ createProtoBufCacheDir ()
 	metadataCacheDir = ""; // invalidate metadataCacheDir
     }
 
+    usingProtobuf = FALSE; // Disable protobuf if cache dir cannot be created
     return FALSE;
 }
 
