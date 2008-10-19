@@ -98,7 +98,7 @@ AC_ARG_ENABLE(protobuf,
 
 if test "x$use_protobuf" = "xyes"; then
   AC_LANG([C++])
-  protobuf_error_msg="\nWARNING: You need to install Protocol Buffers to get faster program startup.\n        Package names for Ubuntu/Debian: libprotobuf0, libprotobuf-dev, protobuf-compiler\n         Package names for other distributions: protobuf, protobuf-devel\n        Disabling protobuf.\n"
+  protobuf_error_msg="\nWARNING: You need to install Protocol Buffers to get faster program startup.\n        Sources are available at http://code.google.com/p/protobuf/downloads/list\n         Package names for Ubuntu/Debian: libprotobuf0, libprotobuf-dev, protobuf-compiler\n         Package names for other distributions: protobuf, protobuf-devel\n        Disabling protobuf.\n"
   AC_CHECK_PROG(have_protoc, protoc, yes, no)
   if test "x$have_protoc" = "xno"; then
     echo -e $protobuf_error_msg; use_protobuf=no
