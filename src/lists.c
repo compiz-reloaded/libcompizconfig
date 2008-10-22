@@ -257,7 +257,7 @@ char ** ccsGetStringArrayFromValueList (CCSSettingValueList list, int *num)
 
     if (length)
     {
-	rv = calloc (length, sizeof (int));
+	rv = calloc (length, sizeof (char *));
 	if (!rv)
 	    return NULL;
     }
@@ -278,7 +278,7 @@ char ** ccsGetMatchArrayFromValueList (CCSSettingValueList list, int *num)
 
     if (length)
     {
-	rv = calloc (length, sizeof (int));
+	rv = calloc (length, sizeof (char *));
 	if (!rv)
 	    return NULL;
     }
