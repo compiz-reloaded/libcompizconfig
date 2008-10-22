@@ -1933,14 +1933,13 @@ createProtoBufCacheDir ()
     if (cacheBaseDir)
     {
 	metadataCacheDir = cacheBaseDir;
-	metadataCacheDir += "/compizconfig";
-
-	// Create base dir
-	mkdir (cacheBaseDir, 0700);
+	if (metadataCacheDir[metadataCacheDir.length () - 1] != '/')
+	    metadataCacheDir += "/";
+	metadataCacheDir += "compizconfig";
+	std::string metadataCacheFileDummy = metadataCacheDir + "/dummy";
 
 	// Create cache dir
-	Bool success = !mkdir (metadataCacheDir.c_str (), 0700);
-	success |= (errno == EEXIST);
+	Bool success = ccsCreateDirFor (metadataCacheFileDummy.c_str ());
 	if (!success)
 	    fprintf (stderr, "[ERROR]: Error creating directory \"%s\"\n",
 		     metadataCacheDir.c_str ());

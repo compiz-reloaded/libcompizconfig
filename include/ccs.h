@@ -715,6 +715,8 @@ void ccsIniClose (IniDictionary *dictionary);
 void ccsIniSave (IniDictionary *dictionary,
 		 const char    *fileName);
 
+Bool ccsCreateDirFor (const char *fileName);
+
 Bool ccsIniGetString (IniDictionary *dictionary,
 		      const char    *section,
 		      const char    *entry,
