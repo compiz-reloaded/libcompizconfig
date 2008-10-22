@@ -35,7 +35,7 @@
  * @return: True if the parent directory of the file now exists
 **/
 
-static Bool
+Bool
 ccsCreateDirFor (const char *fileName)
 {
     char *path, *delim;
