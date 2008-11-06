@@ -2502,6 +2502,13 @@ addPluginFromXMLNode (CCSContext * context,
 	return;
     }
 
+    if (!strcmp (name, "ini") || !strcmp (name, "gconf") ||
+	!strcmp (name, "ccp") || !strcmp (name, "kconfig"))
+    {
+	free (name);
+	return;
+    }
+
     if (ccsFindPlugin (context, name))
     {
 	free (name);
@@ -2546,13 +2553,6 @@ addPluginFromXMLNode (CCSContext * context,
 #ifdef USE_PROTOBUF
     fillBasicInfoIntoPB (plugin, (PluginInfoMetadata *) pluginInfoPBv);
 #endif
-
-    if (!strcmp (name, "ini") || !strcmp (name, "gconf") ||
-	!strcmp (name, "ccp") || !strcmp (name, "kconfig"))
-    {
-	free (name);
-	return;
-    }
 
     initRulesFromRootNode (plugin, node, pluginInfoPBv);
 
