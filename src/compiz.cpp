@@ -2480,7 +2480,8 @@ fillBasicInfoIntoPB (CCSPlugin *plugin, PluginInfoMetadata *pluginInfoPB)
 }
 #endif
 
-static void
+/* Returns TRUE on success. */
+static Bool
 addPluginFromXMLNode (CCSContext * context,
 		      xmlNode * node,
 		      char * file,
@@ -2491,7 +2492,7 @@ addPluginFromXMLNode (CCSContext * context,
     CCSPluginPrivate *pPrivate;
 
     if (!node)
-	return;
+	return FALSE;
 
     name = getStringFromXPath (node->doc, node, "@name");
 
@@ -2499,31 +2500,31 @@ addPluginFromXMLNode (CCSContext * context,
     {
 	if (name)
 	    free (name);
-	return;
+	return FALSE;
     }
 
     if (!strcmp (name, "ini") || !strcmp (name, "gconf") ||
 	!strcmp (name, "ccp") || !strcmp (name, "kconfig"))
     {
 	free (name);
-	return;
+	return FALSE;
     }
 
     if (ccsFindPlugin (context, name))
     {
 	free (name);
-	return;
+	return FALSE;
     }
 
     plugin = (CCSPlugin *) calloc (1, sizeof (CCSPlugin));
     if (!plugin)
-	return;
+	return FALSE;
 
     pPrivate = (CCSPluginPrivate *) calloc (1, sizeof (CCSPluginPrivate));
     if (!pPrivate)
     {
 	free (plugin);
-	return;
+	return FALSE;
     }
 
     plugin->ccsPrivate = (void *) pPrivate;
@@ -2558,9 +2559,12 @@ addPluginFromXMLNode (CCSContext * context,
 
     context->plugins = ccsPluginListAppend (context->plugins, plugin);
     free (name);
+
+    return TRUE;
 }
 
-static void
+/* Returns TRUE on success. */
+static Bool
 addCoreSettingsFromXMLNode (CCSContext * context,
 			    xmlNode * node,
 			    char *file,
@@ -2570,20 +2574,20 @@ addCoreSettingsFromXMLNode (CCSContext * context,
     CCSPluginPrivate *pPrivate;
 
     if (!node)
-	return;
+	return FALSE;
 
     if (ccsFindPlugin (context, "core"))
-	return;
+	return FALSE;
 
     plugin = (CCSPlugin *) calloc (1, sizeof (CCSPlugin));
     if (!plugin)
-	return;
+	return FALSE;
 
     pPrivate = (CCSPluginPrivate *) calloc (1, sizeof (CCSPluginPrivate));
     if (!pPrivate)
     {
 	free (plugin);
-	return;
+	return FALSE;
     }
 
     plugin->ccsPrivate = (void *) pPrivate;
@@ -2616,6 +2620,8 @@ addCoreSettingsFromXMLNode (CCSContext * context,
 
     initRulesFromRootNode (plugin, node, pluginInfoPBv);
     context->plugins = ccsPluginListAppend (context->plugins, plugin);
+
+    return TRUE;
 }
 
 /* End of XML parsing */
@@ -2711,7 +2717,8 @@ writePBFile (char *pbFilePath,
 }
 #endif
 
-static void
+/* Returns TRUE on success. */
+static Bool
 loadPluginFromXML (CCSContext * context,
 		   xmlDoc * doc,
 		   char *filename,
@@ -2719,20 +2726,25 @@ loadPluginFromXML (CCSContext * context,
 {
     xmlNode **nodes;
     int num;
+    Bool success = FALSE;
 
     nodes = getNodesFromXPath (doc, NULL, "/compiz/core", &num);
     if (num)
     {
-	addCoreSettingsFromXMLNode (context, nodes[0], filename, pluginInfoPBv);
+	success = addCoreSettingsFromXMLNode (context, nodes[0], filename,
+					      pluginInfoPBv);
 	free (nodes);
+	return success;
     }
 
     nodes = getNodesFromXPath (doc, NULL, "/compiz/plugin", &num);
     if (num)
     {
-	addPluginFromXMLNode (context, nodes[0], filename, pluginInfoPBv);
+	success = addPluginFromXMLNode (context, nodes[0], filename,
+					pluginInfoPBv);
 	free (nodes);
     }
+    return success;
 }
 
 #ifdef USE_PROTOBUF
@@ -2830,6 +2842,7 @@ loadPluginFromXMLFile (CCSContext * context, char *xmlName, char *xmlDirPath)
 
     // Load from .xml
     FILE *fp = fopen (xmlFilePath, "r");
+    Bool xmlLoaded = FALSE;
 
     if (fp)
     {
@@ -2837,14 +2850,15 @@ loadPluginFromXMLFile (CCSContext * context, char *xmlName, char *xmlDirPath)
 	xmlDoc *doc = xmlReadFile (xmlFilePath, NULL, 0);
 	if (doc)
 	{
-	    loadPluginFromXML (context, doc, xmlFilePath, pluginInfoPBv);
+	    xmlLoaded = loadPluginFromXML (context, doc, xmlFilePath,
+					   pluginInfoPBv);
 	    xmlFreeDoc (doc);
 	}
     }
     free (xmlFilePath);
 
 #ifdef USE_PROTOBUF
-    if (usingProtobuf)
+    if (usingProtobuf && xmlLoaded)
     {
 	writePBFile (pbFilePath, NULL, &persistentPluginBriefPB);
 
