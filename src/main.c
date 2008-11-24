@@ -242,7 +242,13 @@ CCSSetting *
 ccsFindSetting (CCSPlugin * plugin, const char *name,
 		Bool isScreen, unsigned int screenNum)
 {
+    if (!plugin)
+	return NULL;
+
     PLUGIN_PRIV (plugin);
+
+    if (!name)
+	name = "";
 
     if (!pPrivate->loaded)
 	ccsLoadPluginSettings (plugin);
