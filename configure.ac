@@ -96,7 +96,7 @@ AC_SUBST(LIBXML2_REQUIRES)
 
 AC_ARG_ENABLE(protobuf,
   [  --disable-protobuf      Disable Protocol Buffers],
-  [use_protobuf=no], [use_protobuf=yes])
+  [use_protobuf=$enableval], [use_protobuf=yes])
 
 if test "x$use_protobuf" = "xyes"; then
   protobuf_error_msg="\nWARNING: You need to install Protocol Buffers to get faster program startup.\n        Sources are available at http://code.google.com/p/protobuf/downloads/list\n         Package names for Ubuntu/Debian: libprotobuf0, libprotobuf-dev, protobuf-compiler\n         Package names for other distributions: protobuf, protobuf-devel\n        Disabling protobuf.\n"
