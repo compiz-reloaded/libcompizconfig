@@ -2755,6 +2755,9 @@ updatePBFilePath (CCSContext * context, char *name, char *pbFilePath)
     if (plugin)
     {
 	PLUGIN_PRIV (plugin);
+
+	if (pPrivate->pbFilePath)
+	    free (pPrivate->pbFilePath);
 	pPrivate->pbFilePath = strdup (pbFilePath);
     }
 }
@@ -2791,15 +2794,14 @@ loadPluginFromXMLFile (CCSContext * context, char *xmlName, char *xmlDirPath)
 	Bool error = TRUE;
 	int lenXMLName = strlen (xmlName);
 	struct stat pbStat;
-	name = (char *) malloc (lenXMLName - 4 + 1);
+
+	name = strndup (xmlName, strlen (xmlName) - 4);
 	if (!name)
 	{
 	    fprintf (stderr, "[ERROR]: Can't allocate memory\n");
 	    free (xmlFilePath);
 	    return;
 	}
-	strncpy (name, xmlName, lenXMLName - 4);
-	name[lenXMLName - 4] = '\0';
 
 	if (createProtoBufCacheDir () &&
 	    metadataCacheDir.length () > 0)
@@ -2861,12 +2863,13 @@ loadPluginFromXMLFile (CCSContext * context, char *xmlName, char *xmlDirPath)
     if (usingProtobuf && xmlLoaded)
     {
 	writePBFile (pbFilePath, NULL, &persistentPluginBriefPB);
-
 	updatePBFilePath (context, name, pbFilePath);
-
-	free (pbFilePath);
-	free (name);
     }
+
+    if (pbFilePath)
+	free (pbFilePath);
+    if (name)
+	free (name);
 #endif
 }
 
