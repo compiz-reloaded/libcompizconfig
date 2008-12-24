@@ -38,14 +38,14 @@ getConfigFileName (void)
     configDir = getenv ("XDG_CONFIG_HOME");
     if (configDir && strlen (configDir))
     {
-	asprintf (&fileName, "%s/%s/config", configDir, SETTINGPATH);
+	asprintf (&fileName, "%s/%s/config++", configDir, SETTINGPATH);
 	return fileName;
     }
 
     configDir = getenv ("HOME");
     if (configDir && strlen (configDir))
     {
-	asprintf (&fileName, "%s/.config/%s/config", configDir, SETTINGPATH);
+	asprintf (&fileName, "%s/.config/%s/config++", configDir, SETTINGPATH);
 	return fileName;
     }
 
@@ -128,12 +128,12 @@ ccsReadGlobalConfig (ConfigOption option,
 
     /* check if the global config file exists - if it doesn't, exit
        to avoid it being created by ccsIniOpen */
-    fp = fopen (SYSCONFDIR "/compizconfig/config", "r");
+    fp = fopen (SYSCONFDIR "/compizconfig/config++", "r");
     if (!fp)
 	return FALSE;
     fclose (fp);
 
-    iniFile = ccsIniOpen (SYSCONFDIR "/compizconfig/config");
+    iniFile = ccsIniOpen (SYSCONFDIR "/compizconfig/config++");
     if (!iniFile)
 	return FALSE;
 

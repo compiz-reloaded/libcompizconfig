@@ -204,7 +204,7 @@ ccsContextNew (unsigned int *screens, unsigned int numScreens)
 	ccsLoadPluginSettings (p);
 
 	/* initialize plugin->active values */
-	s = ccsFindSetting (p, "active_plugins", FALSE, 0);
+	s = ccsFindSetting (p, "active_plugins", TRUE, 0);
 	if (s)
 	{
 	    CCSStringList       list;
@@ -1718,7 +1718,7 @@ ccsWriteAutoSortedPluginList (CCSContext *context)
     {
 	CCSSetting *s;
 
-	s = ccsFindSetting (p, "active_plugins", FALSE, 0);
+	s = ccsFindSetting (p, "active_plugins", TRUE, 0);
 	if (s)
 	{
 	    CCSSettingValueList vl;

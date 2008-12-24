@@ -82,14 +82,14 @@ getIniFileName (char *profile)
     configDir = getenv ("XDG_CONFIG_HOME");
     if (configDir && strlen (configDir))
     {
-	asprintf (&fileName, "%s/%s/%s.ini", configDir, SETTINGPATH, profile);
+	asprintf (&fileName, "%s/%s/%s.ini++", configDir, SETTINGPATH, profile);
 	return fileName;
     }
 
     configDir = getenv ("HOME");
     if (configDir && strlen (configDir))
     {
-	asprintf (&fileName, "%s/.config/%s/%s.ini", configDir, SETTINGPATH,
+	asprintf (&fileName, "%s/.config/%s/%s.ini++", configDir, SETTINGPATH,
 		  profile);
 	return fileName;
     }
@@ -601,7 +601,7 @@ profileNameFilter (const struct dirent *name)
 {
     int length = strlen (name->d_name);
 
-    if (strncmp (name->d_name + length - 4, ".ini", 4))
+    if (strncmp (name->d_name + length - 6, ".ini++", 6))
 	return 0;
 
     return 1;

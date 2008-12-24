@@ -41,10 +41,11 @@ extern "C"
 
 #include <locale.h>
 
-#include <compiz-core.h>
 #include <ccs.h>
 #include "ccs-private.h"
 }
+
+#include <core/core.h>
 
 extern int xmlLoadExtDtdDefaultValue;
 
@@ -1962,7 +1963,6 @@ addOptionForPlugin (CCSPlugin * plugin,
 		    char * name,
 		    char * type,
 		    Bool isReadonly,
-		    Bool isScreen,
 		    unsigned int screen,
 		    xmlNode * node,
 		    void * groupListPBv,
@@ -1973,7 +1973,7 @@ addOptionForPlugin (CCSPlugin * plugin,
     int num = 0;
     CCSSetting *setting;
 
-    if (ccsFindSetting (plugin, name, isScreen, screen))
+    if (ccsFindSetting (plugin, name, TRUE, screen))
     {
 	fprintf (stderr, "[ERROR]: Option \"%s\" already defined\n", name);
 	return;
@@ -1987,7 +1987,7 @@ addOptionForPlugin (CCSPlugin * plugin,
 	return;
 
     setting->parent = plugin;
-    setting->isScreen = isScreen;
+    setting->isScreen = TRUE;
     setting->screenNum = screen;
     setting->isDefault = TRUE;
     setting->name = strdup (name);
@@ -2161,7 +2161,6 @@ addOptionForPlugin (CCSPlugin * plugin,
 static void
 addOptionFromXMLNode (CCSPlugin * plugin,
 		      xmlNode * node,
-		      Bool isScreen,
 		      void * groupListPBv,
 		      void * subgroupListPBv,
 		      void * optionPBv)
@@ -2199,18 +2198,11 @@ addOptionFromXMLNode (CCSPlugin * plugin,
 	return;
     }
 
-    if (isScreen)
-    {
-	for (i = 0; i < plugin->context->numScreens; i++)
-	    addOptionForPlugin (plugin, name, type, isReadonly, TRUE,
-				plugin->context->screens[i], node,
-				groupListPBv, subgroupListPBv, optionPBv);
-    }
-    else
-    {
-	addOptionForPlugin (plugin, name, type, isReadonly, FALSE, 0, node,
+    for (i = 0; i < plugin->context->numScreens; i++)
+	addOptionForPlugin (plugin, name, type, isReadonly,
+			    plugin->context->screens[i], node,
 			    groupListPBv, subgroupListPBv, optionPBv);
-    }
+
     free (name);
     free (type);
 
@@ -2221,7 +2213,6 @@ addOptionFromXMLNode (CCSPlugin * plugin,
 static void
 initDisplayScreenFromRootNode (CCSPlugin * plugin,
 			       xmlNode * node,
-			       Bool isScreen,
 			       void * pluginPBv)
 {
     xmlNode **nodes;
@@ -2230,8 +2221,7 @@ initDisplayScreenFromRootNode (CCSPlugin * plugin,
     void *groupListPBv = NULL;
     void *subgroupListPBv = NULL;
 
-    nodes = getNodesFromXPath (node->doc, node,
-			       (isScreen ? "screen" : "display"), &num);
+    nodes = getNodesFromXPath (node->doc, node, "options", &num);
     if (!num)
 	return;
 
@@ -2241,9 +2231,7 @@ initDisplayScreenFromRootNode (CCSPlugin * plugin,
     if (pluginPBv)
     {
 	PluginMetadata *pluginPB = (PluginMetadata *) pluginPBv;
-	screenPB = (isScreen ?
-		    pluginPB->mutable_screen () :
-		    pluginPB->mutable_display ());
+	screenPB = pluginPB->mutable_screen ();
 	groupListPBv = screenPB->mutable_group_desc ();
 	subgroupListPBv = screenPB->mutable_subgroup_desc ();
     }
@@ -2261,7 +2249,7 @@ initDisplayScreenFromRootNode (CCSPlugin * plugin,
 	    if (screenPB)
 		optionPBv = screenPB->add_option ();
     #endif
-	    addOptionFromXMLNode (plugin, optNodes[i], isScreen,
+	    addOptionFromXMLNode (plugin, optNodes[i],
 				  groupListPBv, subgroupListPBv, optionPBv);
 	}
 
@@ -2275,11 +2263,8 @@ initOptionsFromRootNode (CCSPlugin * plugin,
 			 xmlNode * node,
 			 void * pluginPBv)
 {
-    // For display
-    initDisplayScreenFromRootNode (plugin, node, FALSE, pluginPBv);
-
-    // For screen
-    initDisplayScreenFromRootNode (plugin, node, TRUE, pluginPBv);
+    // For all optiond
+    initDisplayScreenFromRootNode (plugin, node, pluginPBv);
 }
 
 static void
@@ -2595,7 +2580,7 @@ addCoreSettingsFromXMLNode (CCSContext * context,
     if (file)
 	pPrivate->xmlFile = strdup (file);
 
-    pPrivate->xmlPath = strdup ("/compiz/core");
+    pPrivate->xmlPath = strdup ("/compiz/plugin[@name='core']");
     plugin->context = context;
     plugin->name = strdup ("core");
     plugin->category = strdup ("General");
@@ -2728,7 +2713,7 @@ loadPluginFromXML (CCSContext * context,
     int num;
     Bool success = FALSE;
 
-    nodes = getNodesFromXPath (doc, NULL, "/compiz/core", &num);
+    nodes = getNodesFromXPath (doc, NULL, "/compiz/plugin[@name='core']", &num);
     if (num)
     {
 	success = addCoreSettingsFromXMLNode (context, nodes[0], filename,
