@@ -4,8 +4,6 @@ PROTOBUF_LIB = -lprotobuf
 PROTOBUF_DEFINES = \
 	-DUSE_PROTOBUF=1
 
-EXTRA_DIST = compizconfig.proto
-
 compizconfig.pb.cc: compizconfig.proto
 	protoc --cpp_out=. compizconfig.proto
 
@@ -21,6 +19,7 @@ clean-local:
 
 endif
 
+EXTRA_DIST = compizconfig.proto
 
 INCLUDES =			               \
 	@COMPIZ_CFLAGS@                        \
