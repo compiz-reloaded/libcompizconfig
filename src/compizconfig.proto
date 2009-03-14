@@ -7,21 +7,22 @@ message PluginInfo
 {
   required sint32 pb_abi_version = 1;
   required string locale = 2;
+  required uint64 time = 3;   // modification time of source .xml file
 
   // true if container is missing options and extensions, and only includes
   // plugin info
-  required bool brief_metadata = 3;
+  required bool brief_metadata = 4;
 
   // true if container is missing extensions, string restrictions, and
   // short/long descriptions for the plugin and its options
-  required bool basic_metadata = 4;
+  required bool basic_metadata = 5;
 
-  required string name = 5;
-  optional string short_desc = 6;
-  optional string long_desc = 7;
-  optional string category = 8;
+  required string name = 6;
+  optional string short_desc = 7;
+  optional string long_desc = 8;
+  optional string category = 9;
 
-  repeated string feature = 9;
+  repeated string feature = 10;
 
   message Dependencies
   {
@@ -35,7 +36,7 @@ message PluginInfo
     repeated string conflict_feature = 6;
   }
 
-  optional Dependencies deps = 10;
+  optional Dependencies deps = 11;
 }
 
 
