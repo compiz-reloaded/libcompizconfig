@@ -507,7 +507,7 @@ CcpScreen::initPluginForScreen (CompPlugin *p)
 
 
 CcpScreen::CcpScreen (CompScreen *screen) :
-    PrivateHandler<CcpScreen,CompScreen> (screen),
+    PluginClassHandler<CcpScreen,CompScreen> (screen),
     mApplyingSettings (false)
 {
     ccsSetBasicMetadata (TRUE);

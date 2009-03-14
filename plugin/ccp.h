@@ -32,12 +32,12 @@ extern "C" {
 }
 
 #include <core/core.h>
-#include <core/privatehandler.h>
+#include <core/pluginclasshandler.h>
 #include <core/timer.h>
 
 class CcpScreen :
     public ScreenInterface,
-    public PrivateHandler<CcpScreen,CompScreen>
+    public PluginClassHandler<CcpScreen,CompScreen>
 {
     public:
 	CcpScreen (CompScreen *screen);
