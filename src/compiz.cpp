@@ -54,7 +54,7 @@ extern int xmlLoadExtDtdDefaultValue;
 
 Bool usingProtobuf = TRUE;
 
-#define PB_ABI_VERSION 20081004
+#define PB_ABI_VERSION 20090314
 
 typedef metadata::PluginInfo PluginInfoMetadata;
 typedef metadata::PluginBrief PluginBriefMetadata;
@@ -2650,13 +2650,12 @@ checkAndLoadProtoBuf (char *pbPath,
 	!loadPluginMetadataFromProtoBuf (pbPath, pluginBriefPB, NULL) ||
 	(!basicMetadata && pluginBriefPB->info ().basic_metadata ()) ||
 	pluginInfoPB.pb_abi_version () != PB_ABI_VERSION ||
+	pluginInfoPB.time () != (unsigned long)xmlStat->st_mtime ||
+	// xml modification time mismatch?
 	(pluginInfoPB.locale () != "NONE" &&
 	 pluginInfoPB.locale () != shortLocale))
     {
 	// .pb needs update
-
-	remove (pbPath); // Attempt to remove .pb
-
 	return FALSE;
     }
     return TRUE;
@@ -2666,7 +2665,8 @@ checkAndLoadProtoBuf (char *pbPath,
 static void
 writePBFile (char *pbFilePath,
 	     PluginMetadata *pluginPB,
-	     PluginBriefMetadata *pluginBriefPB)
+	     PluginBriefMetadata *pluginBriefPB,
+	     struct stat *xmlStat)
 {
     if (!createProtoBufCacheDir ())
 	return;
@@ -2683,6 +2683,7 @@ writePBFile (char *pbFilePath,
 	pluginInfoPB = pluginBriefPB->mutable_info ();
 	pluginInfoPB->set_pb_abi_version (PB_ABI_VERSION);
 	pluginInfoPB->set_locale (shortLocale);
+	pluginInfoPB->set_time ((unsigned long)xmlStat->st_mtime);
 	pluginInfoPB->set_brief_metadata (TRUE);
     }
 
@@ -2764,6 +2765,8 @@ loadPluginFromXMLFile (CCSContext * context, char *xmlName, char *xmlDirPath)
 
 #ifdef USE_PROTOBUF
     char *name = NULL;
+    struct stat xmlStat;
+    Bool removePB = FALSE;
 
     if (usingProtobuf)
     {
@@ -2802,24 +2805,31 @@ loadPluginFromXMLFile (CCSContext * context, char *xmlName, char *xmlDirPath)
 	    error = stat (pbFilePath, &pbStat);
 	}
 
-	if (!error &&
-	    checkAndLoadProtoBuf (pbFilePath, &pbStat, &xmlStat,
-				  &persistentPluginBriefPB))
+	if (!error)
 	{
-	    // Found and loaded .pb
-	    if (!strcmp (name, "core"))
-		addCoreSettingsFromPB (context, persistentPluginBriefPB.info (),
-				       pbFilePath, xmlFilePath);
+	    if (checkAndLoadProtoBuf (pbFilePath, &pbStat, &xmlStat,
+				      &persistentPluginBriefPB))
+	    {
+		// Found and loaded .pb
+		if (!strcmp (name, "core"))
+		    addCoreSettingsFromPB (context,
+					   persistentPluginBriefPB.info (),
+					   pbFilePath, xmlFilePath);
+		else
+		    addPluginFromPB (context, persistentPluginBriefPB.info (),
+				     pbFilePath, xmlFilePath);
+    
+		updatePBFilePath (context, name, pbFilePath);
+    
+		free (xmlFilePath);
+		free (pbFilePath);
+		free (name);
+		return;
+	    }
 	    else
-		addPluginFromPB (context, persistentPluginBriefPB.info (),
-				 pbFilePath, xmlFilePath);
-
-	    updatePBFilePath (context, name, pbFilePath);
-
-	    free (xmlFilePath);
-	    free (pbFilePath);
-	    free (name);
-	    return;
+	    {
+		removePB = TRUE;
+	    }
 	}
 
 	persistentPluginBriefPB.Clear ();
@@ -2847,7 +2857,9 @@ loadPluginFromXMLFile (CCSContext * context, char *xmlName, char *xmlDirPath)
 #ifdef USE_PROTOBUF
     if (usingProtobuf && xmlLoaded)
     {
-	writePBFile (pbFilePath, NULL, &persistentPluginBriefPB);
+	if (removePB)
+	    remove (pbFilePath); // Attempt to remove .pb
+	writePBFile (pbFilePath, NULL, &persistentPluginBriefPB, &xmlStat);
 	updatePBFilePath (context, name, pbFilePath);
     }
 
@@ -3035,13 +3047,18 @@ ccsLoadPlugins (CCSContext * context)
 
 static void
 loadOptionsStringExtensionsFromXML (CCSPlugin * plugin,
-				    void * pluginPBv)
+				    void * pluginPBv,
+				    struct stat *xmlStat)
 {
     PLUGIN_PRIV (plugin);
 
     xmlDoc *doc = NULL;
     xmlNode **nodes;
     int num;
+
+    if (stat (pPrivate->xmlFile, xmlStat))
+	return;
+
     FILE *fp = fopen (pPrivate->xmlFile, "r");
     if (!fp)
 	return;
@@ -3105,14 +3122,16 @@ ccsLoadPluginSettings (CCSPlugin * plugin)
     }
 #endif
 
+    struct stat xmlStat;
+
     // Load from .xml
     if (!ignoreXML && pPrivate->xmlFile)
-	loadOptionsStringExtensionsFromXML (plugin, pluginPBToWrite);
+	loadOptionsStringExtensionsFromXML (plugin, pluginPBToWrite, &xmlStat);
 
 #ifdef USE_PROTOBUF
     if (pluginPBToWrite && pPrivate->pbFilePath && loadedAtLeastBriefPB)
 	writePBFile (pPrivate->pbFilePath, (PluginMetadata *) pluginPBToWrite,
-		     NULL);
+		     NULL, &xmlStat);
 #endif
     D (D_FULL, "done\n");
 
