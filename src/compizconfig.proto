@@ -143,9 +143,8 @@ message Plugin
   {
     required string base_plugin = 1;
     repeated string base_option = 2;
-    optional bool display = 3;
 
-    repeated Option.StringRestriction str_restriction = 4;
+    repeated Option.StringRestriction str_restriction = 3;
   }
 
 
@@ -157,9 +156,8 @@ message Plugin
     repeated string subgroup_desc = 3;
   }
 
-  optional Screen display = 2;
-  optional Screen screen = 3;
+  optional Screen screen = 2;
 
-  repeated Extension extension = 4;
+  repeated Extension extension = 3;
 }
 

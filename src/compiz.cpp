@@ -704,19 +704,6 @@ initOptionsFromPB (CCSPlugin * plugin,
 {
     int numOpt, i;
 
-    if (pluginPB.has_display ())
-    {
-	const ScreenMetadata &displayPB = pluginPB.display ();
-
-	// Display options
-	numOpt = displayPB.option_size ();
-	for (i = 0; i < numOpt; i++)
-	    addOptionFromPB (plugin, FALSE,
-			     displayPB.group_desc (),
-			     displayPB.subgroup_desc (),
-			     displayPB.option (i));
-    }
-
     if (pluginPB.has_screen ())
     {
 	const ScreenMetadata &screenPB = pluginPB.screen ();
@@ -756,9 +743,6 @@ addStringExtensionFromPB (CCSPlugin * plugin,
     extension = (CCSStrExtension *) calloc (1, sizeof (CCSStrExtension));
     if (!extension)
 	return;
-
-    extension->isScreen = !(extensionPB.has_display () &&
-			    extensionPB.display ());
 
     extension->restriction = NULL;
 
@@ -2211,9 +2195,9 @@ addOptionFromXMLNode (CCSPlugin * plugin,
 }
 
 static void
-initDisplayScreenFromRootNode (CCSPlugin * plugin,
-			       xmlNode * node,
-			       void * pluginPBv)
+initScreenFromRootNode (CCSPlugin * plugin,
+			xmlNode * node,
+			void * pluginPBv)
 {
     xmlNode **nodes;
     xmlNode **optNodes;
@@ -2264,7 +2248,7 @@ initOptionsFromRootNode (CCSPlugin * plugin,
 			 void * pluginPBv)
 {
     // For all optiond
-    initDisplayScreenFromRootNode (plugin, node, pluginPBv);
+    initScreenFromRootNode (plugin, node, pluginPBv);
 }
 
 static void
@@ -2309,19 +2293,11 @@ addStringExtensionFromXMLNode (CCSPlugin * plugin,
     CCSStrExtension *extension;
     char *name;
     char *value;
-    char *isDisplay;
     void * stringListPBv = NULL;
 
     extension = (CCSStrExtension *) calloc (1, sizeof (CCSStrExtension));
     if (!extension)
 	return;
-
-    isDisplay = getStringFromXPath (node->doc, node, "@display");
-
-    extension->isScreen = !(isDisplay && !strcmp (isDisplay, "true"));
-
-    if (isDisplay)
-	free (isDisplay);
 
     extension->restriction = NULL;
 
@@ -2334,7 +2310,6 @@ addStringExtensionFromXMLNode (CCSPlugin * plugin,
     if (extensionPBv)
     {
 	extensionPB = (ExtensionMetadata *) extensionPBv;
-	extensionPB->set_display (!extension->isScreen);
 	extensionPB->set_base_plugin (extension->basePlugin);
 	stringListPBv = extensionPB->mutable_base_option ();
     }
