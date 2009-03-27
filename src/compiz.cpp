@@ -511,7 +511,6 @@ initActionInfoPB (CCSSettingInfo * i, const OptionMetadata & option)
 static void
 addOptionForPluginPB (CCSPlugin * plugin,
 		      const char * name,
-		      Bool isScreen,
 		      unsigned int screen,
 		      const StringList & groups,
 		      const StringList & subgroups,
@@ -520,7 +519,7 @@ addOptionForPluginPB (CCSPlugin * plugin,
     int num = 0;
     CCSSetting *setting;
 
-    if (ccsFindSetting (plugin, name, isScreen, screen))
+    if (ccsFindSetting (plugin, name, TRUE, screen))
     {
 	fprintf (stderr, "[ERROR]: Option \"%s\" already defined\n", name);
 	return;
@@ -531,7 +530,7 @@ addOptionForPluginPB (CCSPlugin * plugin,
 	return;
 
     setting->parent = plugin;
-    setting->isScreen = isScreen;
+    setting->isScreen = TRUE;
     setting->screenNum = screen;
     setting->isDefault = TRUE;
     setting->name = strdup (name);
@@ -671,7 +670,6 @@ addOptionForPluginPB (CCSPlugin * plugin,
 
 static void
 addOptionFromPB (CCSPlugin * plugin,
-		 Bool isScreen,
 		 const StringList & groups,
 		 const StringList & subgroups,
 		 const OptionMetadata & option)
@@ -687,15 +685,10 @@ addOptionFromPB (CCSPlugin * plugin,
     if (!strlen (name) || readonly)
 	return;
 
-    if (isScreen)
-    {
-	for (i = 0; i < plugin->context->numScreens; i++)
-	    addOptionForPluginPB (plugin, name, TRUE,
-				  plugin->context->screens[i],
-				  groups, subgroups, option);
-    }
-    else
-	addOptionForPluginPB (plugin, name, FALSE, 0, groups, subgroups, option);
+    for (i = 0; i < plugin->context->numScreens; i++)
+	addOptionForPluginPB (plugin, name,
+			      plugin->context->screens[i],
+			      groups, subgroups, option);
 }
 
 static void
@@ -711,7 +704,7 @@ initOptionsFromPB (CCSPlugin * plugin,
 	// Screen options
 	numOpt = screenPB.option_size ();
 	for (i = 0; i < numOpt; i++)
-	    addOptionFromPB (plugin, TRUE,
+	    addOptionFromPB (plugin,
 			     screenPB.group_desc (),
 			     screenPB.subgroup_desc (),
 			     screenPB.option (i));
