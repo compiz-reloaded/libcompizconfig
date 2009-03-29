@@ -94,7 +94,7 @@ configChangeNotify (unsigned int watchId, void *closure)
 }
 
 CCSContext *
-ccsEmptyContextNew (unsigned int *screens, unsigned int numScreens)
+ccsEmptyContextNew (unsigned int screenNum)
 {
     CCSContext *context;
 
@@ -111,35 +111,7 @@ ccsEmptyContextNew (unsigned int *screens, unsigned int numScreens)
 
     CONTEXT_PRIV (context);
 
-    if (numScreens > 0 && screens)
-    {
-	int i;
-
-	context->screens = calloc (1, sizeof (unsigned int) * numScreens);
-	if (!context->screens)
-	{
-	    free (cPrivate);
-	    free (context);
-	    return NULL;
-	}
-
-	context->numScreens = numScreens;
-
-	for (i = 0; i < numScreens; i++)
-	    context->screens[i] = screens[i];
-    }
-    else
-    {
-	context->screens = calloc (1, sizeof (unsigned int));
-	if (!context->screens)
-	{
-	    free (cPrivate);
-	    free (context);
-	    return NULL;
-	}
-	context->screens[0] = 0;
-	context->numScreens = 1;
-    }
+    context->screenNum = screenNum;
 
     initGeneralOptions (context);
     cPrivate->configWatchId = ccsAddConfigWatch (context, configChangeNotify);
@@ -187,10 +159,10 @@ ccsSetActivePluginList (CCSContext * context, CCSStringList list)
 }
 
 CCSContext *
-ccsContextNew (unsigned int *screens, unsigned int numScreens)
+ccsContextNew (unsigned int screenNum)
 {
     CCSPlugin  *p;
-    CCSContext *context = ccsEmptyContextNew (screens, numScreens);
+    CCSContext *context = ccsEmptyContextNew (screenNum);
     if (!context)
 	return NULL;
 
@@ -204,7 +176,7 @@ ccsContextNew (unsigned int *screens, unsigned int numScreens)
 	ccsLoadPluginSettings (p);
 
 	/* initialize plugin->active values */
-	s = ccsFindSetting (p, "active_plugins", TRUE, 0);
+	s = ccsFindSetting (p, "active_plugins");
 	if (s)
 	{
 	    CCSStringList       list;
@@ -239,8 +211,7 @@ ccsFindPlugin (CCSContext * context, const char *name)
 }
 
 CCSSetting *
-ccsFindSetting (CCSPlugin * plugin, const char *name,
-		Bool isScreen, unsigned int screenNum)
+ccsFindSetting (CCSPlugin * plugin, const char *name)
 {
     if (!plugin)
 	return NULL;
@@ -257,10 +228,7 @@ ccsFindSetting (CCSPlugin * plugin, const char *name,
 
     while (l)
     {
-	if (!strcmp (l->data->name, name) &&
-	    ((!l->data->isScreen && !isScreen) ||
-	     (l->data->isScreen && isScreen)) &&
-	    (!isScreen || (l->data->screenNum == screenNum)))
+	if (!strcmp (l->data->name, name))
 	    return l->data;
 
 	l = l->next;
@@ -365,9 +333,6 @@ ccsFreeContext (CCSContext * c)
 
     if (c->changedSettings)
 	ccsSettingListFree (c->changedSettings, FALSE);
-
-    if (c->screens)
-	free (c->screens);
 
     if (c->ccsPrivate)
 	free (c->ccsPrivate);
@@ -1718,7 +1683,7 @@ ccsWriteAutoSortedPluginList (CCSContext *context)
     {
 	CCSSetting *s;
 
-	s = ccsFindSetting (p, "active_plugins", TRUE, 0);
+	s = ccsFindSetting (p, "active_plugins");
 	if (s)
 	{
 	    CCSSettingValueList vl;
@@ -2492,11 +2457,8 @@ ccsExportToFile (CCSContext *context,
 	    if (skipDefaults && setting->isDefault)
 		continue;
 
-	    if (setting->isScreen)
-		asprintf (&keyName, "s%d_%s", 
-			  setting->screenNum, setting->name);
-	    else
-		asprintf (&keyName, "as_%s", setting->name);
+	    asprintf (&keyName, "s%d_%s", 
+		      context->screenNum, setting->name);
 
 	    switch (setting->type)
 	    {
@@ -2595,11 +2557,8 @@ ccsImportFromFile (CCSContext *context,
 	    if (!setting->isDefault && !overwriteNonDefault)
 		continue;
 
-	    if (setting->isScreen)
-		asprintf (&keyName, "s%d_%s", 
-			  setting->screenNum, setting->name);
-	    else
-		asprintf (&keyName, "as_%s", setting->name);
+	    asprintf (&keyName, "s%d_%s", 
+		      context->screenNum, setting->name);
 
 	    switch (setting->type)
 	    {

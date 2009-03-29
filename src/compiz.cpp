@@ -511,7 +511,6 @@ initActionInfoPB (CCSSettingInfo * i, const OptionMetadata & option)
 static void
 addOptionForPluginPB (CCSPlugin * plugin,
 		      const char * name,
-		      unsigned int screen,
 		      const StringList & groups,
 		      const StringList & subgroups,
 		      const OptionMetadata & option)
@@ -519,7 +518,7 @@ addOptionForPluginPB (CCSPlugin * plugin,
     int num = 0;
     CCSSetting *setting;
 
-    if (ccsFindSetting (plugin, name, TRUE, screen))
+    if (ccsFindSetting (plugin, name))
     {
 	fprintf (stderr, "[ERROR]: Option \"%s\" already defined\n", name);
 	return;
@@ -530,8 +529,6 @@ addOptionForPluginPB (CCSPlugin * plugin,
 	return;
 
     setting->parent = plugin;
-    setting->isScreen = TRUE;
-    setting->screenNum = screen;
     setting->isDefault = TRUE;
     setting->name = strdup (name);
 
@@ -685,10 +682,8 @@ addOptionFromPB (CCSPlugin * plugin,
     if (!strlen (name) || readonly)
 	return;
 
-    for (i = 0; i < plugin->context->numScreens; i++)
-	addOptionForPluginPB (plugin, name,
-			      plugin->context->screens[i],
-			      groups, subgroups, option);
+    addOptionForPluginPB (plugin, name,
+			  groups, subgroups, option);
 }
 
 static void
@@ -1940,7 +1935,6 @@ addOptionForPlugin (CCSPlugin * plugin,
 		    char * name,
 		    char * type,
 		    Bool isReadonly,
-		    unsigned int screen,
 		    xmlNode * node,
 		    void * groupListPBv,
 		    void * subgroupListPBv,
@@ -1950,7 +1944,7 @@ addOptionForPlugin (CCSPlugin * plugin,
     int num = 0;
     CCSSetting *setting;
 
-    if (ccsFindSetting (plugin, name, TRUE, screen))
+    if (ccsFindSetting (plugin, name))
     {
 	fprintf (stderr, "[ERROR]: Option \"%s\" already defined\n", name);
 	return;
@@ -1964,8 +1958,6 @@ addOptionForPlugin (CCSPlugin * plugin,
 	return;
 
     setting->parent = plugin;
-    setting->isScreen = TRUE;
-    setting->screenNum = screen;
     setting->isDefault = TRUE;
     setting->name = strdup (name);
 
@@ -2175,10 +2167,8 @@ addOptionFromXMLNode (CCSPlugin * plugin,
 	return;
     }
 
-    for (i = 0; i < plugin->context->numScreens; i++)
-	addOptionForPlugin (plugin, name, type, isReadonly,
-			    plugin->context->screens[i], node,
-			    groupListPBv, subgroupListPBv, optionPBv);
+    addOptionForPlugin (plugin, name, type, isReadonly, node,
+			groupListPBv, subgroupListPBv, optionPBv);
 
     free (name);
     free (type);

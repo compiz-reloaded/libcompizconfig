@@ -258,10 +258,7 @@ readSetting (CCSContext *context,
     if (!data)
 	return;
 
-    if (setting->isScreen)
-	asprintf (&keyName, "s%d_%s", setting->screenNum, setting->name);
-    else
-	asprintf (&keyName, "as_%s", setting->name);
+    asprintf (&keyName, "s%d_%s", context->screenNum, setting->name);
 
     switch (setting->type)
     {
@@ -449,10 +446,7 @@ writeSetting (CCSContext *context,
     if (!data)
 	return;
 
-    if (setting->isScreen)
-	asprintf (&keyName, "s%d_%s", setting->screenNum, setting->name);
-    else
-	asprintf (&keyName, "as_%s", setting->name);
+    asprintf (&keyName, "s%d_%s", context->screenNum, setting->name);
 
     if (setting->isDefault)
     {

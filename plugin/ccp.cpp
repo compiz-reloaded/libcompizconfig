@@ -361,13 +361,11 @@ CcpScreen::setOptionFromContext (CompOption *o,
     CCSSetting        *setting;
     CompOption::Value value;
 
-    int  screenNum = screen->screenNum ();
-
     bsp = ccsFindPlugin (mContext, (plugin) ? plugin : CORE_VTABLE_NAME);
     if (!bsp)
 	return;
 
-    setting = ccsFindSetting (bsp, o->name ().c_str (), TRUE, screenNum);
+    setting = ccsFindSetting (bsp, o->name ().c_str ());
     if (!setting)
 	return;
 
@@ -387,13 +385,11 @@ CcpScreen::setContextFromOption (CompOption *o, const char *plugin)
     CCSPlugin       *bsp;
     CCSSetting      *setting;
 
-    int  screenNum = screen->screenNum ();
-
     bsp = ccsFindPlugin (mContext, (plugin) ? plugin : CORE_VTABLE_NAME);
     if (!bsp)
 	return;
 
-    setting = ccsFindSetting (bsp, o->name ().c_str (), TRUE, screenNum);
+    setting = ccsFindSetting (bsp, o->name ().c_str ());
     if (!setting)
 	return;
 
@@ -512,9 +508,7 @@ CcpScreen::CcpScreen (CompScreen *screen) :
 {
     ccsSetBasicMetadata (TRUE);
 
-    unsigned int screenNum = screen->screenNum ();
-
-    mContext = ccsContextNew (&screenNum, 1);
+    mContext = ccsContextNew (screen->screenNum ());
     ccsReadSettings (mContext);
 
     mContext->changedSettings =

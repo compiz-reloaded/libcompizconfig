@@ -136,8 +136,7 @@ struct _CCSContext
     CCSSettingList    changedSettings; /* list of settings changed since last
 					  settings write */
 
-    unsigned int      *screens;        /* numbers of the available screens */
-    unsigned int      numScreens;      /* number of screens */
+    unsigned int screenNum; /* screen number this context is assigned to */
 };
 
 struct _CCSBackendInfo
@@ -250,8 +249,6 @@ struct _CCSStrExtension
     char *basePlugin;           /* plugin this extension extends */
     CCSStringList baseSettings; /* list of settings this extension extends */
     CCSStrRestrictionList restriction; /* list of added restriction items */
-
-    Bool isScreen;          /* is this extension a screen setting extension? */
 };
 
 typedef struct _CCSSettingIntInfo
@@ -364,10 +361,6 @@ struct _CCSSetting
 
     CCSSettingType type;    /* setting type */
 
-    Bool	 isScreen;  /* is this setting a screen setting? */
-    unsigned int screenNum; /* screen number this setting is assigned to, valid
-			       if isScreen is TRUE */
-
     CCSSettingInfo info;    /* information assigned to this setting,
 			       valid if the setting is an int, float, string
 			       or list setting */
@@ -398,16 +391,13 @@ struct _CCSPluginCategory
    metadata informations will be parsed */
 void ccsSetBasicMetadata (Bool value);
 
-/* Creates a new context for the screens given in screens and numScreens.
-   Set numScreens to 0 to initialize for all screens.
+/* Creates a new context for the given screen.
    All plugin settings are automatically enumerated. */
-CCSContext* ccsContextNew (unsigned int *screens,
-			   unsigned int numScreens);
+CCSContext* ccsContextNew (unsigned int screenNum);
 
 /* Creates a new context without auto-enumerating any plugin or setting.
    Behaves otherwise exactly like ccsContextNew. */
-CCSContext* ccsEmptyContextNew (unsigned int *screens,
-				unsigned int numScreens);
+CCSContext* ccsEmptyContextNew (unsigned int screenNum);
 
 /* Destroys the allocated context. */
 void ccsContextDestroy (CCSContext * context);
@@ -422,14 +412,11 @@ Bool ccsLoadPlugin (CCSContext *context,
 CCSPlugin* ccsFindPlugin (CCSContext *context,
 			  const char *name);
 
-/* Searches for a setting in a plugin. screenNum is only valid if isScreen is
-   TRUE. Returns the setting struct if the search was successful (setting with
-   name <name> found and isScreen and screenNum matched the values of the
-   setting), NULL otherwise. */
+/* Searches for a setting in a plugin.
+   Returns the setting struct if the search was successful (setting with
+   name <name> found), NULL otherwise. */
 CCSSetting* ccsFindSetting (CCSPlugin    *plugin,
-			    const char   *name,
-			    Bool         isScreen,
-			    unsigned int screenNum);
+			    const char   *name);
 
 /* Returns TRUE if the named plugin is in the context and marked as currently
    active in Compiz, FALSE otherwise. */
