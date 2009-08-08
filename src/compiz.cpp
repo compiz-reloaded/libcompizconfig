@@ -2837,6 +2837,12 @@ loadPluginsFromXMLFiles (CCSContext * context, char *path)
 
     if (!path)
 	return;
+#if defined(HAVE_SCANDIR_POSIX)
+ // POSIX (2008) defines the comparison function like this:
+ #define scandir(a,b,c,d) scandir((a), (b), (c), (int(*)(const dirent **, const dirent **))(d));
+#else
+ #define scandir(a,b,c,d) scandir((a), (b), (c), (int(*)(const void*,const void*))(d));
+#endif
 
     nFile = scandir (path, &nameList, pluginXMLFilter, NULL);
 
