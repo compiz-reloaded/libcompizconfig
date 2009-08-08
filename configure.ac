@@ -116,6 +116,25 @@ if test "x$use_protobuf" = "xyes"; then
 fi
 AM_CONDITIONAL([USE_PROTOBUF], [test "x$use_protobuf" = "xyes"])
 
+dnl Do we have the POSIX compatible scandir() prototype?
+AC_CACHE_CHECK([whether we have the POSIX compatible scandir() prototype],
+    ac_cv_cxx_scandir_posix,[
+	AC_LANG_SAVE
+	AC_LANG_CPLUSPLUS
+	AC_TRY_COMPILE([
+	  # include <dirent.h>
+	  int func (const char *d, dirent ***list, void *sort) {
+	    int n = scandir(d, list, 0, (int(*)(const dirent **, const dirent **))sort);
+	  }
+	],[
+	], ac_cv_cxx_scandir_posix=yes, ac_cv_cxx_scandir_posix=no)
+	AC_LANG_RESTORE
+    ])
+
+if test "$ac_cv_cxx_scandir_posix" = yes; then
+    AC_DEFINE([HAVE_SCANDIR_POSIX], [], [POSIX Compatible scandir()])
+fi
+
 AC_CHECK_HEADERS([sys/inotify.h], [have_inotify=yes], [have_inotify=no])
 
 AC_ARG_ENABLE(debug,
