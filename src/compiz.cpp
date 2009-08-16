@@ -90,7 +90,7 @@ getLocale ()
 }
 
 std::string curLocale = std::string (getLocale ());
-std::string shortLocale = curLocale.find ('.') < 0 ?
+std::string shortLocale = curLocale.find ('.') == std::string::npos ?
     curLocale : curLocale.substr (0, curLocale.find ('.'));
 
 #endif
