@@ -403,8 +403,6 @@ CcpScreen::setContextFromOption (CompOption *o, const char *plugin)
 bool
 CcpScreen::reload ()
 {
-    CompPlugin *p;
-
     foreach (CompPlugin *p, CompPlugin::getPlugins ())
     {
 	foreach (CompOption &o, p->vTable->getOptions ())

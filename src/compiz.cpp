@@ -2728,8 +2728,6 @@ loadPluginFromXMLFile (CCSContext * context, char *xmlName, char *xmlDirPath)
 
     if (usingProtobuf)
     {
-	struct stat xmlStat;
-
 	if (stat (xmlFilePath, &xmlStat))
 	{
 	    free (xmlFilePath);
@@ -2958,7 +2956,6 @@ ccsLoadPlugin (CCSContext * context, char *name)
 	char *home = getenv ("HOME");
 	if (home && strlen (home))
 	{
-	    char *home = getenv ("HOME");
 	    asprintf (&xmlDirPath, "%s/.compiz/metadata", home);
 	    if (xmlDirPath)
 	    {
