@@ -272,6 +272,7 @@ readSetting (CCSContext *context,
 				 keyName, &value))
 	    {
 		ccsSetString (setting, value);
+		free (value);
 		status = TRUE;
 	    }
 	}
@@ -283,6 +284,7 @@ readSetting (CCSContext *context,
 				 keyName, &value))
 	    {
 		ccsSetMatch (setting, value);
+		free (value);
 		status = TRUE;
 	    }
 	}
