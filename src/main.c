@@ -2595,7 +2595,10 @@ ccsImportFromFile (CCSContext *context,
 
 		    if (ccsIniGetString (importFile, plugin->name,
 					 keyName, &value))
-			ccsSetString (setting, value);
+		    {
+		    	ccsSetString (setting, value);
+		    	free (value);
+		    }
 		}
 		break;
 	    case TypeKey:
@@ -2648,7 +2651,10 @@ ccsImportFromFile (CCSContext *context,
 		    char *value;
 		    if (ccsIniGetString (importFile, plugin->name,
 					 keyName, &value))
-			ccsSetMatch (setting, value);
+		    {
+		    	ccsSetMatch (setting, value);
+		    	free (value);
+		    }
 		}
 		break;
 	    case TypeList:
