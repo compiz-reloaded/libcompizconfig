@@ -1480,13 +1480,20 @@ ccsGetSortedPluginStringList (CCSContext * context)
 	ap = ccsPluginListRemove (ap, p, FALSE);
 
     int len = ccsPluginListLength (ap);
-    
+    if (len == 0)
+    {
+	ccsStringListFree (rv, TRUE);
+	return NULL;
+    }
     int i, j;
     /* TODO: conflict handling */
 
     PluginSortHelper *plugins = calloc (1, len * sizeof (PluginSortHelper));
     if (!plugins)
+    {
+	ccsStringListFree (rv, TRUE);
 	return NULL;
+    }
 
     for (i = 0, list = ap; i < len; i++, list = list->next)
     {
