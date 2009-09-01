@@ -248,18 +248,24 @@ unsigned int
 ccsStringToEdges (const char *binding)
 {
     unsigned int edgeMask = 0;
-    char         *needle;
+    const char   *needle;
     int          i;
 
     for (i = 0; i < N_EDGES; i++)
     {
-        needle = strstr (binding, edgeList[i].name);
-        if (needle)
+        int edgeLen = strlen (edgeList[i].name);
+
+        /* Look for all occurrences of edgeList[i].name in binding */
+        needle = binding;
+        while ((needle = strstr (needle, edgeList[i].name)) != NULL)
         {
             if (needle != binding && isalnum (*(needle - 1)))
+            {
+                needle += edgeLen;
                 continue;
+            }
 
-            needle += strlen (edgeList[i].name);
+            needle += edgeLen;
 
             if (*needle && isalnum (*needle))
                 continue;
