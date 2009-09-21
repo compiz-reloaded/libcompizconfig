@@ -86,7 +86,7 @@ getLocale ()
     if (!lang || !strlen (lang))
 	lang = getenv ("LC_MESSAGES");
 
-    return lang;
+    return lang ? lang : (char *)"";
 }
 
 std::string curLocale = std::string (getLocale ());
