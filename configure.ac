@@ -105,7 +105,7 @@ if test "x$use_protobuf" = "xyes"; then
     echo -e $protobuf_error_msg; use_protobuf=no
   else
     AC_CHECK_LIB(protobuf, _ZN6google8protobuf7MessageD2Ev, [], [
-      echo -e $protobuf_error_msg; use_protobuf=no ])
+      echo -e $protobuf_error_msg; use_protobuf=no ], -lpthread)
     if test "x$use_protobuf" = "xyes"; then
       AC_LANG([C++])
       AC_CHECK_HEADER([google/protobuf/message.h],,[
