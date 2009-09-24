@@ -308,8 +308,6 @@ ccpValueToSetting (CCSSetting        *s,
 
     if (s->type == TypeList)
     {
-	int i;
-
 	foreach (CompOption::Value &lv, v->list ())
 	{
 	    CCSSettingValue *val;

@@ -282,8 +282,6 @@ initEdgeValuePB (CCSSettingValue * v,
 		 CCSSettingInfo * i,
 		 const GenericValueMetadata & value)
 {
-    int k, num;
-
     v->value.asEdge = 0;
 
     if (value.has_edge_value ())
@@ -515,7 +513,6 @@ addOptionForPluginPB (CCSPlugin * plugin,
 		      const StringList & subgroups,
 		      const OptionMetadata & option)
 {
-    int num = 0;
     CCSSetting *setting;
 
     if (ccsFindSetting (plugin, name))
@@ -673,7 +670,6 @@ addOptionFromPB (CCSPlugin * plugin,
 {
     const char *name;
     Bool readonly = FALSE;
-    int i;
 
     name = option.name ().c_str ();
 
@@ -982,9 +978,8 @@ getOptionType (const char *name)
 	{ "match", TypeMatch },
 	{ "list", TypeList }
     };
-    int i;
 
-    for (i = 0; i < sizeof (map) / sizeof (map[0]); i++)
+    for (unsigned i = 0; i < sizeof (map) / sizeof (map[0]); i++)
 	if (strcasecmp (name, map[i].name) == 0)
 	    return map[i].type;
 
@@ -1412,7 +1407,7 @@ initEdgeValue (CCSSettingValue * v,
 {
     xmlNode **nodes;
     char *value;
-    int j, k, num;
+    int k, num;
 
     v->value.asEdge = 0;
 
@@ -1434,7 +1429,7 @@ initEdgeValue (CCSSettingValue * v,
 	value = getStringFromXPath (node->doc, nodes[k], "@name");
 	if (value)
 	{
-	    for (j = 0; j < sizeof (edge) / sizeof (edge[0]); j++)
+	    for (unsigned j = 0; j < sizeof (edge) / sizeof (edge[0]); j++)
 	    {
 		if (strcasecmp ((char *) value, edge[j]) == 0)
 		    v->value.asEdge |= (1 << j);
@@ -2138,8 +2133,6 @@ addOptionFromXMLNode (CCSPlugin * plugin,
     char *type;
     char *readonly;
     Bool isReadonly;
-    Bool screen;
-    int i;
 
     if (!node)
 	return;
@@ -2601,7 +2594,6 @@ checkAndLoadProtoBuf (char *pbPath,
 		      struct stat *xmlStat,
 		      PluginBriefMetadata *pluginBriefPB)
 {
-    Bool needsUpdate = FALSE;
     const PluginInfoMetadata &pluginInfoPB = pluginBriefPB->info ();
 
     if (pbStat->st_mtime < xmlStat->st_mtime ||     // is .pb older than .xml?
@@ -2736,7 +2728,6 @@ loadPluginFromXMLFile (CCSContext * context, char *xmlName, char *xmlDirPath)
 
 	// Check if the corresponding .pb exists in cache
 	Bool error = TRUE;
-	int lenXMLName = strlen (xmlName);
 	struct stat pbStat;
 
 	name = strndup (xmlName, strlen (xmlName) - 4);
@@ -2830,7 +2821,6 @@ static void
 loadPluginsFromXMLFiles (CCSContext * context, char *path)
 {
     struct dirent **nameList;
-    char *metadataPath;
     int nFile, i;
 
     if (!path)
