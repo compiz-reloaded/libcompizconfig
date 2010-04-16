@@ -49,6 +49,19 @@ extern "C"
 
 extern int xmlLoadExtDtdDefaultValue;
 
+static const char *
+getLocale ()
+{
+    char *lang = getenv ("LC_ALL");
+
+    if (!lang || !strlen (lang))
+	lang = getenv ("LC_MESSAGES");
+
+    if (!lang || !strlen (lang))
+	lang = getenv ("LANG");
+
+    return lang ? lang : "";
+}
 
 #ifdef USE_PROTOBUF
 
@@ -74,20 +87,6 @@ PluginMetadata persistentPluginPB; // Made global so that it gets reused,
 					 // mem alloc/free for each plugin)
 
 std::string metadataCacheDir = "";
-
-static char *
-getLocale ()
-{
-    char *lang = getenv ("LANG");
-
-    if (!lang || !strlen (lang))
-	lang = getenv ("LC_ALL");
-
-    if (!lang || !strlen (lang))
-	lang = getenv ("LC_MESSAGES");
-
-    return lang ? lang : (char *)"";
-}
 
 std::string curLocale = std::string (getLocale ());
 std::string shortLocale = curLocale.find ('.') == std::string::npos ?
@@ -1110,17 +1109,9 @@ stringFromNodeDef (xmlNode * node, const char *path, const char *def)
 static char *
 stringFromNodeDefTrans (xmlNode * node, const char *path, const char *def)
 {
-    char *lang;
+    const char *lang = getLocale ();
     char newPath[1024];
     char *rv = NULL;
-
-    lang = getenv ("LANG");
-
-    if (!lang || !strlen (lang))
-	lang = getenv ("LC_ALL");
-
-    if (!lang || !strlen (lang))
-	lang = getenv ("LC_MESSAGES");
 
     if (!lang || !strlen (lang))
 	return stringFromNodeDef (node, path, def);
