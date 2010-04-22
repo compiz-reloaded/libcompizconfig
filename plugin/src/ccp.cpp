@@ -429,6 +429,8 @@ CcpScreen::timeout ()
     	CompOption     *o;
 
 	mContext->changedSettings = NULL;
+
+	fprintf (stderr, "looping list\n");
 	
 	while (l)
 	{
@@ -525,6 +527,8 @@ CcpScreen::~CcpScreen ()
 bool
 CcpPluginVTable::init ()
 {
+    fprintf (stderr, "plugin init\n");
+
     if (!CompPlugin::checkPluginABI ("core", CORE_ABIVERSION))
 	 return false;
 

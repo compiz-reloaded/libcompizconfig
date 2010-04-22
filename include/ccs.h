@@ -28,9 +28,9 @@
 #define D_FULL   2
 
 #ifndef DEBUGLEVEL
-# define DEBUGLEVEL D_NONE
+# define DEBUGLEVEL D_FULL
 #endif
-#define D(x, fmt, args...)  { if (x <= DEBUGLEVEL) printf(fmt, ##args); }
+#define D(x, fmt, args...)  { if (x <= DEBUGLEVEL) fprintf(stderr, fmt, ##args); }
 
 #ifndef Bool
 #define Bool int

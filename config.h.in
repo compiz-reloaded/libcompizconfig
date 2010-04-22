@@ -1,0 +1,5 @@
+#define PACKAGE_STRING "@_libcompizconfig_package_string@"
+
+#define PACKAGE "@_libcompizconfig_package@"
+
+#define GETTEXT_PACKAGE "@GETTEXT_PACKAGE@"
