@@ -67,14 +67,8 @@ if (NOT _COMPIZCONFIG_INTERNAL)
 	# look for compiz
 	pkg_check_modules (COMPIZCONFIG ${_req} "libcompizconfig")
 
-	message ("compprefix is " ${COMPIZCONFIG_PREFIX})
-
-	# is the CompizDefaults module installed?
+	# is the LibCompizConfigCommon module installed?
 	find_path(_compiz_def_macro LibCompizConfigCommon.cmake ${COMPIZCONFIG_PREFIX}/share/compiz/cmake)
-	
-	if (_compiz_def_macro)
-	message ("found lcccommon")
-	endif (_compiz_def_macro)
 
 	if (COMPIZCONFIG_FOUND AND _compiz_def_macro)
             # everything found. Set module path and include defaults module
