@@ -9,5 +9,5 @@ Version: @VERSION@
 
 Requires: compiz
 Libs: -L@libdir@ -lcompizconfig
-Cflags: -I@includedir@/compizconfig
+Cflags: -I@includedir@
 

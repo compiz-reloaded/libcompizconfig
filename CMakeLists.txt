@@ -6,6 +6,8 @@ include (CompizCommon)
 include (CheckLibraryExists)
 include (CheckIncludeFile)
 
+set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
+
 # libcompizconfig package version number
 # An odd micro number indicates in-progress development.
 # An even micro number indicates a released version.
@@ -116,9 +118,21 @@ install (
     DESTINATION ${libdir}/pkgconfig
 )
 
+find_file (_find_compiz FindCompizConfig.cmake PATHS ${CMAKE_ROOT}/Modules ${ARGN})
+if (NOT _find_compiz)
+    message ("\"FindCompizConfig.cmake\" file not found in cmake module directories.")
+    message ("It should be installed to allow building of external compiz packages.")
+    message ("Call \"sudo make findcompizconfig_install\" to install it.\n")
+    endif ()
+    add_custom_target (
+        findcompizconfig_install
+	${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/cmake/FindCompizConfig.cmake ${CMAKE_ROOT}/Modules
+    )
+
 add_subdirectory (backend)
 add_subdirectory (plugin)
 add_subdirectory (src)
 add_subdirectory (include)
+add_subdirectory (cmake)
 #add_subdirectory (metadata)
 #add_subdirectory (po)

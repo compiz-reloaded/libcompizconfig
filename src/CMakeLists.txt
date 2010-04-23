@@ -20,11 +20,11 @@ set (LIBCOMPIZCONFIG_FILES
 
 add_definitions (
     -DHAVE_CONFIG_H
-    -DPLUGINDIR=\\\"${compiz_plugindir}\\\"
-    -DIMAGEDIR=\\\"${compiz_imagedir}\\\"
-    -DMETADATADIR=\\\"${compiz_metadatadir}\\\"
-    -DSYSCONFDIR=\\\"${sysconfdir}\\\"
-    -DLIBDIR=\\\"${libdir}\\\"
+    -DPLUGINDIR=\\\"${COMPIZ_PLUGINDIR}\\\"
+    -DIMAGEDIR=\\\"${COMPIZ_IMAGEDIR}\\\"
+    -DMETADATADIR=\\\"${COMPIZ_METADATADIR}\\\"
+    -DSYSCONFDIR=\\\"${COMPIZ_SYSCONFDIR}\\\"
+    -DLIBDIR=\\\"${COMPIZ_LIBDIR}\\\"
 )
 
 if (HAVE_PROTOBUF)
