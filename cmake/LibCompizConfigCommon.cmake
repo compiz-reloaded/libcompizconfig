@@ -31,10 +31,24 @@ function (compizconfig_backend bname)
 	foreach (_val ${LIBBACKEND_CFLAGS})
     set (BACKEND_CFLAGS "${BACKEND_CFLAGS}${_val} ")
 	endforeach (_val ${LIBBACKEND_CFLAGS})
-
-    add_library (${bname} SHARED
-		 ${bname}.c
-    )
+	
+    find_file (BACKEND_C_FILE ${bname}.c ${CMAKE_CURRENT_SOURCE_DIR})
+    
+    if (NOT BACKEND_C_FILE)
+	find_file (BACKEND_CPP_FILE ${bname}.cpp ${CMAKE_CURRENT_SOURCE_DIR})
+    endif (NOT BACKEND_C_FILE)
+    
+    if (BACKEND_C_FILE)
+	add_library (${bname} SHARED
+		     ${bname}.c
+        )
+    endif (BACKEND_C_FILE)
+    
+    if (BACKEND_CPP_FILE)
+	add_library (${bname} SHARED
+		     ${bname}.cpp
+	)
+    endif (BACKEND_CPP_FILE)
 
     target_link_libraries (
 	${bname}
