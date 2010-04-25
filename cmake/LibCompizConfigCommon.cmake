@@ -5,9 +5,11 @@ function (compizconfig_backend bname)
 
     include (CompizCommon)
 
-    set (BACKEND_REQUIRES
-        libcompizconfig
-        )
+    if (NOT _COMPIZCONFIG_INTERNAL)
+	set (BACKEND_REQUIRES
+	libcompizconfig
+	)
+    endif (NOT _COMPIZCONFIG_INTERNAL)
 
     compiz_pkg_check_modules (BACKEND REQUIRED ${BACKEND_REQUIRES})
 
