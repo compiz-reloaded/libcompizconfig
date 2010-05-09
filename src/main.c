@@ -582,7 +582,7 @@ openBackend (char *backend)
 
     if (err)
     {
-	fprintf (stderr, "libccs: dlopen: %s\n", err);
+	fprintf (stderr, "libcompizconfig: dlopen: %s\n", err);
     }
 
     return dlhand;
@@ -1597,7 +1597,7 @@ ccsGetSortedPluginStringList (CCSContext * context)
     if (error)
     {
 	fprintf (stderr,
-		 "libccs: unable to generate sorted plugin list\n");
+		 "libcompizconfig: unable to generate sorted plugin list\n");
 
 	for (i = 0; i < len; i++)
 	{
