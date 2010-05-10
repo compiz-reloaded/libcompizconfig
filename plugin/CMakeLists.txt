@@ -1,13 +1,6 @@
 find_package (Compiz REQUIRED)
 
-include (CompizPlugin)
+include (CompizCommon)
+include (CompizPackage)
 
-set (COMPIZ_PLUGIN_INSTALL_TYPE
-     "compiz")
-
-compiz_plugin (ccp LIBRARIES compizconfig)
-
-set_target_properties (
-    ccp PROPERTIES
-    INSTALL_RPATH "${COMPIZCONFIG_LIBDIR}"
-)
+compiz_add_plugins_in_folder (${CMAKE_CURRENT_SOURCE_DIR})

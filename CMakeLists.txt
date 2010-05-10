@@ -3,6 +3,7 @@ project (libcompizconfig)
 find_package (Compiz REQUIRED)
 
 include (CompizCommon)
+include (CompizPackage)
 include (CheckLibraryExists)
 include (CheckIncludeFile)
 
@@ -18,6 +19,9 @@ set (VERSION ${LIBCOMPIZCONFIG_VERSION_MAJOR}.${LIBCOMPIZCONFIG_VERSION_MINOR}.$
 
 set (_libcompizconfig_package_string "LibCompizConfig ${VERSION}")
 set (_libcompizconfig_package "LibCompizCompiz")
+
+set (ALL_LINGUAS af ar bg bn bn_IN bs ca cs cy da de el en_GB en_US es eu et fi fr gl gu he hi hr hu id it ja ka km ko lo lt mk mr nb nl or pa pl pt pt_BR ro ru sk sl sr sv ta tr uk vi xh zh_CN zh_TW zu)
+set (GETTEXT_PACKAGE libcompizconfig)
 
 configure_file (
     "${CMAKE_SOURCE_DIR}/config.h.in"
@@ -118,21 +122,34 @@ install (
     DESTINATION ${libdir}/pkgconfig
 )
 
-find_file (_find_compiz FindCompizConfig.cmake PATHS ${CMAKE_ROOT}/Modules ${ARGN})
-if (NOT _find_compiz)
-    message ("\"FindCompizConfig.cmake\" file not found in cmake module directories.")
-    message ("It should be installed to allow building of external compiz packages.")
-    message ("Call \"sudo make findcompizconfig_install\" to install it.\n")
-    endif ()
-    add_custom_target (
-        findcompizconfig_install
-	${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/cmake/FindCompizConfig.cmake ${CMAKE_ROOT}/Modules
-    )
+
 
 add_subdirectory (backend)
 add_subdirectory (plugin)
 add_subdirectory (src)
 add_subdirectory (include)
 add_subdirectory (cmake)
+
+compiz_print_configure_header ("CompizConfig Library")
+compiz_color_message ("\n${_escape}[4mOptional features:${_escape}[0m\n")
+
+compiz_print_result_message ("protocol buffers" HAVE_PROTOBUF)
+compiz_print_result_message ("file system change notifications" HAVE_INOTIFY)
+compiz_print_plugin_stats ("${CMAKE_SOURCE_DIR}/plugin")
+compiz_print_configure_footer ()
+
+find_file (_find_compizconfig FindCompizConfig.cmake PATHS ${CMAKE_ROOT}/Modules ${ARGN})
+if (NOT _find_compizconfig)
+    compiz_color_message ("${_escape}[1;31mWARNING:${_escape}[0m")
+    message ("\"FindCompiz.cmake\" file not found in cmake module directories.")
+    message ("It should be installed to allow building of external compiz packages.")
+    message ("Call \"sudo make findcompiz_install\" to install it.\n")
+    compiz_print_configure_footer ()
+endif (NOT _find_compizconfig)
+    add_custom_target (
+        findcompizconfig_install
+	${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/cmake/FindCompizConfig.cmake ${CMAKE_ROOT}/Modules
+    )
+
 #add_subdirectory (metadata)
 #add_subdirectory (po)
