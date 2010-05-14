@@ -1,9 +1,57 @@
+macro (_get_backend_parameters _prefix)
+    set (_current_var _foo)
+    set (_supported_var PKGDEPS LDFLAGSADD CFLAGSADD LIBRARIES LIBDIRS INCDIRS)
+    foreach (_val ${_supported_var})
+	set (${_prefix}_${_val})
+    endforeach (_val)
+    foreach (_val ${ARGN})
+	set (_found FALSE)
+	foreach (_find ${_supported_var})
+	    if ("${_find}" STREQUAL "${_val}")
+		set (_found TRUE)
+	    endif ("${_find}" STREQUAL "${_val}")
+	endforeach (_find)
+
+	if (_found)
+	    set (_current_var ${_prefix}_${_val})
+	else (_found)
+	    list (APPEND ${_current_var} ${_val})
+	endif (_found)
+    endforeach (_val)
+endmacro (_get_backend_parameters)
+
+# check pkgconfig dependencies
+macro (_check_backend_pkg_deps _prefix)
+    set (${_prefix}_HAS_PKG_DEPS TRUE)
+    foreach (_val ${ARGN})
+        string (REGEX REPLACE "[<>=\\.]" "_" _name ${_val})
+	string (TOUPPER ${_name} _name)
+
+	compiz_pkg_check_modules (_${_name} ${_val})
+
+	if (_${_name}_FOUND)
+	    list (APPEND ${_prefix}_PKG_LIBDIRS "${_${_name}_LIBRARY_DIRS}")
+	    list (APPEND ${_prefix}_PKG_LIBRARIES "${_${_name}_LIBRARIES}")
+	    list (APPEND ${_prefix}_PKG_INCDIRS "${_${_name}_INCLUDE_DIRS}")
+	else ()
+	    set (${_prefix}_HAS_PKG_DEPS FALSE)
+	    compiz_set (COMPIZCONFIG_${_prefix}_MISSING_DEPS "${COMPIZCONFIG_${_prefix}_MISSING_DEPS} ${_val}")
+	    set(__pkg_config_checked__${_name} 0 CACHE INTERNAL "" FORCE)
+	endif ()
+    endforeach ()
+endmacro ()
+
 function (compizconfig_backend bname)
-    project (compizconfig_${bname})
+    string (TOUPPER ${bname} _BACKEND)
+
+    project (compizconfig_${_BACKEND})
 
     find_package (Compiz REQUIRED)
 
     include (CompizCommon)
+
+    _get_backend_parameters (${_BACKEND} ${ARGN})
+    _check_backend_pkg_deps (${_BACKEND} ${${_BACKEND}_PKGDEPS})
 
     if (NOT _COMPIZCONFIG_INTERNAL)
 	set (BACKEND_REQUIRES
@@ -18,6 +66,9 @@ function (compizconfig_backend bname)
         ${CMAKE_CURRENT_BINARY_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${BACKEND_INCLUDE_DIRS}
+        ${${_BACKEND}_LOCAL_INCDIRS}
+        ${${_BACKEND}_PKG_INCDIRS}
+        ${${_BACKEND}_INCDIRS}
     )
 
     link_directories (
@@ -33,33 +84,29 @@ function (compizconfig_backend bname)
 	foreach (_val ${LIBBACKEND_CFLAGS})
     set (BACKEND_CFLAGS "${BACKEND_CFLAGS}${_val} ")
 	endforeach (_val ${LIBBACKEND_CFLAGS})
-	
-    find_file (BACKEND_C_FILE ${bname}.c ${CMAKE_CURRENT_SOURCE_DIR})
-    
-    if (NOT BACKEND_C_FILE)
-	find_file (BACKEND_CPP_FILE ${bname}.cpp ${CMAKE_CURRENT_SOURCE_DIR})
-    endif (NOT BACKEND_C_FILE)
-    
-    if (BACKEND_C_FILE)
-	add_library (${bname} SHARED
-		     ${bname}.c
-        )
-    endif (BACKEND_C_FILE)
-    
-    if (BACKEND_CPP_FILE)
-	add_library (${bname} SHARED
-		     ${bname}.cpp
-	)
-    endif (BACKEND_CPP_FILE)
+
+    file (GLOB _h_files "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h")
+    file (GLOB _cpp_files "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
+    file (GLOB _c_files "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c")
+
+    add_library (
+	${bname} SHARED ${_cpp_files}
+		        ${_h_files}
+		        ${_c_files})
 
     target_link_libraries (
 	${bname}
 	compizconfig
+        ${${_BACKEND}_LOCAL_LIBRARIES}
+        ${${_BACKEND}_PKG_LIBRARIES}
+        ${${_BACKEND}_LIBRARIES}
     )
 
     set_target_properties (
 	${bname} PROPERTIES
 	INSTALL_RPATH "${COMPIZCONFIG_LIBDIR}"
+	COMPILE_FLAGS "${${_BACKEND}_CFLAGSADD}"
+	LINK_FLAGS "${${_BACKEND}_LDFLAGSADD}"
     )
 
     install (
