@@ -1,3 +1,7 @@
+find_package (Compiz REQUIRED)
+
+include (CompizCommon)
+
 macro (_get_backend_parameters _prefix)
     set (_current_var _foo)
     set (_supported_var PKGDEPS LDFLAGSADD CFLAGSADD LIBRARIES LIBDIRS INCDIRS)
@@ -45,10 +49,6 @@ function (compizconfig_backend bname)
     string (TOUPPER ${bname} _BACKEND)
 
     project (compizconfig_${_BACKEND})
-
-    find_package (Compiz REQUIRED)
-
-    include (CompizCommon)
 
     _get_backend_parameters (${_BACKEND} ${ARGN})
     _check_backend_pkg_deps (${_BACKEND} ${${_BACKEND}_PKGDEPS})
