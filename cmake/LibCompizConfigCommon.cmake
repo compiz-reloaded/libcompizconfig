@@ -1,6 +1,7 @@
 find_package (Compiz REQUIRED)
 
 include (CompizCommon)
+include (CompizPackage)
 
 macro (_get_backend_parameters _prefix)
     set (_current_var _foo)
