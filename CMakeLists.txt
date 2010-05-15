@@ -181,6 +181,7 @@ macro (add_uninstall)
 	add_custom_target(uninstall "${CMAKE_COMMAND}" -P "${CMAKE_BINARY_DIR}/cmake_uninstall.cmake")
 endmacro ()
 
+compiz_ensure_linkage ()
 compiz_package_generation ("CompizConfig Library")
 add_uninstall ()
 compiz_add_git_dist ()
