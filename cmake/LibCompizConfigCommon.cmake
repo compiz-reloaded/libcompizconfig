@@ -51,16 +51,8 @@ function (compizconfig_backend bname)
 
     project (compizconfig_${_BACKEND})
 
-    _get_backend_parameters (${_BACKEND} ${ARGN})
-    _check_backend_pkg_deps (${_BACKEND} ${${_BACKEND}_PKGDEPS})
-
-    if (NOT _COMPIZCONFIG_INTERNAL)
-	set (BACKEND_REQUIRES
-	libcompizconfig
-	)
-    endif (NOT _COMPIZCONFIG_INTERNAL)
-
-    compiz_pkg_check_modules (BACKEND REQUIRED ${BACKEND_REQUIRES})
+    _get_backend_parameters (compizconfig_${_BACKEND} ${ARGN})
+    _check_backend_pkg_deps (compizconfig_${_BACKEND} ${${_BACKEND}_PKGDEPS})
 
     include_directories (
         ${CMAKE_SOURCE_DIR}/include
