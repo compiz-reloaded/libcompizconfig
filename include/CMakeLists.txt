@@ -5,5 +5,5 @@ set (_headers
 
 install (
 	FILES ${_headers}
-	DESTINATION ${includedir}
+	DESTINATION ${COMPIZ_DESTDIR}${includedir}
 	)

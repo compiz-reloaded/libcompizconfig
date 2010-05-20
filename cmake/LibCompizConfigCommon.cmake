@@ -104,6 +104,6 @@ function (compizconfig_backend bname)
 
     install (
 	TARGETS ${bname}
-	DESTINATION ${COMPIZCONFIG_LIBDIR}/compizconfig/backends
+	DESTINATION ${COMPIZ_DESTDIR}${COMPIZCONFIG_LIBDIR}/compizconfig/backends
     )
 endfunction ()

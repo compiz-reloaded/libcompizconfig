@@ -70,5 +70,5 @@ endforeach (_val ${LIBCOMPIZCONFIG_CFLAGS})
 
 install (
     TARGETS compizconfig
-    DESTINATION ${libdir}
+    DESTINATION ${COMPIZ_DESTDIR}${libdir}
 )
