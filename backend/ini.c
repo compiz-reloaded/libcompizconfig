@@ -117,6 +117,8 @@ processFileEvent (unsigned int watchId,
     data->iniFile = ccsIniOpen (fileName);
 
     ccsReadSettings (data->context);
+
+    free (fileName);
 }
 
 static void
@@ -151,12 +153,17 @@ setProfile (IniPrivData *data,
 	    file = fopen (fileName, "w");
 
 	    if (!file)
+	    {
+		free (fileName);
 		return;
-
+	    }
 	    fclose (file);
 	}
 	else
+	{
+	    free (fileName);
 	    return;
+	}
     }
 
     data->iniWatchId = ccsAddFileWatch (fileName, TRUE,
@@ -272,6 +279,7 @@ readSetting (CCSContext *context,
 				 keyName, &value))
 	    {
 		ccsSetString (setting, value);
+		free (value);
 		status = TRUE;
 	    }
 	}
@@ -283,6 +291,7 @@ readSetting (CCSContext *context,
 				 keyName, &value))
 	    {
 		ccsSetMatch (setting, value);
+		free (value);
 		status = TRUE;
 	    }
 	}

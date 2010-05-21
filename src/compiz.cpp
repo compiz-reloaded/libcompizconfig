@@ -48,6 +48,19 @@ extern "C"
 
 extern int xmlLoadExtDtdDefaultValue;
 
+static const char *
+getLocale ()
+{
+    char *lang = getenv ("LC_ALL");
+
+    if (!lang || !strlen (lang))
+	lang = getenv ("LC_MESSAGES");
+
+    if (!lang || !strlen (lang))
+	lang = getenv ("LANG");
+
+    return lang ? lang : "";
+}
 
 #ifdef USE_PROTOBUF
 
@@ -74,22 +87,8 @@ PluginMetadata persistentPluginPB; // Made global so that it gets reused,
 
 std::string metadataCacheDir = "";
 
-static char *
-getLocale ()
-{
-    char *lang = getenv ("LANG");
-
-    if (!lang || !strlen (lang))
-	lang = getenv ("LC_ALL");
-
-    if (!lang || !strlen (lang))
-	lang = getenv ("LC_MESSAGES");
-
-    return lang;
-}
-
 std::string curLocale = std::string (getLocale ());
-std::string shortLocale = curLocale.find ('.') < 0 ?
+std::string shortLocale = curLocale.find ('.') == std::string::npos ?
     curLocale : curLocale.substr (0, curLocale.find ('.'));
 
 #endif
@@ -281,8 +280,6 @@ initEdgeValuePB (CCSSettingValue * v,
 		 CCSSettingInfo * i,
 		 const GenericValueMetadata & value)
 {
-    int k, num;
-
     v->value.asEdge = 0;
 
     if (value.has_edge_value ())
@@ -516,7 +513,6 @@ addOptionForPluginPB (CCSPlugin * plugin,
 		      const StringList & subgroups,
 		      const OptionMetadata & option)
 {
-    int num = 0;
     CCSSetting *setting;
 
     if (ccsFindSetting (plugin, name, isScreen, screen))
@@ -677,7 +673,6 @@ addOptionFromPB (CCSPlugin * plugin,
 {
     const char *name;
     Bool readonly = FALSE;
-    int i;
 
     name = option.name ().c_str ();
 
@@ -688,7 +683,7 @@ addOptionFromPB (CCSPlugin * plugin,
 
     if (isScreen)
     {
-	for (i = 0; i < plugin->context->numScreens; i++)
+	for (unsigned i = 0; i < plugin->context->numScreens; i++)
 	    addOptionForPluginPB (plugin, name, TRUE,
 				  plugin->context->screens[i],
 				  groups, subgroups, option);
@@ -1009,9 +1004,7 @@ getOptionType (const char *name)
 	{ "match", TypeMatch },
 	{ "list", TypeList }
     };
-    int i;
-
-    for (i = 0; i < sizeof (map) / sizeof (map[0]); i++)
+    for (unsigned i = 0; i < sizeof (map) / sizeof (map[0]); i++)
 	if (strcasecmp (name, map[i].name) == 0)
 	    return map[i].type;
 
@@ -1142,17 +1135,9 @@ stringFromNodeDef (xmlNode * node, const char *path, const char *def)
 static char *
 stringFromNodeDefTrans (xmlNode * node, const char *path, const char *def)
 {
-    char *lang;
+    const char *lang = getLocale ();
     char newPath[1024];
     char *rv = NULL;
-
-    lang = getenv ("LANG");
-
-    if (!lang || !strlen (lang))
-	lang = getenv ("LC_ALL");
-
-    if (!lang || !strlen (lang))
-	lang = getenv ("LC_MESSAGES");
 
     if (!lang || !strlen (lang))
 	return stringFromNodeDef (node, path, def);
@@ -1439,7 +1424,7 @@ initEdgeValue (CCSSettingValue * v,
 {
     xmlNode **nodes;
     char *value;
-    int j, k, num;
+    int k, num;
 
     v->value.asEdge = 0;
 
@@ -1461,7 +1446,7 @@ initEdgeValue (CCSSettingValue * v,
 	value = getStringFromXPath (node->doc, nodes[k], "@name");
 	if (value)
 	{
-	    for (j = 0; j < sizeof (edge) / sizeof (edge[0]); j++)
+	    for (unsigned j = 0; j < sizeof (edge) / sizeof (edge[0]); j++)
 	    {
 		if (strcasecmp ((char *) value, edge[j]) == 0)
 		    v->value.asEdge |= (1 << j);
@@ -2170,8 +2155,6 @@ addOptionFromXMLNode (CCSPlugin * plugin,
     char *type;
     char *readonly;
     Bool isReadonly;
-    Bool screen;
-    int i;
 
     if (!node)
 	return;
@@ -2201,7 +2184,7 @@ addOptionFromXMLNode (CCSPlugin * plugin,
 
     if (isScreen)
     {
-	for (i = 0; i < plugin->context->numScreens; i++)
+	for (unsigned i = 0; i < plugin->context->numScreens; i++)
 	    addOptionForPlugin (plugin, name, type, isReadonly, TRUE,
 				plugin->context->screens[i], node,
 				groupListPBv, subgroupListPBv, optionPBv);
@@ -2658,7 +2641,6 @@ checkAndLoadProtoBuf (char *pbPath,
 		      struct stat *xmlStat,
 		      PluginBriefMetadata *pluginBriefPB)
 {
-    Bool needsUpdate = FALSE;
     const PluginInfoMetadata &pluginInfoPB = pluginBriefPB->info ();
 
     if (pbStat->st_mtime < xmlStat->st_mtime ||     // is .pb older than .xml?
@@ -2793,7 +2775,6 @@ loadPluginFromXMLFile (CCSContext * context, char *xmlName, char *xmlDirPath)
 
 	// Check if the corresponding .pb exists in cache
 	Bool error = TRUE;
-	int lenXMLName = strlen (xmlName);
 	struct stat pbStat;
 
 	name = strndup (xmlName, strlen (xmlName) - 4);
@@ -2886,7 +2867,6 @@ static void
 loadPluginsFromXMLFiles (CCSContext * context, char *path)
 {
     struct dirent **nameList;
-    char *metadataPath;
     int nFile, i;
 
     if (!path)
