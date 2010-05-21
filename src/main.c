@@ -591,6 +591,7 @@ openBackend (char *backend)
 Bool
 ccsSetBackend (CCSContext * context, char *name)
 {
+    Bool fallbackMode = FALSE;
     CONTEXT_PRIV (context);
 
     if (cPrivate->backend)
@@ -611,6 +612,7 @@ ccsSetBackend (CCSContext * context, char *name)
     void *dlhand = openBackend (name);
     if (!dlhand)
     {
+	fallbackMode = TRUE;
 	name = "ini";
 	dlhand = openBackend (name);
     }
@@ -645,7 +647,8 @@ ccsSetBackend (CCSContext * context, char *name)
 	cPrivate->backend->vTable->backendInit (context);
 
     ccsDisableFileWatch (cPrivate->configWatchId);
-    ccsWriteConfig (OptionBackend, name);
+    if (!fallbackMode)
+	ccsWriteConfig (OptionBackend, name);
     ccsEnableFileWatch (cPrivate->configWatchId);
 
     return TRUE;
