@@ -95,12 +95,23 @@ function (compizconfig_backend bname)
         ${${_BACKEND}_LIBRARIES}
     )
 
-    set_target_properties (
-	${bname} PROPERTIES
-	INSTALL_RPATH "${COMPIZCONFIG_LIBDIR}"
-	COMPILE_FLAGS "${${_BACKEND}_CFLAGSADD}"
-	LINK_FLAGS "${${_BACKEND}_LDFLAGSADD}"
-    )
+    if (COMPIZ_BUILD_WITH_RPATH)
+
+	set_target_properties (
+	    ${bname} PROPERTIES
+	    INSTALL_RPATH "${COMPIZCONFIG_LIBDIR}"
+	    COMPILE_FLAGS "${${_BACKEND}_CFLAGSADD}"
+	    LINK_FLAGS "${${_BACKEND}_LDFLAGSADD}"
+	)
+
+    else (COMPIZ_BUILD_WITH_RPATH)
+
+	set_target_properties (
+	    ${bname} PROPERTIES
+	    COMPILE_FLAGS "${${_BACKEND}_CFLAGSADD}"
+	    LINK_FLAGS "${${_BACKEND}_LDFLAGSADD}"
+	)
+    endif ()
 
     install (
 	TARGETS ${bname}
