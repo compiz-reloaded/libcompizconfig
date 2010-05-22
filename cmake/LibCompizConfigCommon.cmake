@@ -51,16 +51,8 @@ function (compizconfig_backend bname)
 
     project (compizconfig_${_BACKEND})
 
-    _get_backend_parameters (${_BACKEND} ${ARGN})
-    _check_backend_pkg_deps (${_BACKEND} ${${_BACKEND}_PKGDEPS})
-
-    if (NOT _COMPIZCONFIG_INTERNAL)
-	set (BACKEND_REQUIRES
-	libcompizconfig
-	)
-    endif (NOT _COMPIZCONFIG_INTERNAL)
-
-    compiz_pkg_check_modules (BACKEND REQUIRED ${BACKEND_REQUIRES})
+    _get_backend_parameters (compizconfig_${_BACKEND} ${ARGN})
+    _check_backend_pkg_deps (compizconfig_${_BACKEND} ${${_BACKEND}_PKGDEPS})
 
     include_directories (
         ${CMAKE_SOURCE_DIR}/include
@@ -103,15 +95,26 @@ function (compizconfig_backend bname)
         ${${_BACKEND}_LIBRARIES}
     )
 
-    set_target_properties (
-	${bname} PROPERTIES
-	INSTALL_RPATH "${COMPIZCONFIG_LIBDIR}"
-	COMPILE_FLAGS "${${_BACKEND}_CFLAGSADD}"
-	LINK_FLAGS "${${_BACKEND}_LDFLAGSADD}"
-    )
+    if (COMPIZ_BUILD_WITH_RPATH)
+
+	set_target_properties (
+	    ${bname} PROPERTIES
+	    INSTALL_RPATH "${COMPIZCONFIG_LIBDIR}"
+	    COMPILE_FLAGS "${${_BACKEND}_CFLAGSADD}"
+	    LINK_FLAGS "${${_BACKEND}_LDFLAGSADD}"
+	)
+
+    else (COMPIZ_BUILD_WITH_RPATH)
+
+	set_target_properties (
+	    ${bname} PROPERTIES
+	    COMPILE_FLAGS "${${_BACKEND}_CFLAGSADD}"
+	    LINK_FLAGS "${${_BACKEND}_LDFLAGSADD}"
+	)
+    endif ()
 
     install (
 	TARGETS ${bname}
-	DESTINATION ${COMPIZCONFIG_LIBDIR}/compizconfig/backends
+	DESTINATION ${COMPIZ_DESTDIR}${COMPIZCONFIG_LIBDIR}/compizconfig/backends
     )
 endfunction ()
