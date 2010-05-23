@@ -50,6 +50,11 @@ add_library (
     ${LIBCOMPIZCONFIG_FILES}
 )
 
+set_target_properties (compizconfig PROPERTIES
+    VERSION 0.0.0
+    SOVERSION 0
+)
+
 link_directories (
     ${LIBCOMPIZCONFIG_LINK_DIRS}
 )
