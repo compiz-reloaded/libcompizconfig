@@ -148,7 +148,8 @@ if (NOT _find_compizconfig)
 endif (NOT _find_compizconfig)
     add_custom_target (
         findcompizconfig_install
-	${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/cmake/FindCompizConfig.cmake ${CMAKE_ROOT}/Modules
+	${CMAKE_COMMAND} -E make_directory ${COMPIZ_DESTDIR}${CMAKE_ROOT}/Modules &&
+	${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/cmake/FindCompizConfig.cmake ${COMPIZ_DESTDIR}${CMAKE_ROOT}/Modules
     )
 
 macro (add_uninstall)
