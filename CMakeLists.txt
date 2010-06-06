@@ -33,10 +33,10 @@ include_directories (
     )
 
 
-set (libdir ${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX})
-set (includedir ${CMAKE_INSTALL_PREFIX}/include/compizconfig)
-set (prefix ${CMAKE_INSTALL_PREFIX})
-set (exec_prefix ${CMAKE_INSTALL_PREFIX})
+set (libdir ${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX}         CACHE PATH "libdir")
+set (includedir ${CMAKE_INSTALL_PREFIX}/include/compizconfig CACHE PATH "includedir")
+set (prefix ${CMAKE_INSTALL_PREFIX}                          CACHE PATH "prefix")
+set (exec_prefix ${CMAKE_INSTALL_PREFIX}/bin                 CACHE PATH "bindir")
 
 option (USE_PROTOBUF
 	"Use Google Protocol Buffers library for faster XML loading"
