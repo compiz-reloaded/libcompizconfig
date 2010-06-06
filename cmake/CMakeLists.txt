@@ -1,5 +1,4 @@
 set (_files
-    FindCompizConfig.cmake
     LibCompizConfigCommon.cmake
 )
 
