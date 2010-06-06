@@ -52,16 +52,17 @@ function (compizconfig_backend bname)
     project (compizconfig_${_BACKEND})
 
     _get_backend_parameters (compizconfig_${_BACKEND} ${ARGN})
-    _check_backend_pkg_deps (compizconfig_${_BACKEND} ${${_BACKEND}_PKGDEPS})
+    _check_backend_pkg_deps (compizconfig_${_BACKEND} ${compizconfig_${_BACKEND}_PKGDEPS})
 
     include_directories (
         ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_CURRENT_BINARY_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${BACKEND_INCLUDE_DIRS}
-        ${${_BACKEND}_LOCAL_INCDIRS}
-        ${${_BACKEND}_PKG_INCDIRS}
-        ${${_BACKEND}_INCDIRS}
+        ${compizconfig_${_BACKEND}_LOCAL_INCDIRS}
+        ${compizconfig_${_BACKEND}_PKG_INCDIRS}
+        ${compizconfig_${_BACKEND}_INCDIRS}
+        ${COMPIZCONFIG_INCLUDE_DIRS}
     )
 
     link_directories (
@@ -117,4 +118,4 @@ function (compizconfig_backend bname)
 	TARGETS ${bname}
 	DESTINATION ${COMPIZ_DESTDIR}${COMPIZCONFIG_LIBDIR}/compizconfig/backends
     )
-endfunction ()
+endfunction (compizconfig_backend bname)
