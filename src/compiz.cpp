@@ -1894,7 +1894,7 @@ createProtoBufCacheDir ()
 	metadataCacheDir = cacheBaseDir;
 	if (metadataCacheDir[metadataCacheDir.length () - 1] != '/')
 	    metadataCacheDir += "/";
-	metadataCacheDir += "compizconfig";
+	metadataCacheDir += "compizconfig-1";
 	std::string metadataCacheFileDummy = metadataCacheDir + "/dummy";
 
 	// Create cache dir
