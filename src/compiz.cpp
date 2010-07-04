@@ -2937,7 +2937,7 @@ ccsLoadPlugin (CCSContext * context, char *name)
 	char *home = getenv ("HOME");
 	if (home && strlen (home))
 	{
-	    asprintf (&xmlDirPath, "%s/.compiz/metadata", home);
+	    asprintf (&xmlDirPath, "%s/.compiz-1/metadata", home);
 	    if (xmlDirPath)
 	    {
 		loadPluginFromXMLFile (context, xmlName, xmlDirPath);
@@ -2965,7 +2965,7 @@ ccsLoadPlugins (CCSContext * context)
     if (home && strlen (home))
     {
 	char *homeplugins = NULL;
-	asprintf (&homeplugins, "%s/.compiz/metadata", home);
+	asprintf (&homeplugins, "%s/.compiz-1/metadata", home);
 	if (homeplugins)
 	{
 	    loadPluginsFromXMLFiles (context, homeplugins);
@@ -2977,7 +2977,7 @@ ccsLoadPlugins (CCSContext * context)
     if (home && strlen (home))
     {
 	char *homeplugins = NULL;
-	asprintf (&homeplugins, "%s/.compiz/plugins", home);
+	asprintf (&homeplugins, "%s/.compiz-1/plugins", home);
 	if (homeplugins)
 	{
 	    loadPluginsFromName (context, homeplugins);
