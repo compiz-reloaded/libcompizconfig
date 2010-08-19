@@ -66,6 +66,7 @@ function (compizconfig_backend bname)
     )
 
     link_directories (
+	${compizconfig_${_BACKEND}_PKG_LIBDIRS}
 	${COMPIZCONFIG_LIBRARY_DIRS}
     )
 
@@ -91,9 +92,9 @@ function (compizconfig_backend bname)
     target_link_libraries (
 	${bname}
 	compizconfig
-        ${${_BACKEND}_LOCAL_LIBRARIES}
-        ${${_BACKEND}_PKG_LIBRARIES}
-        ${${_BACKEND}_LIBRARIES}
+        ${compizconfig_${_BACKEND}_LOCAL_LIBRARIES}
+        ${compizconfig_${_BACKEND}_PKG_LIBRARIES}
+        ${compizconfig_${_BACKEND}_LIBRARIES}
     )
 
     if (COMPIZ_BUILD_WITH_RPATH)
