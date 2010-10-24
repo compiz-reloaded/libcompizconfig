@@ -2694,7 +2694,6 @@ static void
 loadPluginFromXMLFile (CCSContext * context, char *xmlName, char *xmlDirPath)
 {
     char *xmlFilePath = NULL;
-    char *pbFilePath = NULL;
     void *pluginInfoPBv = NULL;
 
     asprintf (&xmlFilePath, "%s/%s", xmlDirPath, xmlName);
@@ -2706,6 +2705,7 @@ loadPluginFromXMLFile (CCSContext * context, char *xmlName, char *xmlDirPath)
 
 #ifdef USE_PROTOBUF
     char *name = NULL;
+    char *pbFilePath = NULL;
     struct stat xmlStat;
     Bool removePB = FALSE;
 
@@ -3024,10 +3024,10 @@ void
 ccsLoadPluginSettings (CCSPlugin * plugin)
 {
     Bool ignoreXML = FALSE;
-    Bool loadedAtLeastBriefPB = FALSE;
     void *pluginPBToWrite = NULL;
 
 #ifdef USE_PROTOBUF
+    Bool loadedAtLeastBriefPB = FALSE;
     initPBLoading ();
 #endif
 
