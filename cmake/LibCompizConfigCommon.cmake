@@ -5,7 +5,7 @@ include (CompizPackage)
 
 macro (_get_backend_parameters _prefix)
     set (_current_var _foo)
-    set (_supported_var PKGDEPS LDFLAGSADD CFLAGSADD LIBRARIES LIBDIRS INCDIRS)
+    set (_supported_var PKGDEPS LDFLAGSADD CFLAGSADD LIBRARIES LIBDIRS INCDIRS FILESADD)
     foreach (_val ${_supported_var})
 	set (${_prefix}_${_val})
     endforeach (_val)
@@ -87,7 +87,8 @@ function (compizconfig_backend bname)
     add_library (
 	${bname} SHARED ${_cpp_files}
 		        ${_h_files}
-		        ${_c_files})
+		        ${_c_files}
+			${compizconfig_${_BACKEND}_FILESADD})
 
     target_link_libraries (
 	${bname}
