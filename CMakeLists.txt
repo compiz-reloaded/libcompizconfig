@@ -45,6 +45,8 @@ else (COMPIZ_PACKAGING_ENABLED)
     set (exec_prefix ${CMAKE_INSTALL_PREFIX}/bin)
 endif (COMPIZ_PACKAGING_ENABLED)
 
+set (COMPIZ_SYSCONFDIR "/etc" CACHE PATH "/etc")
+
 option (USE_PROTOBUF
 	"Use Google Protocol Buffers library for faster XML loading"
 	ON
