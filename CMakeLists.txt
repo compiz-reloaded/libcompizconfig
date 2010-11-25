@@ -132,7 +132,7 @@ install (
 )
 
 
-
+add_subdirectory (config)
 add_subdirectory (backend)
 add_subdirectory (plugin)
 add_subdirectory (src)
