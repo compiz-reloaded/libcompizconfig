@@ -59,13 +59,7 @@ initGeneralOptions (CCSContext * context)
     else
 	ccsSetBackend (context, "ini");
 
-    /* The session might ask for a specific profile */
-
-    if ((val = getenv ("COMPIZCONFIG_PROFILE")))
-    {
-	ccsSetProfile (context, val);
-    }
-    else if (ccsReadConfig (OptionProfile, &val))
+    if (ccsReadConfig (OptionProfile, &val))
     {
 	ccsSetProfile (context, val);
 	free (val);
@@ -566,7 +560,7 @@ openBackend (char *backend)
 
     if (home && strlen (home))
     {
-	asprintf (&dlname, "%s/.compizconfig/backends/lib%s.so",
+	asprintf (&dlname, "%s/.compizconfig/backends/lib%s.so", 
 		  home, backend);
 	dlerror ();
 	dlhand = dlopen (dlname, RTLD_NOW | RTLD_NODELETE | RTLD_LOCAL);
@@ -578,7 +572,7 @@ openBackend (char *backend)
         if (dlname) {
 	        free (dlname);
         }
-	asprintf (&dlname, "%s/compizconfig/backends/lib%s.so",
+	asprintf (&dlname, "%s/compizconfig/backends/lib%s.so", 
 		  LIBDIR, backend);
 	dlhand = dlopen (dlname, RTLD_NOW | RTLD_NODELETE | RTLD_LOCAL);
 	err = dlerror ();
@@ -1536,7 +1530,7 @@ ccsGetSortedPluginStringList (CCSContext * context)
 		    found = TRUE;
 		l2 = l2->next;
 	    }
-
+	    
 	    if (p && !ccsPluginListFind (plugins[i].after, p) && !found)
 		plugins[i].after = ccsPluginListAppend (plugins[i].after, p);
 
@@ -1774,9 +1768,9 @@ ccsReadSettings (CCSContext * context)
 {
     if (!context)
 	return;
-
+    
     CONTEXT_PRIV (context);
-
+    
     if (!cPrivate->backend)
 	return;
 
@@ -1842,7 +1836,7 @@ ccsWriteSettings (CCSContext * context)
 {
     if (!context)
 	return;
-
+    
     CONTEXT_PRIV (context);
 
     if (!cPrivate->backend)
@@ -1882,9 +1876,9 @@ ccsWriteChangedSettings (CCSContext * context)
 {
     if (!context)
 	return;
-
+    
     CONTEXT_PRIV (context);
-
+    
     if (!cPrivate->backend)
 	return;
 
@@ -2263,7 +2257,7 @@ ccsCanDisablePlugin (CCSContext * context, CCSPlugin * plugin)
 		}
 		pluginList = pluginList->next;
 	    }
-
+	    
 	}
 	if (conflict)
 	    list = ccsPluginConflictListAppend (list, conflict);
@@ -2279,9 +2273,9 @@ ccsGetExistingProfiles (CCSContext * context)
 {
     if (!context)
 	return NULL;
-
+    
     CONTEXT_PRIV (context);
-
+    
     if (!cPrivate->backend)
 	return NULL;
 
@@ -2296,9 +2290,9 @@ ccsDeleteProfile (CCSContext * context, char *name)
 {
     if (!context)
 	return;
-
+    
     CONTEXT_PRIV (context);
-
+    
     if (!cPrivate->backend)
 	return;
 
@@ -2473,7 +2467,7 @@ ccsExportToFile (CCSContext *context,
 	    if (skipDefaults && setting->isDefault)
 		continue;
 
-	    asprintf (&keyName, "s%d_%s",
+	    asprintf (&keyName, "s%d_%s", 
 		      context->screenNum, setting->name);
 
 	    switch (setting->type)
@@ -2573,7 +2567,7 @@ ccsImportFromFile (CCSContext *context,
 	    if (!setting->isDefault && !overwriteNonDefault)
 		continue;
 
-	    asprintf (&keyName, "s%d_%s",
+	    asprintf (&keyName, "s%d_%s", 
 		      context->screenNum, setting->name);
 
 	    switch (setting->type)
