@@ -65,6 +65,7 @@ struct _Modifier
 modifierList[] = {
     { "<Shift>",      ShiftMask		 },
     { "<Control>",    ControlMask	 },
+    { "<Primary>",    ControlMask	 },
     { "<Mod1>",	      Mod1Mask		 },
     { "<Mod2>",	      Mod2Mask		 },
     { "<Mod3>",	      Mod3Mask		 },
