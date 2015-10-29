@@ -33,6 +33,8 @@
 
 #include <ccs.h>
 
+#include <X11/XKBlib.h>
+
 static int corePrivateIndex;
 static CompMetadata ccpMetadata;
 
@@ -312,7 +314,7 @@ ccpInitValue (CompObject      *object,
 	    d = GET_CORE_DISPLAY (object);
 
 	    value->value.asKey.keysym =
-		XKeycodeToKeysym (d->display, from->action.key.keycode, 0);
+	        XkbKeycodeToKeysym (d->display, from->action.key.keycode, 1, 0);
 	    value->value.asKey.keyModMask = from->action.key.modifiers;
 	}
 	else
