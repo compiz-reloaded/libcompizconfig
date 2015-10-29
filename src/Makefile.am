@@ -21,7 +21,7 @@ endif
 
 EXTRA_DIST = compizconfig.proto
 
-INCLUDES =			               \
+AM_CPPFLAGS =			               \
 	@COMPIZ_CFLAGS@                        \
 	@LIBX11_CFLAGS@                        \
 	@LIBXML2_CFLAGS@                       \
