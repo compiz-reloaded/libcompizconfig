@@ -65,9 +65,9 @@ getSectionName (void)
 	return section;
     }
 
-    profile = getenv ("GNOME_DESKTOP_SESSION_ID");
+    profile = getenv ("MATE_DESKTOP_SESSION_ID");
     if (profile && strlen (profile))
-	return strdup ("gnome_session");
+	return strdup ("mate_session");
 
     profile = getenv ("KDE_SESSION_VERSION");
     if (profile && strlen (profile) && strcasecmp (profile, "4") == 0)
