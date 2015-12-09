@@ -23,6 +23,9 @@
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #endif
 
+#include <libxslt/transform.h>
+#include <libxslt/xsltutils.h>
+
 extern "C"
 {
 #ifdef HAVE_CONFIG_H
@@ -35,9 +38,6 @@ extern "C"
 #include <dirent.h>
 #include <sys/stat.h>
 #include <errno.h>
-
-#include <libxslt/transform.h>
-#include <libxslt/xsltutils.h>
 
 #include <locale.h>
 
