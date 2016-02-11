@@ -1,6 +1,6 @@
 AC_PREREQ(2.57)
 
-AC_INIT([libcompizconfig], [0.8.10.1], [dev@opencompositing.org])
+AC_INIT([libcompizconfig], [0.8.12], [chat-to-me@raveit.de])
 AM_INIT_AUTOMAKE([1.9 tar-ustar dist-xz no-dist-gzip check-news])
 
 AC_PROG_CXX
