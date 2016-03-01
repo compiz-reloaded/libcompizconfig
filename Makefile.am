@@ -2,21 +2,27 @@
 
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 
-ALL_SUBDIRS = 	 \
-    include	 \
-    po           \
-    src	         \
-    backend      \
-    plugin       \
-    metadata	 \
-    config
+ALL_SUBDIRS =		\
+	include		\
+	po		\
+	src		\
+	backend		\
+	plugin		\
+	metadata	\
+	config
 
 SUBDIRS = $(ALL_SUBDIRS)
 
-EXTRA_DIST =            \
-    VERSION             \
-    COPYING		\
-    libcompizconfig.pc.in
+EXTRA_DIST =			\
+	AUTHORS			\
+	COPYING			\
+	LICENSE.GPL		\
+	LICENSE.LGPL		\
+	NEWS			\
+	README.md		\
+	VERSION			\
+	autogen.sh		\
+	libcompizconfig.pc.in
 
 clean:
 	for sdir in $(SUBDIRS) ; do \
