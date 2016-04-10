@@ -1,18 +1,3 @@
-[kde4_session]
-backend = ini
-plugin_list_autosort = true
-
-[kde_session]
-backend = ini
-plugin_list_autosort = true
-
-[mate_session]
-backend = ini
-plugin_list_autosort = true
-
 [general]
 backend = ini
 plugin_list_autosort = true
-
-
-
