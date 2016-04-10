@@ -14,13 +14,7 @@ AC_PROG_CPP
 LT_INIT
 AC_HEADER_STDC
 AC_CHECK_HEADERS([stdlib.h sys/time.h unistd.h])
-IT_PROG_INTLTOOL([0.35.0])
 AC_CONFIG_MACRO_DIR([m4])
-AC_SUBST(ALL_LINGUAS)
-AM_GLIB_GNU_GETTEXT
-GETTEXT_PACKAGE=libcompizconfig
-AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE,"$GETTEXT_PACKAGE", [Gettext package.])
-AC_SUBST(GETTEXT_PACKAGE)
 
 if test "x$GCC" = "xyes"; then
   case " $CFLAGS " in
@@ -155,7 +149,6 @@ backend/Makefile
 plugin/Makefile
 include/Makefile
 metadata/Makefile
-po/Makefile.in
 config/Makefile
 ])
 
