@@ -1,5 +1,3 @@
-## Process this file with automake to produce Makefile.in
-
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 
 ALL_SUBDIRS =		\
@@ -19,7 +17,6 @@ EXTRA_DIST =			\
 	LICENSE.LGPL		 \
 	NEWS			 \
 	README.md		 \
-	VERSION			 \
 	autogen.sh		 \
 	libcompizconfig.pc.in
 
