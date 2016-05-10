@@ -46,6 +46,7 @@
 #define CompModeSwitchMask (1 << 20)
 #define CompNumLockMask    (1 << 21)
 #define CompScrollLockMask (1 << 22)
+#define CompClickOnDesktopMask (1 << 23)
 
 #define SCREEN_EDGE_LEFT	(1 << 0)
 #define SCREEN_EDGE_RIGHT	(1 << 1)
@@ -76,6 +77,7 @@ modifierList[] = {
     { "<Super>",      CompSuperMask      },
     { "<Hyper>",      CompHyperMask	 },
     { "<ModeSwitch>", CompModeSwitchMask },
+    { "<ClickOnDesktop>", CompClickOnDesktopMask },
 };
 
 #define N_MODIFIERS (sizeof (modifierList) / sizeof (struct _Modifier))
