@@ -23,8 +23,7 @@
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #endif
 
-#include <libxslt/transform.h>
-#include <libxslt/xsltutils.h>
+#include <libxml/xpath.h>
 
 extern "C"
 {
