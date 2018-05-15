@@ -1,6 +1,5 @@
 if USE_PROTOBUF
 
-PROTOBUF_LIB = -lprotobuf
 PROTOBUF_DEFINES = \
 	-DUSE_PROTOBUF=1
 
@@ -53,7 +52,7 @@ libcompizconfig_la_SOURCES = \
 	ccs-private.h	\
 	iniparser.h
 
-libcompizconfig_la_LIBADD = @LIBXML2_LIBS@ @LIBX11_LIBS@ $(PROTOBUF_LIB)
+libcompizconfig_la_LIBADD = @LIBXML2_LIBS@ @LIBX11_LIBS@ @PROTOBUF_LIBS@
 
 lib_LTLIBRARIES=libcompizconfig.la
 
