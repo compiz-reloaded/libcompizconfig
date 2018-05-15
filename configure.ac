@@ -91,19 +91,13 @@ AC_ARG_ENABLE(protobuf,
   [use_protobuf=$enableval], [use_protobuf=yes])
 
 if test "x$use_protobuf" = "xyes"; then
-  protobuf_error_msg="\nWARNING: You need to install Protocol Buffers to get faster program startup.\n        Sources are available at http://code.google.com/p/protobuf/downloads/list\n         Package names for Ubuntu/Debian: libprotobuf0, libprotobuf-dev, protobuf-compiler\n         Package names for other distributions: protobuf, protobuf-devel\n        Disabling protobuf.\n"
+  protobuf_error_msg="\nWARNING: You need to install Protocol Buffers to get faster program startup.\n        Sources are available at https://developers.google.com/protocol-buffers\n         Package names for Debian/Ubuntu: libprotobuf0, libprotobuf-dev, protobuf-compiler\n         Package names for other distributions: protobuf, protobuf-devel\n        Disabling protobuf.\n"
   AC_CHECK_PROG(have_protoc, protoc, yes, no)
   if test "x$have_protoc" = "xno"; then
     echo -e $protobuf_error_msg; use_protobuf=no
   else
-    AC_CHECK_LIB(protobuf, _ZN6google8protobuf7MessageD2Ev, [], [
-      echo -e $protobuf_error_msg; use_protobuf=no ], -lpthread)
-    if test "x$use_protobuf" = "xyes"; then
-      AC_LANG([C++])
-      AC_CHECK_HEADER([google/protobuf/message.h],,[
-        echo -e $protobuf_error_msg; use_protobuf=no ])
-      AC_LANG([C])
-    fi
+    PKG_CHECK_MODULES(PROTOBUF, "protobuf", [], [
+      echo -e $protobuf_error_msg; use_protobuf=no ])
   fi
 fi
 AM_CONDITIONAL([USE_PROTOBUF], [test "x$use_protobuf" = "xyes"])
