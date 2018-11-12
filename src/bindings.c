@@ -25,8 +25,6 @@
  */
 
 
-#define _GNU_SOURCE
-
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
@@ -238,8 +236,16 @@ ccsStringToModifiers (const char *binding)
 
     for (i = 0; i < N_MODIFIERS; i++)
     {
-	if (strcasestr (binding, modifierList[i].name))
-	    mods |= modifierList[i].modifier;
+	int         modLen = strlen (modifierList[i].name);
+	const char *haystack;
+	for (haystack = binding; *haystack != '\0'; ++haystack)
+	{
+	    if (strncasecmp (haystack, modifierList[i].name, modLen) == 0)
+	    {
+		mods |= modifierList[i].modifier;
+		break;
+	    }
+	}
     }
 
     return mods;
@@ -287,8 +293,16 @@ ccsModStringToEdges (const char *binding)
 
     for (i = 0; i < N_EDGES; i++)
     {
-	if (strcasestr (binding, edgeList[i].modName))
-	    mods |= edgeList[i].modifier;
+	int         edgeLen = strlen (edgeList[i].name);
+	const char *haystack;
+	for (haystack = binding; *haystack != '\0'; ++haystack)
+	{
+	    if (strncasecmp (haystack, edgeList[i].name, edgeLen) == 0)
+	    {
+		mods |= edgeList[i].modifier;
+		break;
+	    }
+	}
     }
 
     return mods;

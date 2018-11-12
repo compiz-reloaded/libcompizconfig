@@ -18,13 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#define _GNU_SOURCE
 #include <stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <errno.h>
 
 #include <ccs.h>
+#include "ccs-private.h"
 #include "iniparser.h"
 
 /** 
@@ -110,9 +110,12 @@ getIniString (IniDictionary *dictionary,
     char *sectionName;
     char *retValue;
 
-    asprintf (&sectionName, "%s:%s", section, entry);
+    sectionName = strdup_printf ("%s:%s", section, entry);
+    if (sectionName == NULL)
+	return NULL;
 
     retValue = iniparser_getstring (dictionary, sectionName, NULL);
+
     free (sectionName);
 
     return retValue;
@@ -126,7 +129,9 @@ setIniString (IniDictionary *dictionary,
 {
     char *sectionName;
 
-    asprintf (&sectionName, "%s:%s", section, entry);
+    sectionName = strdup_printf ("%s:%s", section, entry);
+    if (sectionName == NULL)
+	return;
 
     if (!iniparser_find_entry (dictionary, (char*) section))
 	iniparser_add_entry (dictionary, (char*) section, NULL, NULL);
@@ -534,10 +539,10 @@ ccsIniSetInt (IniDictionary *dictionary,
 	      const char    *entry,
 	      int           value)
 {
-    char *string = NULL;
+    char *string;
 
-    asprintf (&string, "%i", value);
-    if (string)
+    string = strdup_printf ("%d", value);
+    if (string != NULL)
     {
 	setIniString (dictionary, section, entry, string);
 	free (string);
@@ -550,10 +555,10 @@ ccsIniSetFloat (IniDictionary *dictionary,
 		const char    *entry,
 		float         value)
 {
-    char *string = NULL;
+    char *string;
 
-    asprintf (&string, "%f", value);
-    if (string)
+    string = strdup_printf ("%f", value);
+    if (string != NULL)
     {
 	setIniString (dictionary, section, entry, string);
 	free (string);
@@ -579,7 +584,7 @@ ccsIniSetColor (IniDictionary        *dictionary,
     char *string;
 
     string = ccsColorToString (&value);
-    if (string)
+    if (string != NULL)
     {
 	setIniString (dictionary, section, entry, string);
 	free (string);
@@ -746,7 +751,10 @@ void ccsIniRemoveEntry (IniDictionary * dictionary,
 {
     char *sectionName;
 
-    asprintf (&sectionName, "%s:%s", section, entry);
-    iniparser_unset (dictionary, sectionName);
-    free (sectionName);
+    sectionName = strdup_printf ("%s:%s", section, entry);
+    if (sectionName != NULL)
+    {
+	iniparser_unset (dictionary, sectionName);
+	free (sectionName);
+    }
 }

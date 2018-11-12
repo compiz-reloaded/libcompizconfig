@@ -855,7 +855,7 @@ addPluginFromPB (CCSContext * context,
     if (xmlFile)
     {
 	pPrivate->xmlFile = strdup (xmlFile);
-	asprintf (&pPrivate->xmlPath, "/compiz/plugin[@name = '%s']", name);
+	pPrivate->xmlPath = strdup_printf ("/compiz/plugin[@name = '%s']", name);
     }
 
     plugin->context = context;
@@ -1899,18 +1899,18 @@ createProtoBufCacheDir ()
 	return TRUE;
     }
     char *cacheBaseDir = NULL;
-    char *cacheHome = getenv ("XDG_CACHE_HOME");
+    const char *cacheHome = getenv ("XDG_CACHE_HOME");
 
     if (cacheHome && strlen (cacheHome))
     {
-	asprintf (&cacheBaseDir, "%s", cacheHome);
+	cacheBaseDir = strdup (cacheHome);
     }
     else
     {
-	char *home = getenv ("HOME");
-	if (home && strlen (home))
+	const char *home = getenv ("HOME");
+	if (home && strlen (home) > 0)
 	{
-	    asprintf (&cacheBaseDir, "%s/.cache", home);
+	    cacheBaseDir = strdup_printf ("%s/.cache", home);
 	}
     }
 
@@ -2514,7 +2514,7 @@ addPluginFromXMLNode (CCSContext * context,
     if (file)
 	pPrivate->xmlFile = strdup (file);
 
-    asprintf (&pPrivate->xmlPath, "/compiz/plugin[@name = '%s']", name);
+    pPrivate->xmlPath = strdup_printf ("/compiz/plugin[@name = '%s']", name);
     plugin->context = context;
     plugin->name = strdup (name);
 
@@ -2748,11 +2748,11 @@ updatePBFilePath (CCSContext * context, char *name, char *pbFilePath)
 static void
 loadPluginFromXMLFile (CCSContext * context, char *xmlName, char *xmlDirPath)
 {
-    char *xmlFilePath = NULL;
+    char *xmlFilePath;
     char *pbFilePath = NULL;
     void *pluginInfoPBv = NULL;
 
-    asprintf (&xmlFilePath, "%s/%s", xmlDirPath, xmlName);
+    xmlFilePath = strdup_printf ("%s/%s", xmlDirPath, xmlName);
     if (!xmlFilePath)
     {
 	fprintf (stderr, "[ERROR]: Can't allocate memory\n");
@@ -2787,7 +2787,7 @@ loadPluginFromXMLFile (CCSContext * context, char *xmlName, char *xmlDirPath)
 	if (createProtoBufCacheDir () &&
 	    metadataCacheDir.length () > 0)
 	{
-	    asprintf (&pbFilePath, "%s/%s.pb", metadataCacheDir.c_str (), name);
+	    pbFilePath = strdup_printf ("%s/%s.pb", metadataCacheDir.c_str (), name);
 	    if (!pbFilePath)
 	    {
 		fprintf (stderr, "[ERROR]: Can't allocate memory\n");
@@ -2982,17 +2982,15 @@ ccsLoadPlugin (CCSContext * context, char *name)
     initPBLoading ();
 #endif
 
-    char *xmlDirPath = NULL;
-    char *xmlName = NULL;
-    asprintf (&xmlName, "%s.xml", name);
+    char *xmlName = strdup_printf ("%s.xml", name);
 
     if (xmlName)
     {
-	char *home = getenv ("HOME");
-	if (home && strlen (home))
+	const char *home = getenv ("HOME");
+	if (home && strlen (home) > 0)
 	{
-	    char *home = getenv ("HOME");
-	    asprintf (&xmlDirPath, "%s/.compiz/metadata", home);
+	    char *xmlDirPath = strdup_printf ("%s/.compiz/metadata", home);
+
 	    if (xmlDirPath)
 	    {
 		loadPluginFromXMLFile (context, xmlName, xmlDirPath);
@@ -3016,11 +3014,10 @@ ccsLoadPlugins (CCSContext * context)
     initPBLoading ();
 #endif
 
-    char *home = getenv ("HOME");
-    if (home && strlen (home))
+    const char *home = getenv ("HOME");
+    if (home && strlen (home) > 0)
     {
-	char *homeplugins = NULL;
-	asprintf (&homeplugins, "%s/.compiz/metadata", home);
+	char *homeplugins = strdup_printf ("%s/.compiz/metadata", home);
 	if (homeplugins)
 	{
 	    loadPluginsFromXMLFiles (context, homeplugins);
@@ -3029,10 +3026,9 @@ ccsLoadPlugins (CCSContext * context)
     }
     loadPluginsFromXMLFiles (context, (char *)METADATADIR);
 
-    if (home && strlen (home))
+    if (home && strlen (home) > 0)
     {
-	char *homeplugins = NULL;
-	asprintf (&homeplugins, "%s/.compiz/plugins", home);
+	char *homeplugins = strdup_printf ("%s/.compiz/plugins", home);
 	if (homeplugins)
 	{
 	    loadPluginsFromName (context, homeplugins);

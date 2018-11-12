@@ -19,7 +19,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -29,24 +28,22 @@
 
 #define SETTINGPATH "compiz/compizconfig"
 
-static char*
+static char *
 getConfigFileName (void)
 {
-    char *configDir = NULL;
-    char *fileName = NULL;
+    const char *configDir;
+    const char *homeDir;
 
     configDir = getenv ("XDG_CONFIG_HOME");
-    if (configDir && strlen (configDir))
+    if (configDir != NULL && strlen (configDir) > 0)
     {
-	asprintf (&fileName, "%s/%s/config", configDir, SETTINGPATH);
-	return fileName;
+	return strdup_printf ("%s/%s/config", configDir, SETTINGPATH);
     }
 
-    configDir = getenv ("HOME");
-    if (configDir && strlen (configDir))
+    homeDir = getenv ("HOME");
+    if (homeDir != NULL && strlen (homeDir) > 0)
     {
-	asprintf (&fileName, "%s/.config/%s/config", configDir, SETTINGPATH);
-	return fileName;
+	return strdup_printf ("%s/.config/%s/config", homeDir, SETTINGPATH);
     }
 
     return NULL;
@@ -55,14 +52,13 @@ getConfigFileName (void)
 static char*
 getSectionName (void)
 {
-    char *profile;
-    char *section;
+    char *section = NULL;
+    const char *profile;
 
     profile = getenv ("COMPIZ_CONFIG_PROFILE");
-    if (profile && strlen (profile))
+    if (profile != NULL && strlen (profile) > 0)
     {
-	asprintf (&section, "general_%s", profile);
-	return section;
+	return strdup_printf ("general_%s", profile);
     }
 
     profile = getenv ("MATE_DESKTOP_SESSION_ID");

@@ -23,8 +23,8 @@
 #  include "../config.h"
 #endif
 
-#define _GNU_SOURCE
 #include <stdlib.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 #include <malloc.h>
@@ -44,6 +44,28 @@ void
 ccsSetBasicMetadata (Bool value)
 {
     basicMetadata = value;
+}
+
+char *
+strdup_printf (const char *format, ...)
+{
+    char   *string;
+    char    c;
+    va_list args, args2;
+
+    va_start (args, format);
+    string = calloc (vsnprintf (&c, 1, format, args) + 1,
+                     sizeof (char));
+    va_end (args);
+
+    if (string != NULL)
+    {
+	va_start (args2, format);
+	vsprintf (string, format, args2);
+	va_end (args2);
+    }
+
+    return string;
 }
 
 static void
@@ -588,32 +610,34 @@ ccsFreeStrExtension (CCSStrExtension *e)
 static void *
 openBackend (char *backend)
 {
-    char *home = getenv ("HOME");
+    const char *home = getenv ("HOME");
     void *dlhand = NULL;
-    char *dlname = NULL;
     char *err = NULL;
 
-    if (home && strlen (home))
+    if (home != NULL && strlen (home) > 0)
     {
-	asprintf (&dlname, "%s/.compizconfig/backends/lib%s.so", 
-		  home, backend);
-	dlerror ();
-	dlhand = dlopen (dlname, RTLD_NOW | RTLD_NODELETE | RTLD_LOCAL);
-	err = dlerror ();
+	char *dlname = strdup_printf ("%s/.compizconfig/backends/lib%s.so",
+	                              home, backend);
+	if (dlname != NULL)
+	{
+	    dlerror ();
+	    dlhand = dlopen (dlname, RTLD_NOW | RTLD_NODELETE | RTLD_LOCAL);
+	    err = dlerror ();
+            free (dlname);
+	}
     }
 
-    if (!dlhand)
+    if (dlhand == NULL)
     {
-        if (dlname) {
-	        free (dlname);
-        }
-	asprintf (&dlname, "%s/compizconfig/backends/lib%s.so", 
-		  LIBDIR, backend);
-	dlhand = dlopen (dlname, RTLD_NOW | RTLD_NODELETE | RTLD_LOCAL);
-	err = dlerror ();
+	char *dlname = strdup_printf ("%s/compizconfig/backends/lib%s.so",
+	                              LIBDIR, backend);
+	if (dlname != NULL)
+	{
+	    dlhand = dlopen (dlname, RTLD_NOW | RTLD_NODELETE | RTLD_LOCAL);
+	    err = dlerror ();
+	    free (dlname);
+	}
     }
-
-    free (dlname);
 
     if (err)
     {
@@ -2454,20 +2478,26 @@ CCSBackendInfoList
 ccsGetExistingBackends ()
 {
     CCSBackendInfoList rv = NULL;
-    char *home = getenv ("HOME");
+    const char *home = getenv ("HOME");
     char *backenddir;
 
-    if (home && strlen (home))
+    if (home != NULL && strlen (home) > 0)
     {
-	asprintf (&backenddir, "%s/.compizconfig/backends", home);
+	backenddir = strdup_printf ("%s/.compizconfig/backends", home);
+	if (backenddir != NULL)
+	{
+	    getBackendInfoFromDir (&rv, backenddir);
+	    free (backenddir);
+	}
+    }
+
+    backenddir = strdup_printf ("%s/compizconfig/backends", LIBDIR);
+    if (backenddir != NULL)
+    {
 	getBackendInfoFromDir (&rv, backenddir);
 	free (backenddir);
     }
 
-    asprintf (&backenddir, "%s/compizconfig/backends", LIBDIR);
-
-    getBackendInfoFromDir (&rv, backenddir);
-    free (backenddir);
     return rv;
 }
 
@@ -2481,7 +2511,6 @@ ccsExportToFile (CCSContext *context,
     CCSSettingList s;
     CCSPlugin *plugin;
     CCSSetting *setting;
-    char *keyName;
 
     exportFile = ccsIniNew ();
     if (!exportFile)
@@ -2497,16 +2526,23 @@ ccsExportToFile (CCSContext *context,
 
 	for (s = pPrivate->settings; s; s = s->next)
 	{
+	    char *keyName;
+
 	    setting = s->data;
 
 	    if (skipDefaults && setting->isDefault)
 		continue;
 
 	    if (setting->isScreen)
-		asprintf (&keyName, "s%d_%s", 
-			  setting->screenNum, setting->name);
+	    {
+		keyName = strdup_printf ("s%d_%s",
+		                         setting->screenNum, setting->name);
+	    }
 	    else
-		asprintf (&keyName, "as_%s", setting->name);
+		keyName = strdup_printf ("as_%s", setting->name);
+
+	    if (keyName == NULL)
+		continue;
 
 	    switch (setting->type)
 	    {
@@ -2578,7 +2614,6 @@ ccsImportFromFile (CCSContext *context,
     CCSSettingList s;
     CCSPlugin *plugin;
     CCSSetting *setting;
-    char *keyName;
     FILE *fp;
 
     /* check if the file exists first */
@@ -2601,15 +2636,22 @@ ccsImportFromFile (CCSContext *context,
 
 	for (s = pPrivate->settings; s; s = s->next)
 	{
+	    char *keyName;
+
 	    setting = s->data;
 	    if (!setting->isDefault && !overwriteNonDefault)
 		continue;
 
 	    if (setting->isScreen)
-		asprintf (&keyName, "s%d_%s", 
-			  setting->screenNum, setting->name);
+	    {
+		keyName = strdup_printf ("s%d_%s",
+		                         setting->screenNum, setting->name);
+	    }
 	    else
-		asprintf (&keyName, "as_%s", setting->name);
+		keyName = strdup_printf ("as_%s", setting->name);
+
+	    if (keyName == NULL)
+		continue;
 
 	    switch (setting->type)
 	    {

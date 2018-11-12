@@ -78,4 +78,6 @@ Bool ccsWriteConfig (ConfigOption option,
 unsigned int ccsAddConfigWatch (CCSContext            *context,
 				FileWatchCallbackProc callback);
 
+char *strdup_printf (const char *format, ...);
+
 #endif

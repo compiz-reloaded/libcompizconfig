@@ -18,8 +18,8 @@
  *
  **/
 
-#define _GNU_SOURCE
 #include <stdio.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 #include <malloc.h>
@@ -57,7 +57,29 @@ static int privDataSize = 0;
 /* forward declaration */
 static void setProfile (IniPrivData *data, char *profile);
 
-static IniPrivData*
+static char *
+strdup_printf (const char *format, ...)
+{
+    char   *string;
+    char    c;
+    va_list args, args2;
+
+    va_start (args, format);
+    string = calloc (vsnprintf (&c, 1, format, args) + 1,
+                     sizeof (char));
+    va_end (args);
+
+    if (string != NULL)
+    {
+	va_start (args2, format);
+	vsprintf (string, format, args2);
+	va_end (args2);
+    }
+
+    return string;
+}
+
+static IniPrivData *
 findPrivFromContext (CCSContext *context)
 {
     int i;
@@ -73,25 +95,23 @@ findPrivFromContext (CCSContext *context)
     return data;
 }
 
-static char*
+static char *
 getIniFileName (char *profile)
 {
-    char *configDir = NULL;
-    char *fileName = NULL;
+    const char *configDir;
+    const char *homeDir;
 
     configDir = getenv ("XDG_CONFIG_HOME");
-    if (configDir && strlen (configDir))
+    if (configDir != NULL && strlen (configDir) > 0)
     {
-	asprintf (&fileName, "%s/%s/%s.ini", configDir, SETTINGPATH, profile);
-	return fileName;
+	return strdup_printf ("%s/%s/%s.ini", configDir, SETTINGPATH, profile);
     }
 
-    configDir = getenv ("HOME");
-    if (configDir && strlen (configDir))
+    homeDir = getenv ("HOME");
+    if (homeDir != NULL && strlen (homeDir) > 0)
     {
-	asprintf (&fileName, "%s/.config/%s/%s.ini", configDir, SETTINGPATH,
-		  profile);
-	return fileName;
+	return strdup_printf ("%s/.config/%s/%s.ini", homeDir, SETTINGPATH,
+	                      profile);
     }
 
     return NULL;
@@ -266,9 +286,12 @@ readSetting (CCSContext *context,
 	return;
 
     if (setting->isScreen)
-	asprintf (&keyName, "s%d_%s", setting->screenNum, setting->name);
+	keyName = strdup_printf ("s%d_%s", setting->screenNum, setting->name);
     else
-	asprintf (&keyName, "as_%s", setting->name);
+	keyName = strdup_printf ("as_%s", setting->name);
+
+    if (keyName == NULL)
+	return;
 
     switch (setting->type)
     {
@@ -459,9 +482,12 @@ writeSetting (CCSContext *context,
 	return;
 
     if (setting->isScreen)
-	asprintf (&keyName, "s%d_%s", setting->screenNum, setting->name);
+	keyName = strdup_printf ("s%d_%s", setting->screenNum, setting->name);
     else
-	asprintf (&keyName, "as_%s", setting->name);
+	keyName = strdup_printf ("as_%s", setting->name);
+
+    if (keyName == NULL)
+	return;
 
     if (setting->isDefault)
     {
@@ -650,33 +676,36 @@ scanConfigDir (char * filePath)
 static CCSStringList
 getExistingProfiles (CCSContext * context)
 {
-    CCSStringList  ret = NULL;
-    char	   *filePath = NULL;
-    char           *homeDir = NULL;
-    char	   *configDir = NULL;
-    
-    configDir = getenv ("XDG_CONFIG_HOME");
-    if (configDir && strlen (configDir))
-    {
-	asprintf (&filePath, "%s/%s", configDir, SETTINGPATH);
-	
-	ret = scanConfigDir(filePath);
-	free(filePath);
+    CCSStringList ret;
+    const char   *configDir;
+    const char   *homeDir;
+    char         *filePath;
 
-	if (ret)
+    configDir = getenv ("XDG_CONFIG_HOME");
+    if (configDir != NULL && strlen (configDir) > 0)
+    {
+	filePath = strdup_printf ("%s/%s", configDir, SETTINGPATH);
+
+	if (filePath == NULL)
+	    return NULL;
+
+	ret = scanConfigDir (filePath);
+	free (filePath);
+
+	if (ret != NULL)
 	    return ret;
     }
-    
+
     homeDir = getenv ("HOME");
-    if (!homeDir)
+    if (homeDir == NULL && strlen (configDir) <= 0)
 	return NULL;
 
-    asprintf (&filePath, "%s/.config/%s", homeDir, SETTINGPATH);
-    if (!filePath)
+    filePath = strdup_printf ("%s/.config/%s", homeDir, SETTINGPATH);
+    if (filePath == NULL)
 	return NULL;
 
-    ret = scanConfigDir(filePath);
-    free(filePath);
+    ret = scanConfigDir (filePath);
+    free (filePath);
 
     return ret;
 }
