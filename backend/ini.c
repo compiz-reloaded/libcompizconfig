@@ -60,22 +60,28 @@ static void setProfile (IniPrivData *data, char *profile);
 static char *
 strdup_printf (const char *format, ...)
 {
-    char   *string;
-    char    c;
-    va_list args, args2;
+    char      *string;
+    const int  init_size = 100;
+    char       stack[init_size];
+    int        size;
+    va_list    args, args2;
 
     va_start (args, format);
-    string = calloc (vsnprintf (&c, 1, format, args) + 1,
-                     sizeof (char));
+    size = vsnprintf (stack, init_size, format, args);
     va_end (args);
 
-    if (string != NULL)
+    if (size < 0)
+	return NULL;
+
+    string = calloc ((unsigned long) size + 1UL, sizeof (char));
+    if (string != NULL && size + 1 > init_size)
     {
 	va_start (args2, format);
 	vsprintf (string, format, args2);
 	va_end (args2);
     }
-
+    else if (string != NULL)
+	memcpy (string, stack, (unsigned long) size + 1UL);
     return string;
 }
 
