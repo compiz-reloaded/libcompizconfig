@@ -758,3 +758,159 @@ void ccsIniRemoveEntry (IniDictionary * dictionary,
 	free (sectionName);
     }
 }
+
+void
+ccsIniReadSetting (dictionary *d,
+		   CCSSetting *setting)
+{
+    Bool         status = FALSE;
+    char        *keyName;
+
+    if (setting->isScreen)
+	keyName = strdup_printf ("s%d_%s", setting->screenNum, setting->name);
+    else
+	keyName = strdup_printf ("as_%s", setting->name);
+
+    if (keyName == NULL)
+	return;
+
+    switch (setting->type)
+    {
+    case TypeString:
+	{
+	    char *value;
+	    if (ccsIniGetString (d, setting->parent->name,
+				 keyName, &value))
+	    {
+		ccsSetString (setting, value);
+		free (value);
+		status = TRUE;
+	    }
+	}
+	break;
+    case TypeMatch:
+	{
+	    char *value;
+	    if (ccsIniGetString (d, setting->parent->name,
+				 keyName, &value))
+	    {
+		ccsSetMatch (setting, value);
+		free (value);
+		status = TRUE;
+	    }
+	}
+	break;
+    case TypeInt:
+	{
+	    int value;
+	    if (ccsIniGetInt (d, setting->parent->name,
+			      keyName, &value))
+	    {
+		ccsSetInt (setting, value);
+		status = TRUE;
+	    }
+	}
+	break;
+    case TypeBool:
+	{
+	    Bool value;
+	    if (ccsIniGetBool (d, setting->parent->name,
+			       keyName, &value))
+	    {
+		ccsSetBool (setting, (value != 0));
+		status = TRUE;
+	    }
+	}
+	break;
+    case TypeFloat:
+	{
+	    float value;
+	    if (ccsIniGetFloat (d, setting->parent->name,
+				keyName, &value))
+	    {
+		ccsSetFloat (setting, value);
+		status = TRUE;
+	    }
+	}
+	break;
+    case TypeColor:
+	{
+	    CCSSettingColorValue color;
+
+	    if (ccsIniGetColor (d, setting->parent->name,
+				keyName, &color))
+	    {
+		ccsSetColor (setting, color);
+		status = TRUE;
+	    }
+	}
+	break;
+    case TypeKey:
+	{
+	    CCSSettingKeyValue key;
+	    if (ccsIniGetKey (d, setting->parent->name,
+			      keyName, &key))
+	    {
+		ccsSetKey (setting, key);
+		status = TRUE;
+	    }
+	}
+	break;
+    case TypeButton:
+	{
+	    CCSSettingButtonValue button;
+	    if (ccsIniGetButton (d, setting->parent->name,
+				 keyName, &button))
+	    {
+		ccsSetButton (setting, button);
+		status = TRUE;
+	    }
+	}
+	break;
+    case TypeEdge:
+	{
+	    unsigned int edges;
+	    if (ccsIniGetEdge (d, setting->parent->name,
+				 keyName, &edges))
+	    {
+		ccsSetEdge (setting, edges);
+		status = TRUE;
+	    }
+	}
+	break;
+    case TypeBell:
+	{
+	    Bool bell;
+	    if (ccsIniGetBell (d, setting->parent->name,
+			       keyName, &bell))
+	    {
+		ccsSetBell (setting, bell);
+		status = TRUE;
+	    }
+	}
+	break;
+    case TypeList:
+	{
+	    CCSSettingValueList value;
+	    if (ccsIniGetList (d, setting->parent->name,
+			       keyName, &value, setting))
+	    {
+		ccsSetList (setting, value);
+		ccsSettingValueListFree (value, TRUE);
+		status = TRUE;
+	    }
+	}
+	break;
+    default:
+	break;
+    }
+
+    if (!status)
+    {
+	/* reset setting to default if it could not be read */
+	ccsResetToDefault (setting);
+    }
+
+    if (keyName)
+	free (keyName);
+}
