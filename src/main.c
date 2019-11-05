@@ -793,6 +793,13 @@ ccsResetToDefault (CCSSetting * setting)
     setting->isDefault = TRUE;
 }
 
+void
+ccsSetAsDefault (CCSSetting * setting)
+{
+    copyValue (setting->value, &setting->defaultValue);
+    ccsResetToDefault (setting);
+}
+
 Bool
 ccsSetInt (CCSSetting * setting, int data)
 {

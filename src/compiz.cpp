@@ -43,6 +43,7 @@ extern "C"
 #include <compiz-core.h>
 #include <ccs.h>
 #include "ccs-private.h"
+#include "iniparser.h"
 }
 
 extern int xmlLoadExtDtdDefaultValue;
@@ -3071,6 +3072,30 @@ loadOptionsStringExtensionsFromXML (CCSPlugin * plugin,
 	xmlFreeDoc (doc);
 }
 
+static void
+loadPresets(CCSPlugin * plugin)
+{
+    IniDictionary *presets;
+    const char *presetsFile = SYSCONFDIR "/compizconfig/presets.ini";
+
+    PLUGIN_PRIV (plugin);
+
+    CCSSettingList sl = pPrivate->settings;
+
+    presets = iniparser_new ((char *) presetsFile);
+
+    if (presets)
+    {
+	while (sl)
+	{
+	    ccsIniReadSetting (presets, sl->data);
+	    ccsSetAsDefault (sl->data);
+
+	    sl = sl->next;
+	}
+    }
+}
+
 void
 ccsLoadPluginSettings (CCSPlugin * plugin)
 {
@@ -3129,6 +3154,9 @@ ccsLoadPluginSettings (CCSPlugin * plugin)
     D (D_FULL, "done\n");
 
     collateGroups (pPrivate);
+
+    loadPresets (plugin);
+
     ccsReadPluginSettings (plugin);
 }
 

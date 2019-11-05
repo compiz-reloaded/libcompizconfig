@@ -667,6 +667,9 @@ void ccsWriteChangedSettings (CCSContext *context);
    previously are added to the changedSettings list of the context. */
 void ccsResetToDefault (CCSSetting * setting);
 
+/* Sets the current value as default value */
+void ccsSetAsDefault (CCSSetting * setting);
+
 /* Exports a profile to a file. If skipDefaults is TRUE, only exports
    non-default settings. Returns TRUE on successful export, FALSE otherwise. */
 Bool ccsExportToFile (CCSContext *context,
@@ -804,6 +807,9 @@ void ccsIniSetList (IniDictionary       *dictionary,
 void ccsIniRemoveEntry (IniDictionary *dictionary,
 			const char    *section,
 			const char    *entry);
+
+void ccsIniReadSetting (IniDictionary *dictionary,
+			CCSSetting *setting);
 
 /* Checks if a plugin can be enabled. Returns a list of conflicts that
    would occur when loading the plugin. A return value of NULL means that
