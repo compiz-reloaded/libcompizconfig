@@ -1,3 +1,11 @@
+Release 0.8.18 (2020-04-04 The Compiz Reloaded Team)
+==================================================================
+COMPIZ-RELOADED
+
+Read SYSCONFDIR/compizconfig/presets.ini as default values if exists
+
+Avoid using glibc-specific strcasestr and asprintf
+
 Release 0.8.16 (2018-11-11 Scott Moreau <oreaus@gmail.com>)
 ==================================================================
 COMPIZ-RELOADED
