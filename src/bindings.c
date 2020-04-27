@@ -293,11 +293,11 @@ ccsModStringToEdges (const char *binding)
 
     for (i = 0; i < N_EDGES; i++)
     {
-	int         edgeLen = strlen (edgeList[i].name);
+	int         edgeLen = strlen (edgeList[i].modName);
 	const char *haystack;
 	for (haystack = binding; *haystack != '\0'; ++haystack)
 	{
-	    if (strncasecmp (haystack, edgeList[i].name, edgeLen) == 0)
+	    if (strncasecmp (haystack, edgeList[i].modName, edgeLen) == 0)
 	    {
 		mods |= edgeList[i].modifier;
 		break;
